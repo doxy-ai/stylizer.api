@@ -1,0 +1,6 @@
+[submodule "thirdparty/slcross"]
+	path = thirdparty/slcross
+	url = https://github.com/doxy-ai/slcross
+[submodule "thirdparty/WebGPU-distribution"]
+	path = thirdparty/WebGPU-distribution
+	url = https://github.com/eliemichel/WebGPU-distribution.git
