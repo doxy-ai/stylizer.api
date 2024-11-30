@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(thirdparty/slcross)
 add_subdirectory(thirdparty/WebGPU-distribution)
+add_subdirectory(thirdparty/magic_enum)
 
-add_executable(tst "test.cpp")
-target_link_libraries(tst PUBLIC slcross::slcross webgpu)
+add_executable(tst "test.cpp" "webgpu/device.cpp")
+target_link_libraries(tst PUBLIC magic_enum slcross::slcross webgpu)
+
+include(cmake/glfw.cmake)
+target_setup_glfw_for_stylizer(tst)
