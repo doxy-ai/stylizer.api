@@ -2,7 +2,7 @@
 #include "surface.hpp"
 
 namespace stylizer::api::webgpu {
-	device device::create_default(create_config config) {
+	device device::create_default(const create_config& config) {
 		device out;
 		out.adapter = get_instance().requestAdapter(WGPURequestAdapterOptions{
 			.compatibleSurface = confirm_wgpu_type<webgpu::surface>(*config.surface).surface_,
