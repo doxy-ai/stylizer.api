@@ -1,8 +1,7 @@
-#include "common.hpp"
+#pragma once
+
 #include "device.hpp"
 #include "cstring_from_view.hpp"
-#include <webgpu/webgpu.h>
-#include <webgpu/webgpu.hpp>
 
 namespace stylizer::api::webgpu {
 	struct texture: public api::texture { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture);
