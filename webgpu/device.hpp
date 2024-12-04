@@ -3,6 +3,9 @@
 #include "common.hpp"
 
 namespace stylizer::api::webgpu {
+	struct texture;
+	struct render_pass;
+
 	struct device: public api::device { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(device);
 		char type[4] = STYLIZER_API_WGPU_TYPE;
 		wgpu::Adapter adapter = nullptr;
@@ -33,6 +36,12 @@ namespace stylizer::api::webgpu {
 			// }
 		}
 
+		webgpu::texture create_texture(const api::texture::create_config& config = {});
+		api::texture& create_texture(temporary_return_t, const api::texture::create_config& config = {}) override;
+
+		webgpu::render_pass create_render_pass(std::span<api::render_pass::color_attachment> colors, std::optional<api::render_pass::depth_stencil_attachment> depth = {}, bool one_shot = false, std::string_view label = "Stylizer Render Pass");
+		api::render_pass& create_render_pass(temporary_return_t, std::span<api::render_pass::color_attachment> colors, std::optional<api::render_pass::depth_stencil_attachment> depth = {}, bool one_shot = false, std::string_view label = "Stylizer Render Pass") override;
+
 		void release(bool static_sub_objects = false) override {
 			if(static_sub_objects) {
 				static auto_release<device> device = {};
@@ -44,5 +53,5 @@ namespace stylizer::api::webgpu {
 			if(adapter) std::exchange(adapter, nullptr).release();
 		}
 	};
-	static_assert(device_concept<device>);
+	// static_assert(device_concept<device>); // NOTE: In .cpp file
 }
