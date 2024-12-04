@@ -1,13 +1,16 @@
 #define STYLIZER_API_IMPLEMENTATION
 #include "webgpu/device.hpp"
 #include "webgpu/surface.hpp"
+#include "webgpu/render_pass.hpp"
 #include "glfw.hpp"
 
 #include <iostream>
+#include "span_from_value.hpp"
 
 int main() {
 	glfwInit();
 
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	GLFWwindow* window = glfwCreateWindow(640, 480, "Stylizer Test", NULL, NULL);
 
@@ -25,29 +28,14 @@ int main() {
 
 		try {
 			stylizer::auto_release texture = surface.next_texture(device);
+			stylizer::auto_release render_pass = device.create_render_pass(
+				span_from_value<stylizer::api::render_pass::color_attachment>({
+					.texture = texture,
+					.clear_value = {{.3, .5, 1}},
+				})
+			);
 
-			stylizer::auto_release encoder = device.device_.createCommandEncoder();
-
-			WGPURenderPassColorAttachment color{
-				.view = texture.view,
-				.resolveTarget = nullptr,
-				.loadOp = wgpu::LoadOp::Clear,
-				.storeOp = wgpu::StoreOp::Store,
-				.clearValue = {1, 1, 1, 1}
-			};
-			stylizer::auto_release render_pass = encoder.beginRenderPass(WGPURenderPassDescriptor{
-				.label = "Stylizer Render Pass",
-				.colorAttachmentCount = 1,
-				.colorAttachments = &color,
-				.depthStencilAttachment = nullptr,
-				.occlusionQuerySet = nullptr,
-				.timestampWrites = nullptr,
-			});
-
-			render_pass.end();
-			stylizer::auto_release command_buffer = encoder.finish();
-			device.queue.submit(command_buffer);
-
+			render_pass.submit(device);
 			surface.present(device);
 		} catch(stylizer::api::surface::texture_aquisition_failed fail) {
 			std::cerr << fail.what() << std::endl;
