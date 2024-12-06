@@ -1,11 +1,8 @@
 #define STYLIZER_API_IMPLEMENTATION
-#include "webgpu/device.hpp"
-#include "webgpu/surface.hpp"
-#include "webgpu/render_pass.hpp"
+#include "webgpu/all.hpp"
 #include "glfw.hpp"
 
 #include <iostream>
-#include "span_from_value.hpp"
 
 int main() {
 	glfwInit();
@@ -21,6 +18,11 @@ int main() {
 
 	std::array<stylizer::api::color8, 640 * 480> color_data; color_data.fill({1, 1, 1, 1});
 	constexpr size_t color8size = sizeof(stylizer::api::color8);
+
+	std::array<float, 5> floats = {1, 2, 3, 4, 5};
+	stylizer::auto_release buffer = device.create_and_write_buffer(stylizer::api::usage::Storage, byte_span<float>(floats));
+
+	auto& zero_buffer = device.get_zero_buffer_singleton(stylizer::api::usage::Storage, 16);
 
 	while(!glfwWindowShouldClose(window)) {
 		glfwPollEvents();

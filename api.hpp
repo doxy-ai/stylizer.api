@@ -1,9 +1,11 @@
 #pragma once
 
 #include <concepts>
-#include <span>
 #include <stdexcept>
 #include <magic_enum/magic_enum.hpp>
+#include <magic_enum/magic_enum_flags.hpp>
+
+#include "spans.hpp"
 
 namespace stylizer {
 	template<typename T>
@@ -23,9 +25,6 @@ namespace stylizer {
 
 		~auto_release() { if(*this) this->release(); }
 	};
-
-	template<typename T>
-	std::span<std::byte> byte_span(std::span<T> span) { return {(std::byte*)span.data(), span.size_bytes()}; }
 
 #define STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(type)\
 		type() {}\
@@ -93,8 +92,12 @@ namespace stylizer::api {
 
 	enum class usage {
 		Invalid = 0,
-		RenderAttachment = (1 << 0),
-		TextureBinding = (1 << 1),
+		CopySource = (1 << 0),
+		CopyDestination = (1 << 1),
+		RenderAttachment = (1 << 2),
+		TextureBinding = (1 << 3),
+
+		Storage = (1 << 4),
 	};
 
 	enum class comparison_function {
@@ -159,7 +162,7 @@ namespace stylizer::api {
 
 	struct texture {
 		using format = texture_format;
-		
+
 		struct create_config {
 			std::string_view label = "Stylizer Texture";
 			enum texture_format format = format::RGBA8_SRGB;
@@ -178,8 +181,8 @@ namespace stylizer::api {
 
 		enum class address_mode {
 			Repeat,
-    		MirrorRepeat,
-    		ClampToEdge,
+			MirrorRepeat,
+			ClampToEdge,
 		};
 
 		struct sampler_config {
@@ -208,6 +211,23 @@ namespace stylizer::api {
 		{ T::create_and_write(device, data, layout, config) } -> std::convertible_to<T>;
 	};
 
+	struct buffer {
+		virtual const buffer& get_zero_buffer_singleton(device& device, usage usage = usage::Storage, size_t minimum_size = 0, buffer* just_released = nullptr) = 0;
+
+		virtual buffer& write(device& device, std::span<std::byte> data, size_t offset = 0) = 0;
+		virtual size_t size(device& device) = 0;
+
+		virtual void release() = 0;
+		STYLIZER_API_AS_METHOD(buffer);
+	};
+
+	template<typename T>
+	concept buffer_concept = std::derived_from<T, buffer> && requires(T t, device device, usage usage, size_t size, bool mapped_at_creation, std::span<std::byte> data, size_t offset, std::string_view label, buffer* just_released) {
+		{ T::create(device, usage, size, mapped_at_creation, label) } -> std::convertible_to<T>;
+		{ T::create_and_write(device, usage, data, offset, label) } -> std::convertible_to<T>;
+
+		{ T::zero_buffer(device, usage, size, just_released) } -> std::convertible_to<T>;
+	};
 
 
 
@@ -266,6 +286,18 @@ namespace stylizer::api {
 
 		virtual texture& create_texture(temporary_return_t, const texture::create_config& config = {}) = 0;
 		virtual texture& create_and_write_texture(temporary_return_t, std::span<const std::byte> data, const texture::data_layout& layout, const texture::create_config& config = {}) = 0;
+
+		virtual buffer& create_buffer(temporary_return_t, usage usage, size_t size, bool mapped_at_creation = false, std::string_view label = "Stylizer Buffer") = 0;
+		virtual buffer& create_and_write_buffer(temporary_return_t, usage usage, std::span<std::byte> data, size_t offset = 0, std::string_view label = "Stylizer Buffer") = 0;
+		
+		// NOTE: This function is more costly than the one on buffer (since it needs to create a temporary buffer), and thus should be avoided when possible!
+		virtual const buffer& get_zero_buffer_singleton(usage usage = usage::Storage, size_t minimum_size = 0, buffer* just_released = nullptr) {
+			auto& tmp = create_buffer(temporary_return, usage::Storage, 0);
+			auto& out = tmp.get_zero_buffer_singleton(*this, usage, minimum_size, just_released);
+			tmp.release();
+			return out;
+		}
+
 		virtual render_pass& create_render_pass(temporary_return_t, std::span<render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth = {}, bool one_shot = false, std::string_view label = "Stylizer Render Pass") = 0;
 
 		virtual void release(bool static_sub_objects = false) = 0;
@@ -275,11 +307,16 @@ namespace stylizer::api {
 	template<typename T>
 	concept device_concept = std::derived_from<T, device> && requires(T t, device::create_config config,
 		texture::create_config texture_config,
-		std::span<render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, std::string_view label
+		std::span<render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, std::string_view label,
+		usage usage, size_t size, bool mapped_at_creation, std::span<std::byte> data, size_t offset
 	) {
 		{ T::create_default(config) } -> std::convertible_to<T>;
 
 		{ t.create_texture(texture_config) } -> std::derived_from<texture>;
+
+		{ t.create_buffer(usage, size, mapped_at_creation, label) } -> std::derived_from<buffer>;
+		{ t.create_and_write_buffer(usage, data, offset, label) } -> std::derived_from<buffer>;
+
 		{ t.create_render_pass(colors, depth, one_shot, label) } -> std::derived_from<render_pass>;
 	};
 }

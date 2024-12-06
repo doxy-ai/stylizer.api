@@ -71,9 +71,48 @@ namespace stylizer::api::webgpu {
 	}
 
 	inline wgpu::TextureUsageFlags to_wgpu_texture(usage usage) {
-		wgpu::TextureUsageFlags out;
-		if((usage & usage::RenderAttachment) > usage::Invalid)
+		wgpu::TextureUsageFlags out = {};
+		if((usage & usage::CopySource) > usage::Invalid) {
+			out |= wgpu::TextureUsage::CopySrc;
+			usage &= ~usage::CopySource;
+		}
+		if((usage & usage::CopyDestination) > usage::Invalid) {
+			out |= wgpu::TextureUsage::CopyDst;
+			usage &= ~usage::CopyDestination;
+		}
+		if((usage & usage::Storage) > usage::Invalid) {
+			out |= wgpu::TextureUsage::StorageBinding;
+			usage &= ~usage::Storage;
+		}
+		if((usage & usage::RenderAttachment) > usage::Invalid) {
 			out |= wgpu::TextureUsage::RenderAttachment;
+			usage &= ~usage::RenderAttachment;
+		}
+		if((usage & usage::TextureBinding) > usage::Invalid) {
+			out |= wgpu::TextureUsage::TextureBinding;
+			usage &= ~usage::TextureBinding;
+		}
+
+		if(usage > usage::Invalid)
+			throw error("Invalid Texture Usage(s): " + std::string(magic_enum::enum_flags_name(usage)));
+		return out;
+	}
+	inline wgpu::BufferUsageFlags to_wgpu_buffer(usage usage) {
+		wgpu::BufferUsageFlags out = {};
+		if((usage & usage::CopySource) > usage::Invalid) {
+			out |= wgpu::BufferUsage::CopySrc;
+			usage &= ~usage::CopySource;
+		}
+		if((usage & usage::CopyDestination) > usage::Invalid) {
+			out |= wgpu::BufferUsage::CopyDst;
+			usage &= ~usage::CopyDestination;
+		}
+		if((usage & usage::Storage) > usage::Invalid) {
+			out |= wgpu::BufferUsage::Storage;
+			usage &= ~usage::Storage;
+		}
+		if(usage > usage::Invalid)
+			throw error("Invalid Buffer Usage(s): " + std::string(magic_enum::enum_flags_name(usage)));
 		return out;
 	}
 

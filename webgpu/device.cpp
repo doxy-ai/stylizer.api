@@ -1,6 +1,7 @@
 #include "device.hpp"
 #include "surface.hpp"
 #include "texture.hpp"
+#include "buffer.hpp"
 #include "render_pass.hpp"
 
 namespace stylizer::api::webgpu {
@@ -36,6 +37,21 @@ namespace stylizer::api::webgpu {
 	api::texture& device::create_and_write_texture(temporary_return_t, std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config /* = {} */) {
 		static webgpu::texture texture;
 		return texture = create_and_write_texture(data, layout, config);
+	}
+
+	webgpu::buffer device::create_buffer(usage usage, size_t size, bool mapped_at_creation /* = false */, std::string_view label /* = "Stylizer Buffer" */) {
+		return webgpu::buffer::create(*this, usage, size, mapped_at_creation, label);
+	}
+	api::buffer& device::create_buffer(temporary_return_t, usage usage, size_t size, bool mapped_at_creation/*  = false */, std::string_view label /* = "Stylizer Buffer" */) {
+		static webgpu::buffer buffer;
+		return buffer = create_buffer(usage, size, mapped_at_creation, label);
+	}
+	webgpu::buffer device::create_and_write_buffer(usage usage, std::span<std::byte> data, size_t offset /* = 0 */, std::string_view label /* = "Stylizer Buffer" */) {
+		return webgpu::buffer::create_and_write(*this, usage, data, offset, label);
+	}
+	api::buffer& device::create_and_write_buffer(temporary_return_t, usage usage, std::span<std::byte> data, size_t offset /* = 0 */, std::string_view label /* = "Stylizer Buffer" */) {
+		static webgpu::buffer buffer;
+		return buffer = create_and_write_buffer(usage, data, offset, label);
 	}
 
 	webgpu::render_pass device::create_render_pass(std::span<api::render_pass::color_attachment> colors, std::optional<api::render_pass::depth_stencil_attachment> depth /* = {} */, bool one_shot /* = false */, std::string_view label /* = "Stylizer Render Pass" */) {
