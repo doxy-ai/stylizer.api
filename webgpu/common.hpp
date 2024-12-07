@@ -19,8 +19,14 @@ namespace stylizer::api::webgpu {
 	constexpr static std::string_view type_string = STYLIZER_API_WGPU_TYPE;
 
 	template<typename Tto, typename Tfrom>
-	inline Tto& confirm_wgpu_type(Tfrom& p) {
-		auto& res = p.template as<Tto>();
+	inline Tto& confirm_wgpu_type(Tfrom& ref) {
+		auto& res = ref.template as<Tto>();
+		assert(res.type == type_string);
+		return res;
+	}
+	template<typename Tto, typename Tfrom>
+	inline const Tto& confirm_wgpu_type(const Tfrom& ref) {
+		auto& res = const_cast<Tfrom&>(ref).template as<Tto>();
 		assert(res.type == type_string);
 		return res;
 	}
@@ -30,9 +36,9 @@ namespace stylizer::api::webgpu {
 		return instance;
 	}
 
-	inline wgpu::Color to_wgpu(color32 color) { 
+	inline wgpu::Color to_wgpu(color32 color) {
 		return {color.r, color.g, color.b, color.a};
-	} 
+	}
 
 	inline wgpu::CompositeAlphaMode to_wgpu(alpha_mode mode) {
 		switch(mode){
@@ -40,26 +46,28 @@ namespace stylizer::api::webgpu {
 			case alpha_mode::PostMultiplied: return wgpu::CompositeAlphaMode::Unpremultiplied;
 			case alpha_mode::PreMultiplied: return wgpu::CompositeAlphaMode::Premultiplied;
 			case alpha_mode::Inherit: return wgpu::CompositeAlphaMode::Inherit;
-        }
-		throw error("Uknown Alpha Mode: " + std::string(magic_enum::enum_name(mode)));
+		}
+		throw error("Unknown Alpha Mode: " + std::string(magic_enum::enum_name(mode)));
 	}
 
 	inline wgpu::TextureFormat to_wgpu(texture_format format) {
 		switch(format){
+			case texture_format::Depth24: return wgpu::TextureFormat::Depth24Plus;
 			case texture_format::RGBA8: return wgpu::TextureFormat::RGBA8Unorm;
 			case texture_format::RGBA8_SRGB: return wgpu::TextureFormat::RGBA8UnormSrgb;
 			case texture_format::BGRA8_SRGB: return wgpu::TextureFormat::BGRA8UnormSrgb;
 		}
-		throw error("Uknown Texture Format: " + std::string(magic_enum::enum_name(format)));
+		throw error("Unknown Texture Format: " + std::string(magic_enum::enum_name(format)));
 	}
 
 	inline texture_format from_wgpu(wgpu::TextureFormat format) {
 		switch(format) {
+			case wgpu::TextureFormat::Depth24Plus: return texture_format::Depth24;
 			case wgpu::TextureFormat::RGBA8Unorm: return texture_format::RGBA8;
 			case wgpu::TextureFormat::RGBA8UnormSrgb: return texture_format::RGBA8_SRGB;
 			case wgpu::TextureFormat::BGRA8UnormSrgb: return texture_format::BGRA8_SRGB;
-			default: throw error("Unkown Texture Format");
-        }
+			default: throw error("Unknown Texture Format");
+		}
 	}
 
 	inline wgpu::TextureUsageFlags to_wgpu_texture(usage usage) {
@@ -106,6 +114,7 @@ namespace stylizer::api::webgpu {
 
 	inline wgpu::CompareFunction to_wgpu(comparison_function func) {
 		switch(func){
+			case comparison_function::NoDepthCompare: return wgpu::CompareFunction::Undefined;
 			case comparison_function::Never: return wgpu::CompareFunction::Never;
 			case comparison_function::Less: return wgpu::CompareFunction::Less;
 			case comparison_function::LessEqual: return wgpu::CompareFunction::LessEqual;
@@ -115,7 +124,7 @@ namespace stylizer::api::webgpu {
 			case comparison_function::NotEqual: return wgpu::CompareFunction::NotEqual;
 			case comparison_function::Always: return wgpu::CompareFunction::Always;
 		}
-		throw error("Uknown Comparison Function: " + std::string(magic_enum::enum_name(func)));
+		throw error("Unknown Comparison Function: " + std::string(magic_enum::enum_name(func)));
 	}
 
 	inline wgpu::PresentMode to_wgpu(surface::present_mode mode) {
@@ -125,7 +134,7 @@ namespace stylizer::api::webgpu {
 			case surface::present_mode::Immediate: return wgpu::PresentMode::Immediate;
 			case surface::present_mode::Mailbox: return wgpu::PresentMode::Mailbox;
 		}
-		throw error("Uknown Present Mode: " + std::string(magic_enum::enum_name(mode)));
+		throw error("Unknown Present Mode: " + std::string(magic_enum::enum_name(mode)));
 	}
 
 	inline wgpu::AddressMode to_wgpu(texture::address_mode mode) {
@@ -134,6 +143,68 @@ namespace stylizer::api::webgpu {
 			case texture::address_mode::MirrorRepeat: return wgpu::AddressMode::MirrorRepeat;
 			case texture::address_mode::ClampToEdge: return wgpu::AddressMode::ClampToEdge;
 		}
-        throw error("Uknown Address Mode: " + std::string(magic_enum::enum_name(mode)));
-	}	
+		throw error("Unknown Address Mode: " + std::string(magic_enum::enum_name(mode)));
+	}
+
+	inline wgpu::VertexFormat to_wgpu(enum graphics_pipeline::config::vertex_buffer_layout::attribute::format format) {
+		using fmt = enum graphics_pipeline::config::vertex_buffer_layout::attribute::format;
+		switch(format){
+			case fmt::f32x1: return wgpu::VertexFormat::Float32;
+			case fmt::f32x2: return wgpu::VertexFormat::Float32x2;
+			case fmt::f32x3: return wgpu::VertexFormat::Float32x3;
+			case fmt::f32x4: return wgpu::VertexFormat::Float32x4;
+		}
+		throw error("Unknown Vertex Format: " + std::string(magic_enum::enum_name(format)));
+	}
+
+	inline wgpu::PrimitiveTopology to_wgpu(enum graphics_pipeline::config::primitive_topology topology) {
+		switch(topology){
+			case graphics_pipeline::config::primitive_topology::PointList: return wgpu::PrimitiveTopology::PointList;
+			case graphics_pipeline::config::primitive_topology::LineList: return wgpu::PrimitiveTopology::LineList;
+			case graphics_pipeline::config::primitive_topology::LineStrip: return wgpu::PrimitiveTopology::LineStrip;
+			case graphics_pipeline::config::primitive_topology::TriangleList: return wgpu::PrimitiveTopology::TriangleList;
+			case graphics_pipeline::config::primitive_topology::TriangleStrip: return wgpu::PrimitiveTopology::TriangleStrip;
+		}
+		throw error("Unknown Primitive Topology: " + std::string(magic_enum::enum_name(topology)));
+	}
+
+	inline wgpu::CullMode to_wgpu(enum graphics_pipeline::config::cull_mode mode) {
+		switch(mode){
+			case graphics_pipeline::config::cull_mode::Back: return wgpu::CullMode::Back;
+			case graphics_pipeline::config::cull_mode::Front: return wgpu::CullMode::Front;
+			// case graphics_pipeline::config::cull_mode::Both: throw
+			case graphics_pipeline::config::cull_mode::Neither: return wgpu::CullMode::None;
+		}
+		throw error("Unknown Cull Mode: " + std::string(magic_enum::enum_name(mode)));
+	}
+
+	inline wgpu::BlendOperation to_wgpu(enum blend_state::operation op) {
+		switch(op){
+			case blend_state::operation::Add: return wgpu::BlendOperation::Add;
+			case blend_state::operation::Subtract: return wgpu::BlendOperation::Subtract;
+			case blend_state::operation::ReverseSubtract: return wgpu::BlendOperation::ReverseSubtract;
+			case blend_state::operation::Min: return wgpu::BlendOperation::Min;
+			case blend_state::operation::Max: return wgpu::BlendOperation::Max;
+		}
+		throw error("Unknown Blend Operation: " + std::string(magic_enum::enum_name(op)));
+	}
+
+	inline wgpu::BlendFactor to_wgpu(enum blend_state::factor factor) {
+		switch(factor){
+			case blend_state::factor::Zero: return wgpu::BlendFactor::Zero;
+			case blend_state::factor::One: return wgpu::BlendFactor::One;
+			case blend_state::factor::Src: return wgpu::BlendFactor::Src;
+			case blend_state::factor::OneMinusSrc: return wgpu::BlendFactor::OneMinusSrc;
+			case blend_state::factor::SrcAlpha: return wgpu::BlendFactor::SrcAlpha;
+			case blend_state::factor::OneMinusSrcAlpha: return wgpu::BlendFactor::OneMinusSrcAlpha;
+			case blend_state::factor::Dst: return wgpu::BlendFactor::Dst;
+			case blend_state::factor::OneMinusDst: return wgpu::BlendFactor::OneMinusDst;
+			case blend_state::factor::DstAlpha: return wgpu::BlendFactor::DstAlpha;
+			case blend_state::factor::OneMinusDstAlpha: return wgpu::BlendFactor::OneMinusDstAlpha;
+			case blend_state::factor::SrcAlphaSaturated: return wgpu::BlendFactor::SrcAlphaSaturated;
+			case blend_state::factor::Constant: return wgpu::BlendFactor::Constant;
+			case blend_state::factor::OneMinusConstant: return wgpu::BlendFactor::OneMinusConstant;
+		}
+		throw error("Unknown Blend Factor: " + std::string(magic_enum::enum_name(factor)));
+	}
 }
