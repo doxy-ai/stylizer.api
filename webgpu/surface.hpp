@@ -211,15 +211,15 @@ namespace stylizer::api::webgpu {
 				case WGPUSurfaceGetCurrentTextureStatus_Force32:
 				case WGPUSurfaceGetCurrentTextureStatus_Success: break;
 				case WGPUSurfaceGetCurrentTextureStatus_Timeout:
-					throw texture_aquisition_failed("Failed to get next surface texture: " "Timed out");
+					throw texture_acquisition_failed("Failed to get next surface texture: " "Timed out");
 				case WGPUSurfaceGetCurrentTextureStatus_Outdated:
-					throw texture_aquisition_failed("Failed to get next surface texture: " "Outdated");
+					throw texture_acquisition_failed("Failed to get next surface texture: " "Outdated");
 				case WGPUSurfaceGetCurrentTextureStatus_Lost:
-					throw texture_aquisition_failed("Failed to get next surface texture: " "Texture Lost");
+					throw texture_acquisition_failed("Failed to get next surface texture: " "Texture Lost");
 				case WGPUSurfaceGetCurrentTextureStatus_OutOfMemory:
-					throw texture_aquisition_failed("Failed to get next surface texture: " "Out of memory");
+					throw texture_acquisition_failed("Failed to get next surface texture: " "Out of memory");
 				case WGPUSurfaceGetCurrentTextureStatus_DeviceLost:
-					throw texture_aquisition_failed("Failed to get next surface texture: " "Device Lost");
+					throw texture_acquisition_failed("Failed to get next surface texture: " "Device Lost");
 			}
 
 			webgpu::texture out;
