@@ -1,5 +1,7 @@
 #pragma once
 
+#define STYLIZER_API_GLFW_AVAILABLE
+
 #include "api.hpp"
 
 // Modified from: https://github.com/eliemichel/glfw3webgpu/blob/main/glfw3webgpu.c
@@ -35,16 +37,16 @@
 #  include <GLFW/glfw3native.h>
 #endif
 
-namespace stylizer::api {
+namespace stylizer::api::glfw {
 
-	inline vec2u get_glfw_window_size(GLFWwindow* window) {
+	inline vec2u get_window_size(GLFWwindow* window) {
 		int x, y;
 		glfwGetWindowSize(window, &x, &y);
 		return {static_cast<size_t>(x), static_cast<size_t>(y)};
 	}
 
 template<stylizer::api::surface_concept Tsurface>
-Tsurface create_surface_from_glfw(GLFWwindow* window) {
+Tsurface create_surface(GLFWwindow* window) {
 #ifndef __EMSCRIPTEN__
 	switch (glfwGetPlatform()) {
 #else
