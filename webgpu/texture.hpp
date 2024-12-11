@@ -27,7 +27,7 @@ namespace stylizer::api::webgpu {
 			out.texture_ = device.device_.createTexture(WGPUTextureDescriptor{
 				.label = cstring_from_view(config.label),
 				.usage = to_wgpu_texture(config.usage),
-				.dimension = config.size.y > 0 ? config.size.z > 0 ? wgpu::TextureDimension::_3D : wgpu::TextureDimension::_2D : wgpu::TextureDimension::_1D,
+				.dimension = config.size.y > 1 ? config.size.z > 1 ? wgpu::TextureDimension::_3D : wgpu::TextureDimension::_2D : wgpu::TextureDimension::_1D,
 				.size = {static_cast<uint32_t>(config.size.x), static_cast<uint32_t>(config.size.y), static_cast<uint32_t>(config.size.z)},
 				.format = format,
 				.mipLevelCount = config.mip_levels,
@@ -57,6 +57,32 @@ namespace stylizer::api::webgpu {
 			if(view) return view;
 			return view = create_view(device, {.aspect = default_aspect(texture_format())});
 		}
+
+
+
+
+		vec3u size() const override {
+			auto& texture = const_cast<wgpu::Texture&>(texture_);
+			return {texture.getWidth(), texture.getHeight(), texture.getDepthOrArrayLayers()};
+		}
+
+		enum texture_format texture_format() const override {
+			return from_wgpu(const_cast<wgpu::Texture&>(texture_).getFormat());
+		}
+
+		enum usage usage() const override {
+			return from_wgpu(const_cast<wgpu::Texture&>(texture_).getUsage());
+		}
+
+		uint32_t mip_levels() const override {
+			return const_cast<wgpu::Texture&>(texture_).getMipLevelCount();
+		}
+		uint32_t samples() const override {
+			return const_cast<wgpu::Texture&>(texture_).getSampleCount();
+		}
+
+
+
 
 		api::texture& configure_sampler(api::device& device_, const sampler_config& config = {}) override {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
@@ -98,6 +124,43 @@ namespace stylizer::api::webgpu {
 
 			return *this;
 		}
+
+
+		static inline void copy_texture_to_texture_impl(wgpu::CommandEncoder e, webgpu::texture& destination, const webgpu::texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) {
+			vec3u max_origin = {std::max(destination_origin.x, source_origin.x), std::max(destination_origin.y, source_origin.y), std::max(destination_origin.z, source_origin.z)};
+			vec3u destSize = destination.size();
+			vec3u srcSize = source.size();
+			vec3u minSize = {std::max(destSize.x, srcSize.x), std::max(destSize.y, srcSize.y), std::max(destSize.z, srcSize.z)};
+			vec3u extent = extent_override.value_or(vec3u{minSize.x - max_origin.x, minSize.y - max_origin.y, minSize.z - max_origin.z});
+			size_t mip_levels = mip_levels_override.value_or(std::min(destination.mip_levels(), source.mip_levels()) - min_mip_level);
+
+			for(uint32_t mip = min_mip_level; mip < mip_levels; ++mip)
+				e.copyTextureToTexture(WGPUImageCopyTexture{
+					.texture = source.texture_,
+					.mipLevel = mip,
+					.origin = {static_cast<uint32_t>(source_origin.x), static_cast<uint32_t>(source_origin.y), static_cast<uint32_t>(source_origin.z)},
+					.aspect = wgpu::TextureAspect::All
+				}, WGPUImageCopyTexture{
+					.texture = destination.texture_,
+					.mipLevel = mip,
+					.origin = {static_cast<uint32_t>(destination_origin.x), static_cast<uint32_t>(destination_origin.y), static_cast<uint32_t>(destination_origin.z)},
+					.aspect = wgpu::TextureAspect::All
+				}, {static_cast<uint32_t>(extent.x), static_cast<uint32_t>(extent.y), static_cast<uint32_t>(extent.z)});
+		}
+
+		api::texture& copy_from(api::device& device_, const api::texture& source_, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override {
+			auto& device = confirm_wgpu_type<webgpu::device>(device_);
+			auto& source = confirm_wgpu_type<webgpu::texture>(source_);
+			auto_release e = device.device_.createCommandEncoder();
+			copy_texture_to_texture_impl(e, *this, source, destination_origin, source_origin, extent_override, min_mip_level, mip_levels_override);
+			auto_release commands = e.finish();
+			device.queue.submit(commands);
+			return *this;
+		}
+
+
+		api::texture& generate_mipmaps(api::device& device, size_t first_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override;
+
 
 		void release() override {
 			if(texture_) std::exchange(texture_, nullptr).release();
