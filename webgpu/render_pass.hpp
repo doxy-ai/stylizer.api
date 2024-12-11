@@ -96,8 +96,13 @@ namespace stylizer::api::webgpu {
 			return command_encoder().dispatch_workgroups(device, workgroups);
 		}
 
-		render_pass& bind_render_pipeline(const api::render_pipeline& pipeline) override;
-		render_pass& draw(size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) override {
+		render_pass& bind_render_pipeline(api::device& device, const api::render_pipeline& pipeline) override;
+		render_pass& bind_render_group(api::device& device, const api::bind_group& group_, std::optional<size_t> index_override = {}) override {
+			auto& group = confirm_wgpu_type<webgpu::bind_group>(group_);
+			pass.setBindGroup(index_override.value_or(group.index), group.group, 0, nullptr);
+			return *this;
+		}
+		render_pass& draw(api::device& device, size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) override {
 			render_used = true;
 			pass.draw(vertex_count, instance_count, first_vertex, first_instance);
 			return *this;
