@@ -323,6 +323,7 @@ namespace stylizer::api {
 		virtual texture& write(device& device, std::span<const std::byte> data, const data_layout& layout, vec3u extent, vec3u origin = {0, 0, 0}, size_t mip_level = 0) = 0;
 
 		virtual texture& copy_from(device& device, const texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
+		virtual texture& blit_from(device& device, const texture& source, std::optional<color32> clear_value = {}, struct render_pipeline* render_pipeline_override = nullptr, std::optional<size_t> vertex_count_override = {}) = 0;
 
 		virtual texture& generate_mipmaps(device& device, size_t first_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
 
@@ -497,10 +498,11 @@ namespace stylizer::api {
 		using depth_stencil_attachment = api::depth_stencil_attachment;
 		using pipeline = struct render_pipeline;
 
-		virtual render_pass& bind_render_pipeline(const render_pipeline& pipeline) = 0;
+		virtual render_pass& bind_render_pipeline(device& device, const render_pipeline& pipeline) = 0;
+		virtual render_pass& bind_render_group(device& device, const bind_group& group, std::optional<size_t> index_override = {}) = 0;
 		virtual render_pass& bind_vertex_buffer(device& device, size_t slot, const buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
 		virtual render_pass& bind_index_buffer(device& device, const buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
-		virtual render_pass& draw(size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) = 0;
+		virtual render_pass& draw(device& device, size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) = 0;
 		virtual render_pass& draw_indexed(device& device, size_t index_count, size_t instance_count = 1, size_t first_index = 0, size_t base_vertex = 0, size_t first_instance = 0) = 0;
 
 		virtual command_buffer& end(temporary_return_t, device& device) = 0;
