@@ -208,7 +208,7 @@ namespace stylizer::api {
 	};
 
 	struct texture {
-		using format = texture_format;
+		using format = api::texture_format;
 
 		struct create_config {
 			const std::string_view label = "Stylizer Texture";
@@ -244,8 +244,18 @@ namespace stylizer::api {
 			comparison_function depth_comparison_function = comparison_function::Less;
 		};
 
+		virtual vec3u size() const = 0;
+		virtual format texture_format() const = 0;
+		virtual enum usage usage() const = 0;
+		virtual uint32_t mip_levels() const = 0;
+		virtual uint32_t samples() const = 0;
+
 		virtual texture& configure_sampler(device& device, const sampler_config& config) = 0;
 		virtual texture& write(device& device, std::span<const std::byte> data, const data_layout& layout, vec3u extent, vec3u origin = {0, 0, 0}, size_t mip_level = 0) = 0;
+
+		virtual texture& copy_from(device& device, const texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
+
+		virtual texture& generate_mipmaps(device& device, size_t first_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
 
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(texture);
@@ -379,6 +389,7 @@ namespace stylizer::api {
 
 		// TODO: Copy functions
 		virtual command_encoder& copy_buffer_to_buffer(device& device, buffer& destination, const buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) = 0;
+		virtual command_encoder& copy_texture_to_texture(device& device, texture& destionation, const texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
 
 		virtual command_encoder& bind_compute_pipeline(device& device, const compute_pipeline& pipeline) = 0;
 		virtual command_encoder& bind_compute_group(device& device, const bind_group& group, std::optional<size_t> index_override = {}) = 0;
