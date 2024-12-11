@@ -120,6 +120,20 @@ namespace stylizer::api::webgpu {
 			throw error("Invalid Texture Usage(s): " + std::string(magic_enum::enum_flags_name(usage)));
 		return out;
 	}
+	inline usage from_wgpu(wgpu::TextureUsageFlags usage) {
+		auto out = usage::Invalid;
+		if(usage & wgpu::TextureUsage::CopySrc)
+			out |= usage::CopySource;
+		if(usage & wgpu::TextureUsage::CopyDst)
+			out |= usage::CopyDestination;
+		if(usage & wgpu::TextureUsage::RenderAttachment)
+			out |= usage::RenderAttachment;
+		if(usage & wgpu::TextureUsage::TextureBinding)
+			out |= usage::TextureBinding;
+		// TODO: Need some form of validation?
+		return out;
+	}
+
 	inline wgpu::BufferUsageFlags to_wgpu_buffer(usage usage) {
 		wgpu::BufferUsageFlags out = {};
 		if((usage & usage::CopySource) > usage::Invalid) {
