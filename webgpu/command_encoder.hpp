@@ -3,6 +3,7 @@
 #include "bind_group.hpp"
 #include "command_buffer.hpp"
 #include "compute_pipeline.hpp"
+#include "texture.hpp"
 
 namespace stylizer::api::webgpu {
 	struct command_encoder: public api::command_encoder { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_encoder);
@@ -56,6 +57,13 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 
+		api::command_encoder& copy_texture_to_texture(api::device& device_, api::texture& destionation, const api::texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override {
+			auto& device = confirm_wgpu_type<webgpu::device>(device_);
+			auto& dest = confirm_wgpu_type<webgpu::texture>(destionation);
+			auto& src = confirm_wgpu_type<webgpu::texture>(source);
+			webgpu::texture::copy_texture_to_texture_impl(maybe_create_pre_encoder(device), dest, src, destination_origin, source_origin, extent_override, min_mip_level, mip_levels_override);
+			return *this;
+		}
 
 
 

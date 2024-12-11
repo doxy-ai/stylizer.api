@@ -5,6 +5,7 @@
 #include <iostream>
 
 int main() {
+	using namespace stylizer::api::operators;
 	glfwInit();
 
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -14,7 +15,9 @@ int main() {
 	stylizer::auto_release surface = stylizer::api::glfw::create_surface<stylizer::api::webgpu::surface>(window);
 	stylizer::auto_release device = stylizer::api::webgpu::device::create_default({.high_performance = true, .compatible_surface = &surface});
 
-	surface.configure(device, surface.determine_optimal_config(device, stylizer::api::glfw::get_window_size(window)));
+	auto config = surface.determine_optimal_config(device, stylizer::api::glfw::get_window_size(window));
+	config.usage |= stylizer::api::usage::CopySource;
+	surface.configure(device, config);
 
 	std::array<stylizer::api::color8, 640 * 480> color_data; color_data.fill({1, 1, 1, 1});
 	constexpr size_t color8size = sizeof(stylizer::api::color8);
@@ -52,7 +55,6 @@ fn fragment() -> @location(0) vec4f {
 	);
 
 	{
-		using namespace stylizer::api::operators;
 		std::array<float, 5> data = {1, 2, 3, 4, 5};
 		stylizer::auto_release buffer = device.create_and_write_buffer(stylizer::api::usage::Storage | stylizer::api::usage::CopySource, byte_span<float>(data));
 		stylizer::auto_release shader = stylizer::api::webgpu::shader::create_from_source(device, stylizer::api::webgpu::shader::language::WGSL, R"(
