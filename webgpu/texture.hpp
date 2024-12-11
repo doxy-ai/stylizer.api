@@ -158,6 +158,8 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 
+		api::texture& blit_from(api::device& device, const api::texture& source, std::optional<color32> clear_value = {}, api::render_pipeline* render_pipeline_override = nullptr, std::optional<size_t> vertex_count_override = {}) override;
+
 
 		api::texture& generate_mipmaps(api::device& device, size_t first_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override;
 

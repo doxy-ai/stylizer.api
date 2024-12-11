@@ -1,11 +1,42 @@
 #include "texture.hpp"
-#include "command_encoder.hpp"
-#include "common.hpp"
-#include "shader.hpp"
-#include "compute_pipeline.hpp"
-#include <cstdint>
+#include "render_pipeline.hpp"
 
 namespace stylizer::api::webgpu {
+	api::texture& texture::blit_from(api::device& device_, const api::texture& source_, std::optional<color32> clear_value /* = {} */, api::render_pipeline* pipeline_override /* = nullptr */, std::optional<size_t> vertex_count_override /* = {} */) {
+		auto& device = confirm_wgpu_type<webgpu::device>(device_);
+		auto& source = confirm_wgpu_type<webgpu::texture>(source_);
+		assert(source.sampler);
+
+		auto attachment = std::array<color_attachment, 1>{color_attachment{
+			.texture = this,
+			.clear_value = clear_value
+		}};
+		webgpu::render_pipeline* pipeline; bool release_pipeline = false;
+		if(!pipeline_override) {
+			static auto_release<shader> shader;
+			shader = webgpu::shader::create_from_wgsl(device, std::string{fullscreen_triangle_vertex_shader} + R"_(
+@fragment
+fn fragment(vert: vertex_output) -> @location(0) vec4f {
+	return textureSample(texture, sampler_, vert.uv);
+})_");
+			pipeline = &confirm_wgpu_type<webgpu::render_pipeline>(device.create_render_pipeline(temporary_return, {
+				{shader::stage::Vertex, {&shader, "vertex"}},
+				{shader::stage::Fragment, {&shader, "fragment"}},
+			}, attachment, {}, {}, "Stylizer Blit Pipeline"));
+			release_pipeline = true;
+		} else pipeline = &confirm_wgpu_type<webgpu::render_pipeline>(*pipeline_override);
+
+		device.create_render_pass(attachment, {}, true, "Stylizer Blit Renderpass")
+			.bind_render_pipeline(device, *pipeline)
+			.bind_render_group(device, pipeline->create_bind_group(device, 0, std::array<bind_group::binding, 1>{
+				bind_group::texture_binding{&source}
+			}))
+			.draw(device, vertex_count_override.value_or(3))
+			.one_shot_submit(device);
+		if(release_pipeline) pipeline->release();
+		return *this;
+	}
+
 	std::string format_to_string(WGPUTextureFormat format) {
 		switch(static_cast<wgpu::TextureFormat>(format)) {
 			case WGPUTextureFormat_Undefined: return "undefined";

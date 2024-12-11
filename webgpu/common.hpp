@@ -37,6 +37,31 @@ namespace stylizer::api::webgpu {
 		return instance;
 	}
 
+	constexpr static std::string_view fullscreen_triangle_vertex_shader = R"_(
+struct vertex_output {
+	@builtin(position) raw_position: vec4f,
+	@location(0) uv: vec2f
+};
+
+@group(0) @binding(0) var texture: texture_2d<f32>;
+@group(0) @binding(1) var sampler_: sampler;
+
+@vertex
+fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
+	switch vertex_index {
+		case 0u: {
+			return vertex_output(vec4f(-1.0, -3.0, .99, 1.0), vec2f(0.0, 2.0));
+		}
+		case 1u: {
+			return vertex_output(vec4f(3.0, 1.0, .99, 1.0), vec2f(2.0, 0.0));
+		}
+		case 2u, default: {
+			return vertex_output(vec4f(-1.0, 1.0, .99, 1.0), vec2f(0.0));
+		}
+	}
+}
+)_";
+
 	inline wgpu::Color to_wgpu(color32 color) {
 		return {color.r, color.g, color.b, color.a};
 	}

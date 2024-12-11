@@ -98,8 +98,13 @@ namespace stylizer::api::webgpu {
 			return super::dispatch_workgroups(device, workgroups);
 		}
 
-
-		render_pass& bind_render_pipeline(const api::render_pipeline& pipeline) override;
+		render_pass& bind_render_pipeline(api::device& device, const api::render_pipeline& pipeline) override;
+		render_pass& bind_render_group(api::device& device, const api::bind_group& group_, std::optional<size_t> index_override = {}) override {
+			render_used = true;
+			auto& group = confirm_wgpu_type<webgpu::bind_group>(group_);
+			pass.setBindGroup(index_override.value_or(group.index), group.group, 0, nullptr);
+			return *this;
+		}
 		render_pass& bind_vertex_buffer(api::device& device, size_t slot, const api::buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) override {
 			render_used = true;
 			auto& buffer = confirm_wgpu_type<webgpu::buffer>(buffer_);
@@ -112,7 +117,7 @@ namespace stylizer::api::webgpu {
 			pass.setIndexBuffer(buffer.buffer_, wgpu::IndexFormat::Uint32, offset, size_override.value_or(buffer.size()));
 			return *this;
 		}
-		render_pass& draw(size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) override {
+		render_pass& draw(api::device& device, size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) override {
 			render_used = true;
 			pass.draw(vertex_count, instance_count, first_vertex, first_instance);
 			return *this;
