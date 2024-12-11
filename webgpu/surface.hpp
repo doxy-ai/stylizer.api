@@ -34,7 +34,7 @@ namespace stylizer::api::webgpu {
 		}
 		inline operator bool() { return surface_; }
 
-		static surface create_from_emscripten(std::string_view canvas_id = "canvas") {
+		static surface create_from_emscripten(const std::string_view canvas_id = "canvas") {
 #ifdef STYLIZER_API_SURFACE_SUPPORT_EMSCRIPTEN
 #  ifdef WEBGPU_BACKEND_DAWN
 			WGPUSurfaceSourceCanvasHTMLSelector_Emscripten fromCanvasHTMLSelector;

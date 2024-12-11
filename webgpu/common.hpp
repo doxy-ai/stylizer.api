@@ -16,7 +16,7 @@
 namespace stylizer::api::webgpu {
 
 	#define STYLIZER_API_WGPU_TYPE "WGP"
-	constexpr static std::string_view type_string = STYLIZER_API_WGPU_TYPE;
+	constexpr static const std::string_view type_string = STYLIZER_API_WGPU_TYPE;
 
 	template<typename Tto, typename Tfrom>
 	inline Tto& confirm_wgpu_type(Tfrom& ref) {
