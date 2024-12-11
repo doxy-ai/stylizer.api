@@ -91,8 +91,8 @@ fn fragment() -> @location(0) vec4f {
 			stylizer::auto_release texture = surface.next_texture(device);
 			color_attachments[0].texture = &texture;
 			device.create_render_pass(color_attachments, {}, true)
-				.bind_render_pipeline(pipeline)
-				.draw(3)
+				.bind_render_pipeline(device, pipeline)
+				.draw(device, 3)
 				.one_shot_submit(device);
 			surface.present(device);
 		} catch(stylizer::api::surface::texture_acquisition_failed fail) {
