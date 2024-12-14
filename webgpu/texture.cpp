@@ -30,7 +30,7 @@ fn fragment(vert: vertex_output) -> @location(0) vec4f {
 			.bind_render_pipeline(device, *pipeline)
 			.bind_render_group(device, pipeline->create_bind_group(device, 0, std::array<bind_group::binding, 1>{
 				bind_group::texture_binding{&source}
-			}))
+			}), true)
 			.draw(device, vertex_count_override.value_or(3))
 			.one_shot_submit(device);
 		if(release_pipeline) pipeline->release();
@@ -184,7 +184,7 @@ fn compute(@builtin(global_invocation_id) id: vec3<u32>) {
 				.bind_compute_pipeline(device, pipeline)
 				.bind_compute_group(device, pipeline.create_bind_group(device, 0, std::array<bind_group::binding, 2>{
 					bind_group::texture_binding{&textures[0], false}, bind_group::texture_binding{&textures[1], false}
-				}))
+				}), true)
 				.dispatch_workgroups(device, workgroups)
 				.one_shot_submit(device);
 
