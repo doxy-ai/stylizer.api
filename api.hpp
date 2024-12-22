@@ -2,6 +2,7 @@
 
 #include "config.h"
 
+#include <functional>
 #include <future>
 #include <optional>
 #include <slcross.hpp>
@@ -15,6 +16,20 @@
 #include "spans.hpp"
 
 namespace stylizer {
+	template<typename... Args>
+	struct event: public std::vector<std::function<void(Args...)>> {
+		void operator()(Args... args) {
+			for(auto& f: *this) f(std::forward<Args>(args)...);
+		}
+	};
+	template<>
+	struct event<void>: public std::vector<std::function<void()>> {
+		void operator()() {
+			for(auto& f: *this) f();
+		}
+	};
+
+
 	template<typename T>
 	concept releasable = requires(T t) {
 		{t.release()};
@@ -432,6 +447,10 @@ namespace stylizer::api {
 	};
 
 	struct command_buffer {
+		event<void> deferred_to_release;
+		template<std::convertible_to<std::function<void>> Tfunc>
+		command_buffer& defer(Tfunc&& func) { deferred_to_release.emplace_back(std::move(func)); return *this; }
+
 		virtual void submit(device& device, bool release = true) = 0;
 
 		virtual operator bool() const { return false; }
@@ -477,12 +496,14 @@ namespace stylizer::api {
 	struct command_encoder {
 		using pipeline = compute_pipeline;
 
+		virtual command_encoder& defer(std::function<void()>&& func) = 0;
+
 		// TODO: Copy functions
 		virtual command_encoder& copy_buffer_to_buffer(device& device, buffer& destination, const buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) = 0;
 		virtual command_encoder& copy_texture_to_texture(device& device, texture& destination, const texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
 
-		virtual command_encoder& bind_compute_pipeline(device& device, const compute_pipeline& pipeline) = 0;
-		virtual command_encoder& bind_compute_group(device& device, const bind_group& group, std::optional<size_t> index_override = {}) = 0;
+		virtual command_encoder& bind_compute_pipeline(device& device, const compute_pipeline& pipeline, bool release_on_submit = false) = 0;
+		virtual command_encoder& bind_compute_group(device& device, const bind_group& group, bool release_on_submit = false, std::optional<size_t> index_override = {}) = 0;
 		virtual command_encoder& dispatch_workgroups(device& device, vec3u workgroups) = 0;
 
 		virtual command_buffer& end(temporary_return_t, device& device) = 0;
@@ -495,6 +516,8 @@ namespace stylizer::api {
 
 	template<typename T>
 	concept command_encoder_concept = std::derived_from<T, command_encoder> && requires(T t, device device, bool one_shot, const std::string_view label) {
+		{ t.deferred_to_release } -> std::convertible_to<event<void>>;
+
 		{ T::create(device, one_shot, label) } -> std::convertible_to<T>;
 	};
 
@@ -511,8 +534,8 @@ namespace stylizer::api {
 		using depth_stencil_attachment = api::depth_stencil_attachment;
 		using pipeline = struct render_pipeline;
 
-		virtual render_pass& bind_render_pipeline(device& device, const render_pipeline& pipeline) = 0;
-		virtual render_pass& bind_render_group(device& device, const bind_group& group, std::optional<size_t> index_override = {}) = 0;
+		virtual render_pass& bind_render_pipeline(device& device, const render_pipeline& pipeline, bool release_on_submit = false) = 0;
+		virtual render_pass& bind_render_group(device& device, const bind_group& group, bool release_on_submit = false, std::optional<size_t> index_override = {}) = 0;
 		virtual render_pass& bind_vertex_buffer(device& device, size_t slot, const buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
 		virtual render_pass& bind_index_buffer(device& device, const buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
 		virtual render_pass& draw(device& device, size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) = 0;
@@ -681,7 +704,7 @@ namespace stylizer::api {
 		auto& pipeline = device.create_compute_pipeline(temporary_return, entry_point);
 		device.create_command_encoder(temporary_return, true)
 			.bind_compute_pipeline(device, pipeline)
-			.bind_compute_group(device, pipeline.create_bind_group(temporary_return, device, 0, bindings))
+			.bind_compute_group(device, pipeline.create_bind_group(temporary_return, device, 0, bindings), true)
 			.dispatch_workgroups(device, workgroups)
 			.one_shot_submit(device);
 		pipeline.release();

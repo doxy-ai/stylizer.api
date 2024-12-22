@@ -81,6 +81,10 @@ namespace stylizer::api::webgpu {
 			return out;
 		}
 
+		api::command_encoder& defer(std::function<void()>&& func) override {
+			return super::defer(std::move(func));
+		}
+
 		api::command_encoder& copy_buffer_to_buffer(api::device& device, api::buffer& destination, const api::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
 			return super::copy_buffer_to_buffer(device, destination, source, destination_offset, source_offset, size_override);
 		}
@@ -88,21 +92,23 @@ namespace stylizer::api::webgpu {
 			return super::copy_texture_to_texture(device, destination, source, destination_origin, source_origin, extent_override, min_mip_level, mip_levels_override);
 		}
 
-		api::command_encoder& bind_compute_pipeline(api::device& device, const api::compute_pipeline& pipeline) override {
-			return super::bind_compute_pipeline(device, pipeline);
+		api::command_encoder& bind_compute_pipeline(api::device& device, const api::compute_pipeline& pipeline, bool release_on_submit = false) override {
+			return super::bind_compute_pipeline(device, pipeline, release_on_submit);
 		}
-		api::command_encoder& bind_compute_group(api::device& device, const api::bind_group& group, std::optional<size_t> index_override = {}) override {
-			return super::bind_compute_group(device, group, index_override);
+		api::command_encoder& bind_compute_group(api::device& device, const api::bind_group& group, bool release_on_submit = false, std::optional<size_t> index_override = {}) override {
+			return super::bind_compute_group(device, group, release_on_submit, index_override);
 		}
 		api::command_encoder& dispatch_workgroups(api::device& device, vec3u workgroups) override {
 			return super::dispatch_workgroups(device, workgroups);
 		}
 
-		render_pass& bind_render_pipeline(api::device& device, const api::render_pipeline& pipeline) override;
-		render_pass& bind_render_group(api::device& device, const api::bind_group& group_, std::optional<size_t> index_override = {}) override {
-			render_used = true;
+		render_pass& bind_render_pipeline(api::device& device, const api::render_pipeline& pipeline, bool release_on_submit = false) override;
+		render_pass& bind_render_group(api::device& device, const api::bind_group& group_, bool release_on_submit = false, std::optional<size_t> index_override = {}) override {
 			auto& group = confirm_wgpu_type<webgpu::bind_group>(group_);
 			pass.setBindGroup(index_override.value_or(group.index), group.group, 0, nullptr);
+			if(release_on_submit) deferred_to_release.emplace_back([group = std::move(group)]() mutable {
+				group.release();
+			});
 			return *this;
 		}
 		render_pass& bind_vertex_buffer(api::device& device, size_t slot, const api::buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) override {
@@ -137,6 +143,7 @@ namespace stylizer::api::webgpu {
 				pass.end();
 				out.render = render_encoder.finish();
 			}
+			out.deferred_to_release = std::move(deferred_to_release);
 			return out;
 		}
 		command_buffer& end(temporary_return_t, api::device& device) override {
@@ -158,6 +165,7 @@ namespace stylizer::api::webgpu {
 			// TODO: ^^^ Calling release on command encoder infinitely recurses?
 			if(render_encoder) std::exchange(render_encoder, nullptr).release();
 			if(pass) std::exchange(pass, nullptr).release();
+			deferred_to_release();
 		}
 	};
 	static_assert(render_pass_concept<render_pass>);

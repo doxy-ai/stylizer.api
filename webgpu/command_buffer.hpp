@@ -10,6 +10,7 @@ namespace stylizer::api::webgpu {
 
 		command_buffer(command_buffer&& o) { *this = std::move(o); }
 		command_buffer& operator=(command_buffer&& o) {
+			deferred_to_release = std::move(o.deferred_to_release);
 			pre = std::exchange(o.pre, nullptr);
 			compute = std::exchange(o.compute, nullptr);
 			render = std::exchange(o.render, nullptr);
@@ -32,6 +33,7 @@ namespace stylizer::api::webgpu {
 			if(pre) std::exchange(pre, nullptr).release();
 			if(compute) std::exchange(compute, nullptr).release();
 			if(render) std::exchange(render, nullptr).release();
+			deferred_to_release();
 		}
 	};
 }

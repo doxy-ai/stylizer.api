@@ -8,6 +8,7 @@
 namespace stylizer::api::webgpu {
 	struct command_encoder: public api::command_encoder { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_encoder);
 		char type[4] = STYLIZER_API_WGPU_TYPE;
+		event<void> deferred_to_release;
 		wgpu::CommandEncoder pre_encoder = nullptr;
 		wgpu::CommandEncoder compute_encoder = nullptr;
 		wgpu::ComputePassEncoder compute_pass = nullptr;
@@ -16,6 +17,7 @@ namespace stylizer::api::webgpu {
 
 		inline command_encoder(command_encoder&& o) { *this = std::move(o); }
 		inline command_encoder& operator=(command_encoder&& o) {
+			deferred_to_release = std::move(o.deferred_to_release);
 			pre_encoder = std::exchange(o.pre_encoder, nullptr);
 			compute_encoder = std::exchange(o.compute_encoder, nullptr);
 			compute_pass = std::exchange(o.compute_pass, nullptr);
@@ -33,6 +35,10 @@ namespace stylizer::api::webgpu {
 			out.one_shot = one_shot;
 			return out;
 		}
+
+		template<typename Tfunc>
+		webgpu::command_encoder& defer(Tfunc&& func) { deferred_to_release.emplace_back(std::move(func)); return *this; }
+		api::command_encoder& defer(std::function<void()>&& func) override { deferred_to_release.emplace_back(std::move(func)); return *this; }
 
 	protected:
 		wgpu::CommandEncoder maybe_create_pre_encoder(webgpu::device& device) {
@@ -67,14 +73,21 @@ namespace stylizer::api::webgpu {
 
 
 
-		api::command_encoder& bind_compute_pipeline(api::device& device, const api::compute_pipeline& pipeline) override {
-			maybe_create_compute_pass(confirm_wgpu_type<webgpu::device>(device)).setPipeline(confirm_wgpu_type<webgpu::compute_pipeline>(pipeline).pipeline);
+		api::command_encoder& bind_compute_pipeline(api::device& device, const api::compute_pipeline& pipeline_, bool release_on_submit = false) override {
+			auto& pipeline = confirm_wgpu_type<webgpu::compute_pipeline>(pipeline_);
+			maybe_create_compute_pass(confirm_wgpu_type<webgpu::device>(device)).setPipeline(pipeline.pipeline);
+			if(release_on_submit) deferred_to_release.emplace_back([pipeline = std::move(pipeline)]() mutable {
+				pipeline.release();
+			});
 			return *this;
 		}
 
-		api::command_encoder& bind_compute_group(api::device& device, const api::bind_group& group_, std::optional<size_t> index_override = {}) override {
+		api::command_encoder& bind_compute_group(api::device& device, const api::bind_group& group_, bool release_on_submit = false, std::optional<size_t> index_override = {}) override {
 			auto& group = confirm_wgpu_type<webgpu::bind_group>(group_);
 			maybe_create_compute_pass(confirm_wgpu_type<webgpu::device>(device)).setBindGroup(index_override.value_or(group.index), group.group, 0, nullptr);
+			if(release_on_submit) deferred_to_release.emplace_back([group = std::move(group)]() mutable {
+				group.release();
+			});
 			return *this;
 		}
 
@@ -88,6 +101,7 @@ namespace stylizer::api::webgpu {
 			command_buffer out;
 			if(pre_encoder) out.pre = pre_encoder.finish();
 			if(compute_encoder) out.compute = compute_encoder.finish();
+			out.deferred_to_release = std::move(deferred_to_release);
 			return out;
 		}
 		command_buffer& end(temporary_return_t, api::device& device) override {
@@ -106,6 +120,7 @@ namespace stylizer::api::webgpu {
 			if(pre_encoder) std::exchange(pre_encoder, nullptr).release();
 			if(compute_encoder) std::exchange(compute_encoder, nullptr).release();
 			if(compute_pass) std::exchange(compute_pass, nullptr).release();
+			deferred_to_release();
 		}
 	};
 	static_assert(command_encoder_concept<command_encoder>);
