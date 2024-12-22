@@ -125,6 +125,18 @@ namespace stylizer::api::webgpu {
 			out |= wgpu::BufferUsage::Storage;
 			usage &= ~usage::Storage;
 		}
+		if((usage & usage::Uniform) > usage::Invalid) {
+			out |= wgpu::BufferUsage::Uniform;
+			usage &= ~usage::Uniform;
+		}
+		if((usage & usage::MapRead) > usage::Invalid) {
+			out |= wgpu::BufferUsage::MapRead;
+			usage &= ~usage::MapRead;
+		}
+		if((usage & usage::MapWrite) > usage::Invalid) {
+			out |= wgpu::BufferUsage::MapWrite;
+			usage &= ~usage::MapWrite;
+		}
 		if(usage > usage::Invalid)
 			throw error("Invalid Buffer Usage(s): " + std::string(magic_enum::enum_flags_name(usage)));
 		return out;
@@ -164,8 +176,8 @@ namespace stylizer::api::webgpu {
 		throw error("Unknown Address Mode: " + std::string(magic_enum::enum_name(mode)));
 	}
 
-	inline wgpu::VertexFormat to_wgpu(enum graphics_pipeline::config::vertex_buffer_layout::attribute::format format) {
-		using fmt = enum graphics_pipeline::config::vertex_buffer_layout::attribute::format;
+	inline wgpu::VertexFormat to_wgpu(enum render_pipeline::config::vertex_buffer_layout::attribute::format format) {
+		using fmt = enum render_pipeline::config::vertex_buffer_layout::attribute::format;
 		switch(format){
 			case fmt::f32x1: return wgpu::VertexFormat::Float32;
 			case fmt::f32x2: return wgpu::VertexFormat::Float32x2;
@@ -183,23 +195,23 @@ namespace stylizer::api::webgpu {
 		STYLIZER_API_THROW("Unknown Vertex Format: " + std::string(magic_enum::enum_name(format)));
 	}
 
-	inline wgpu::PrimitiveTopology to_wgpu(enum graphics_pipeline::config::primitive_topology topology) {
+	inline wgpu::PrimitiveTopology to_wgpu(enum render_pipeline::config::primitive_topology topology) {
 		switch(topology){
-			case graphics_pipeline::config::primitive_topology::PointList: return wgpu::PrimitiveTopology::PointList;
-			case graphics_pipeline::config::primitive_topology::LineList: return wgpu::PrimitiveTopology::LineList;
-			case graphics_pipeline::config::primitive_topology::LineStrip: return wgpu::PrimitiveTopology::LineStrip;
-			case graphics_pipeline::config::primitive_topology::TriangleList: return wgpu::PrimitiveTopology::TriangleList;
-			case graphics_pipeline::config::primitive_topology::TriangleStrip: return wgpu::PrimitiveTopology::TriangleStrip;
+			case render_pipeline::config::primitive_topology::PointList: return wgpu::PrimitiveTopology::PointList;
+			case render_pipeline::config::primitive_topology::LineList: return wgpu::PrimitiveTopology::LineList;
+			case render_pipeline::config::primitive_topology::LineStrip: return wgpu::PrimitiveTopology::LineStrip;
+			case render_pipeline::config::primitive_topology::TriangleList: return wgpu::PrimitiveTopology::TriangleList;
+			case render_pipeline::config::primitive_topology::TriangleStrip: return wgpu::PrimitiveTopology::TriangleStrip;
 		}
 		throw error("Unknown Primitive Topology: " + std::string(magic_enum::enum_name(topology)));
 	}
 
-	inline wgpu::CullMode to_wgpu(enum graphics_pipeline::config::cull_mode mode) {
+	inline wgpu::CullMode to_wgpu(enum render_pipeline::config::cull_mode mode) {
 		switch(mode){
-			case graphics_pipeline::config::cull_mode::Back: return wgpu::CullMode::Back;
-			case graphics_pipeline::config::cull_mode::Front: return wgpu::CullMode::Front;
-			// case graphics_pipeline::config::cull_mode::Both: throw
-			case graphics_pipeline::config::cull_mode::Neither: return wgpu::CullMode::None;
+			case render_pipeline::config::cull_mode::Back: return wgpu::CullMode::Back;
+			case render_pipeline::config::cull_mode::Front: return wgpu::CullMode::Front;
+			// case render_pipeline::config::cull_mode::Both: throw
+			case render_pipeline::config::cull_mode::Neither: return wgpu::CullMode::None;
 		}
 		throw error("Unknown Cull Mode: " + std::string(magic_enum::enum_name(mode)));
 	}

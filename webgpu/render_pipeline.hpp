@@ -1,24 +1,23 @@
 #pragma once
 
-#include "cstring_from_view.hpp"
 #include "render_pass.hpp"
 #include "shader.hpp"
 
 namespace stylizer::api::webgpu {
-	struct graphics_pipeline: public api::graphics_pipeline { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(graphics_pipeline);
+	struct render_pipeline: public api::render_pipeline { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(render_pipeline);
 		char type[4] = STYLIZER_API_WGPU_TYPE;
 		wgpu::RenderPipeline pipeline = nullptr;
 
-		graphics_pipeline(graphics_pipeline&& o) { *this = std::move(o); }
-		graphics_pipeline& operator=(graphics_pipeline&& o) {
+		render_pipeline(render_pipeline&& o) { *this = std::move(o); }
+		render_pipeline& operator=(render_pipeline&& o) {
 			pipeline = std::exchange(o.pipeline, nullptr);
 			return *this;
 		}
 		inline operator bool() { return pipeline; }
 
-		static graphics_pipeline create(api::device& device_, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const graphics_pipeline::config& config = {}, std::string_view label = "Stylizer Graphics Pipeline") {
-			static constexpr auto format_stride = [](enum graphics_pipeline::config::vertex_buffer_layout::attribute::format format) -> size_t {
-				using fmt = enum graphics_pipeline::config::vertex_buffer_layout::attribute::format;
+		static render_pipeline create(api::device& device_, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, std::string_view label = "Stylizer Graphics Pipeline") {
+			static constexpr auto format_stride = [](enum render_pipeline::config::vertex_buffer_layout::attribute::format format) -> size_t {
+				using fmt = enum render_pipeline::config::vertex_buffer_layout::attribute::format;
 				switch(format){
 				case fmt::f32x1: return sizeof(float) * 1;
 				case fmt::f32x2: return sizeof(float) * 2;
@@ -28,10 +27,10 @@ namespace stylizer::api::webgpu {
 				}
 			};
 
-			static constexpr auto topology_is_strip = [](enum graphics_pipeline::config::primitive_topology topology) -> bool {
+			static constexpr auto topology_is_strip = [](enum render_pipeline::config::primitive_topology topology) -> bool {
 				switch(topology){
-					case graphics_pipeline::config::primitive_topology::LineStrip:
-					case graphics_pipeline::config::primitive_topology::TriangleStrip: return true;
+					case render_pipeline::config::primitive_topology::LineStrip:
+					case render_pipeline::config::primitive_topology::TriangleStrip: return true;
 					default: return false;
 				}
 			};
@@ -123,7 +122,7 @@ namespace stylizer::api::webgpu {
 				};
 			}
 
-			graphics_pipeline out;
+			render_pipeline out;
 			out.pipeline = device.device_.createRenderPipeline(WGPURenderPipelineDescriptor{
 				.label = cstring_from_view(label),
 				.layout = nullptr,
@@ -150,14 +149,23 @@ namespace stylizer::api::webgpu {
 			return out;
 		}
 
-		static graphics_pipeline create_from_compatible_render_pass(api::device& device, const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const graphics_pipeline::config& config = {}, std::string_view label = "Stylizer Graphics Pipeline") {
+		static render_pipeline create_from_compatible_render_pass(api::device& device, const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const render_pipeline::config& config = {}, std::string_view label = "Stylizer Graphics Pipeline") {
 			auto& render_pass = confirm_wgpu_type<webgpu::render_pass>(compatible_render_pass);
 			return create(device, entry_points, render_pass.color_attachments, render_pass.depth_attachment, config, label);
+		}
+
+		webgpu::bind_group create_bind_group(api::device& device_, size_t index, std::span<const bind_group::binding> bindings) {
+			auto& device = confirm_wgpu_type<webgpu::device>(device_);
+			return webgpu::bind_group::internal_create(device, index, pipeline.getBindGroupLayout(index), bindings);
+		}
+		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings) override {
+			static webgpu::bind_group group_;
+			return group_ = create_bind_group(device, index, bindings);
 		}
 
 		void release() override {
 			if(pipeline) std::exchange(pipeline, nullptr).release();
 		}
 	};
-	static_assert(graphics_pipeline_concept<graphics_pipeline>);
+	static_assert(render_pipeline_concept<render_pipeline>);
 }
