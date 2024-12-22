@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../api.hpp"
-#include <string>
 
 #ifdef STYLIZER_API_IMPLEMENTATION
 #define WEBGPU_CPP_IMPLEMENTATION
@@ -30,6 +29,10 @@ namespace stylizer::api::webgpu {
 		static auto_release<wgpu::Instance> instance = wgpu::createInstance({});
 		return instance;
 	}
+
+	inline wgpu::Color to_wgpu(color32 color) { 
+		return {color.r, color.g, color.b, color.a};
+	} 
 
 	inline wgpu::CompositeAlphaMode to_wgpu(alpha_mode mode) {
 		switch(mode){
