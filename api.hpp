@@ -1,12 +1,8 @@
 #pragma once
 
 #include <concepts>
-#include <cstddef>
-#include <cassert>
 #include <span>
 #include <stdexcept>
-#include <string_view>
-#include <utility>
 #include <magic_enum/magic_enum.hpp>
 
 namespace stylizer {
@@ -118,24 +114,10 @@ namespace stylizer::api {
 	struct color32 { float r = 0, g = 0, b = 0, a = 1; };
 	struct color8 { uint8_t r = 0, g = 0, b = 0, a = 1; };
 
-	struct interface_t{};
-	constexpr static interface_t interface;
+	struct temporary_return_t{};
+	constexpr static temporary_return_t temporary_return;
 
-	struct device {
-		struct create_config {
-			std::string_view label = "Stylizer Device";
-			bool high_performance = true;
-			struct surface* compatible_surface = nullptr; // When set to null the device will be configured in headless mode
-		};
-
-		virtual void release(bool static_sub_objects = false) = 0;
-		STYLIZER_API_AS_METHOD(device);
-	};
-
-	template<typename T>
-	concept device_concept = std::derived_from<T, device> && requires(T t, device::create_config config) {
-		{ T::create_default(config) } -> std::convertible_to<T>;
-	};
+	struct device;
 
 	struct surface {
 		struct texture_aquisition_failed : public error { using error::error; };
@@ -157,7 +139,7 @@ namespace stylizer::api {
 		virtual config determine_optimal_config(device& device, vec2u size) { config out{}; out.size = size; return out; }
 		virtual surface& configure(device& device, const config& config) = 0;
 
-		virtual struct texture& next_texture(interface_t, device& device) = 0; // May throw texture_aquisition_failed
+		virtual struct texture& next_texture(temporary_return_t, device& device) = 0; // May throw texture_aquisition_failed
 		virtual surface& present(device& device) = 0;
 
 		virtual void release() = 0;
@@ -224,5 +206,80 @@ namespace stylizer::api {
 	concept texture_concept = std::derived_from<T, texture> && requires(T t, device device, texture::create_config config, std::span<const std::byte> data, texture::data_layout layout) {
 		{ T::create(device, config) } -> std::convertible_to<T>;
 		{ T::create_and_write(device, data, layout, config) } -> std::convertible_to<T>;
+	};
+
+
+
+
+	struct command_buffer {
+		virtual void submit(device& device, bool release = true) = 0;
+
+		virtual void release() = 0;
+		STYLIZER_API_AS_METHOD(command_buffer);
+	};
+
+	struct command_encoder {
+		// TODO: Add copy methods
+
+		// virtual void release() = 0;
+		// STYLIZER_API_AS_METHOD(command_encoder);
+	};
+
+	struct render_pass: public command_encoder {
+		struct color_attachment {
+			struct texture& texture;
+			struct texture* resolve_target = nullptr; // Used for multisampling
+			bool should_store = true; // False discards
+			std::optional<color32> clear_value = {}; // When set value is not loaded
+		};
+		struct depth_stencil_attachment {
+			struct texture& texture;
+			bool should_store_depth = true; // False discards
+			std::optional<float> depth_clear_value = {}; // When set value is not loaded
+			bool depth_readonly = false;
+
+			bool should_store_stencil = true; // False discards
+			std::optional<size_t> stencil_clear_value = {}; // When set value is not loaded // TODO: Should be uint32_t?
+			bool stencil_readonly = false;
+		};
+
+		virtual command_buffer& end(temporary_return_t, device& device) = 0;
+		virtual void submit(device& device, bool release = true) = 0;
+
+		virtual void release() = 0;
+		STYLIZER_API_AS_METHOD(render_pass);
+	};
+
+	template<typename T>
+	concept render_pass_concept = std::derived_from<T, render_pass> && requires(T t, device device, std::span<render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, std::string_view label) {
+		{ T::create(device, colors, depth, /*is the resulting command buffer intended to only be used once?*/one_shot, label) } -> std::convertible_to<T>;
+	};
+
+
+
+	struct device {
+		struct create_config {
+			std::string_view label = "Stylizer Device";
+			bool high_performance = true;
+			struct surface* compatible_surface = nullptr; // When set to null the device will be configured in headless mode
+		};
+
+		virtual texture& create_texture(temporary_return_t, const texture::create_config& config = {}) = 0;
+		virtual texture& create_and_write_texture(temporary_return_t, std::span<const std::byte> data, const texture::data_layout& layout, const texture::create_config& config = {}) = 0;
+		virtual render_pass& create_render_pass(temporary_return_t, std::span<render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth = {}, bool one_shot = false, std::string_view label = "Stylizer Render Pass") = 0;
+
+		virtual void release(bool static_sub_objects = false) = 0;
+		STYLIZER_API_AS_METHOD(device);
+	};
+
+	template<typename T>
+	concept device_concept = std::derived_from<T, device> && requires(T t, device::create_config config,
+		texture::create_config texture_config,
+		std::span<render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, std::string_view label
+	) {
+		{ T::create_default(config) } -> std::convertible_to<T>;
+
+		{ t.create_texture(texture_config) } -> std::derived_from<texture>;
+		{ t.create_render_pass(colors, depth, one_shot, label) } -> std::derived_from<render_pass>;
 	};
 }
