@@ -86,7 +86,7 @@ namespace stylizer::api::webgpu {
 			return sampler;
 		}
 
-		api::texture& write(api::device& device_, std::span<std::byte> data, data_layout layout, vec3u extent, vec3u origin = {0, 0, 0}, size_t mip_level = 0) override {
+		api::texture& write(api::device& device_, std::span<const std::byte> data, data_layout layout, vec3u extent, vec3u origin = {0, 0, 0}, size_t mip_level = 0) override {
 			assert(data.size() >= layout.offset + layout.bytes_per_row * layout.rows_per_image);
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 
