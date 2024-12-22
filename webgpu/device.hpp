@@ -18,7 +18,20 @@ namespace stylizer::api::webgpu {
 		}
 		inline operator bool() { return adapter || device_; }
 
-		static webgpu::device create_default(webgpu::device::create_config config);
+		static webgpu::device create_default(const webgpu::device::create_config& config = {});
+
+		void process_events() {
+			// for (int i = 0 ; i < 5 ; ++i) {
+				// std::cout << "Tick/Poll device..." << std::endl;
+#if defined(WEBGPU_BACKEND_DAWN)
+				wgpuDeviceTick(device_);
+#elif defined(WEBGPU_BACKEND_WGPU)
+				wgpuDevicePoll(device_, false, nullptr);
+#elif defined(WEBGPU_BACKEND_EMSCRIPTEN)
+				emscripten_sleep(1);
+#endif
+			// }
+		}
 
 		void release(bool static_sub_objects = false) override {
 			if(static_sub_objects) {
@@ -27,8 +40,8 @@ namespace stylizer::api::webgpu {
 				device = std::move(*this);
 				return;
 			}
-			if(device_) device_.release();
-			if(adapter) adapter.release();
+			if(device_) std::exchange(device_, nullptr).release();
+			if(adapter) std::exchange(adapter, nullptr).release();
 		}
 	};
 	static_assert(device_concept<device>);

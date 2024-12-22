@@ -16,9 +16,42 @@ int main() {
 
 	surface.configure(device, surface.determine_optimal_config(device, stylizer::api::get_glfw_window_size(window)));
 
+	std::array<stylizer::api::color8, 640 * 480> color_data; color_data.fill({1, 1, 1, 1});
+	constexpr size_t color8size = sizeof(stylizer::api::color8);
+
 	while(!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
-		// surface.present(device);
+		device.process_events();
+
+		try {
+			stylizer::auto_release texture = surface.next_texture(device);
+
+			stylizer::auto_release encoder = device.device_.createCommandEncoder();
+
+			WGPURenderPassColorAttachment color{
+				.view = texture.view,
+				.resolveTarget = nullptr,
+				.loadOp = wgpu::LoadOp::Clear,
+				.storeOp = wgpu::StoreOp::Store,
+				.clearValue = {1, 1, 1, 1}
+			};
+			stylizer::auto_release render_pass = encoder.beginRenderPass(WGPURenderPassDescriptor{
+				.label = "Stylizer Render Pass",
+				.colorAttachmentCount = 1,
+				.colorAttachments = &color,
+				.depthStencilAttachment = nullptr,
+				.occlusionQuerySet = nullptr,
+				.timestampWrites = nullptr,
+			});
+
+			render_pass.end();
+			stylizer::auto_release command_buffer = encoder.finish();
+			device.queue.submit(command_buffer);
+
+			surface.present(device);
+		} catch(stylizer::api::surface::texture_aquisition_failed fail) {
+			std::cerr << fail.what() << std::endl;
+		}
 	}
 
 	device.release(true);
