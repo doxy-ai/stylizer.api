@@ -30,7 +30,7 @@ fn fragment(vert: vertex_output) -> @location(0) vec4f {
 			.bind_render_pipeline(device, *pipeline)
 			.bind_render_group(device, pipeline->create_bind_group(device, 0, std::array<bind_group::binding, 1>{
 				bind_group::texture_binding{&source}
-			}))
+			}), true)
 			.draw(device, vertex_count_override.value_or(3))
 			.one_shot_submit(device);
 		if(release_pipeline) pipeline->release();
