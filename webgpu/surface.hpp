@@ -1,8 +1,6 @@
 #pragma once
 
-#include "common.hpp"
-#include "device.hpp"
-#include <webgpu/webgpu.hpp>
+#include "texture.hpp"
 
 #ifdef STYLIZER_API_SURFACE_SUPPORT_X11
 #include <X11/Xlib.h>
@@ -173,13 +171,13 @@ namespace stylizer::api::webgpu {
 
 
 
-		config determine_optimal_config(api::device& device_, vec2 size) override {
+		config determine_optimal_config(api::device& device_, vec2u size) override {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 			config out{.present_mode = present_mode::Fifo, .size = size};
 
 			out.texture_format = from_wgpu(surface_.getPreferredFormat(device.adapter));
 
-			wgpu::SurfaceCapabilities cap; 
+			wgpu::SurfaceCapabilities cap;
 			surface_.getCapabilities(device.adapter, &cap);
 			if(auto end = cap.presentModes + cap.presentModeCount; std::find(cap.presentModes, end, WGPUPresentMode_Mailbox) != end)
 				out.present_mode = present_mode::Mailbox;
@@ -192,7 +190,7 @@ namespace stylizer::api::webgpu {
 			return out;
 		}
 
-		api::surface& configure(api::device& device_, config config) override {
+		api::surface& configure(api::device& device_, const config& config) override {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 			surface_.configure(WGPUSurfaceConfiguration{
 				.device = device.device_,
@@ -206,13 +204,61 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 
+		texture next_texture(api::device& device) {
+			wgpu::SurfaceTexture texture;
+			surface_.getCurrentTexture(&texture);
+			switch(texture.status){
+				case WGPUSurfaceGetCurrentTextureStatus_Force32:
+				case WGPUSurfaceGetCurrentTextureStatus_Success: break;
+				case WGPUSurfaceGetCurrentTextureStatus_Timeout:
+#ifdef __cpp_exceptions
+					throw texture_aquisition_failed("Failed to get next surface texture: " "Timed out");
+#else
+					assert(("Failed to get next surface texture: " "Timed out", false));
+#endif
+				case WGPUSurfaceGetCurrentTextureStatus_Outdated:
+#ifdef __cpp_exceptions
+					throw texture_aquisition_failed("Failed to get next surface texture: " "Outdated");
+#else
+					assert(("Failed to get next surface texture: " "Outdated", false));
+#endif
+				case WGPUSurfaceGetCurrentTextureStatus_Lost:
+#ifdef __cpp_exceptions
+					throw texture_aquisition_failed("Failed to get next surface texture: " "Texture Lost");
+#else
+					assert(("Failed to get next surface texture: " "Texture Lost", false));
+#endif
+				case WGPUSurfaceGetCurrentTextureStatus_OutOfMemory:
+#ifdef __cpp_exceptions
+					throw texture_aquisition_failed("Failed to get next surface texture: " "Out of memory");
+#else
+					assert(("Failed to get next surface texture: " "Out of memory", false));
+#endif
+				case WGPUSurfaceGetCurrentTextureStatus_DeviceLost:
+#ifdef __cpp_exceptions
+					throw texture_aquisition_failed("Failed to get next surface texture: " "Device Lost");
+#else
+					assert(("Failed to get next surface texture: " "Device Lost", false));
+#endif
+			}
+
+			webgpu::texture out;
+			out.texture_ = texture.texture;
+			out.create_view(true);
+			return out;
+		}
+		api::texture& next_texture(interface_t, api::device& device) override {
+			static texture out;
+			return out = next_texture(device);
+		}
+
 		api::surface& present(api::device& device) override {
 			surface_.present();
 			return *this;
 		}
 
 		void release() override {
-			if(surface_) surface_.release();
+			if(surface_) std::exchange(surface_, nullptr).release();
 		}
 	};
 	static_assert(surface_concept<surface>);

@@ -8,6 +8,10 @@
 #endif
 #include <webgpu/webgpu.hpp>
 
+#ifdef WEBGPU_BACKEND_WGPU
+#include <webgpu/wgpu.h>
+#endif // WEBGPU_BACKEND_WGPU
+
 #include <algorithm>
 
 namespace stylizer::api::webgpu {
@@ -70,6 +74,20 @@ namespace stylizer::api::webgpu {
 		return out;
 	}
 
+	inline wgpu::CompareFunction to_wgpu(comparison_function func) {
+		switch(func){
+			case comparison_function::Never: return wgpu::CompareFunction::Never;
+			case comparison_function::Less: return wgpu::CompareFunction::Less;
+			case comparison_function::LessEqual: return wgpu::CompareFunction::LessEqual;
+			case comparison_function::Greater: return wgpu::CompareFunction::Greater;
+			case comparison_function::GreaterEqual: return wgpu::CompareFunction::GreaterEqual;
+			case comparison_function::Equal: return wgpu::CompareFunction::Equal;
+			case comparison_function::NotEqual: return wgpu::CompareFunction::NotEqual;
+			case comparison_function::Always: return wgpu::CompareFunction::Always;
+		}
+		throw error("Uknown Comparison Function: " + std::string(magic_enum::enum_name(func)));
+	}
+
 	inline wgpu::PresentMode to_wgpu(surface::present_mode mode) {
 		switch(mode){
 			case surface::present_mode::Fifo: return wgpu::PresentMode::Fifo;
@@ -80,4 +98,12 @@ namespace stylizer::api::webgpu {
 		throw error("Uknown Present Mode: " + std::string(magic_enum::enum_name(mode)));
 	}
 
+	inline wgpu::AddressMode to_wgpu(texture::address_mode mode) {
+		switch(mode){
+			case texture::address_mode::Repeat: return wgpu::AddressMode::Repeat;
+			case texture::address_mode::MirrorRepeat: return wgpu::AddressMode::MirrorRepeat;
+			case texture::address_mode::ClampToEdge: return wgpu::AddressMode::ClampToEdge;
+		}
+        throw error("Uknown Address Mode: " + std::string(magic_enum::enum_name(mode)));
+	}	
 }

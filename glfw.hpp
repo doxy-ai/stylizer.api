@@ -37,7 +37,7 @@
 
 namespace stylizer::api {
 
-	inline vec2 get_glfw_window_size(GLFWwindow* window) {
+	inline vec2u get_glfw_window_size(GLFWwindow* window) {
 		int x, y;
 		glfwGetWindowSize(window, &x, &y);
 		return {static_cast<size_t>(x), static_cast<size_t>(y)};
