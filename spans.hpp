@@ -4,7 +4,7 @@
 
 template<typename T>
 std::span<T> span_from_value(const T& value) {
-    return {(T*)&value, 1};
+	return {(T*)&value, 1};
 }
 
 template<typename T>

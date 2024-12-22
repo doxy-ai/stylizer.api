@@ -1,5 +1,7 @@
 #pragma once
 
+#include <slcross.hpp>
+
 #include <concepts>
 #include <stdexcept>
 #include <magic_enum/magic_enum.hpp>
@@ -97,10 +99,28 @@ namespace stylizer::api {
 		RenderAttachment = (1 << 2),
 		TextureBinding = (1 << 3),
 
-		Storage = (1 << 4),
+		Vertex = (1 << 4),
+		Index = (1 << 5),
+		Storage = (1 << 6),
+		MapRead = (1 << 7),
+		MapWrite = (1 << 8),
+	};
+
+	enum class shader_language {
+		SPIRV,
+		GLSL,
+		Slang,
+		WGSL,
+	};
+
+	enum class shader_stage {
+		Combined, // Only valid for WGSL
+		Vertex,
+		Fragment
 	};
 
 	enum class comparison_function {
+		NoDepthCompare,
 		Never,
 		Less,
 		LessEqual,
@@ -111,11 +131,67 @@ namespace stylizer::api {
 		Always,
 	};
 
+
 	using bool32 = uint32_t;
 	struct vec2u { size_t x = 0, y = 0; };
 	struct vec3u { size_t x = 0, y = 0, z = 0; };
 	struct color32 { float r = 0, g = 0, b = 0, a = 1; };
 	struct color8 { uint8_t r = 0, g = 0, b = 0, a = 1; };
+
+
+
+	struct blend_state {
+		enum class operation {
+			Add,
+			Subtract,
+			ReverseSubtract,
+			Min,
+			Max,
+		} operation = blend_state::operation::Add;
+		enum class factor {
+			Zero,
+			One,
+			Src,
+			OneMinusSrc,
+			SrcAlpha,
+			OneMinusSrcAlpha,
+			Dst,
+			OneMinusDst,
+			DstAlpha,
+			OneMinusDstAlpha,
+			SrcAlphaSaturated,
+			Constant,
+			OneMinusConstant,
+		} source_factor = blend_state::factor::One, destination_factor = blend_state::factor::Zero;
+	};
+	struct color_attachment {
+		struct texture* texture = nullptr; enum texture_format texture_format = texture_format::Undefined; // Texture format can be specified instead of texture when creating a pipeline
+		struct texture* resolve_target = nullptr; // Used for multisampling
+		bool should_store = true; // False discards
+		std::optional<color32> clear_value = {}; // When set value is not loaded
+		std::optional<blend_state> color_blend_state = {};
+		std::optional<blend_state> alpha_blend_state = {};
+	};
+	struct depth_stencil_attachment {
+		struct texture* texture = nullptr; enum texture_format texture_format = texture_format::Undefined; // Texture format can be specified instead of texture when creating a pipeline
+		bool should_store_depth = true; // False discards
+		std::optional<float> depth_clear_value = {}; // When set value is not loaded
+		bool depth_readonly = false;
+		comparison_function depth_comparison_function = comparison_function::Less;
+		size_t depth_bias = 0;
+		float depth_bias_slope_scale = 0;
+		float depth_bias_clamp = 0;
+
+		bool should_store_stencil = false; // False discards
+		std::optional<size_t> stencil_clear_value = {}; // When set value is not loaded // TODO: Should be uint32_t?
+		bool stencil_readonly = false;
+		// WGPUStencilFaceState stencilFront;
+		// WGPUStencilFaceState stencilBack;
+		// uint32_t stencilReadMask;
+		// uint32_t stencilWriteMask;
+	};
+
+
 
 	struct temporary_return_t{};
 	constexpr static temporary_return_t temporary_return;
@@ -123,7 +199,7 @@ namespace stylizer::api {
 	struct device;
 
 	struct surface {
-		struct texture_aquisition_failed : public error { using error::error; };
+		struct texture_acquisition_failed : public error { using error::error; };
 
 		enum class present_mode {
 			Fifo = 0,
@@ -142,7 +218,7 @@ namespace stylizer::api {
 		virtual config determine_optimal_config(device& device, vec2u size) { config out{}; out.size = size; return out; }
 		virtual surface& configure(device& device, const config& config) = 0;
 
-		virtual struct texture& next_texture(temporary_return_t, device& device) = 0; // May throw texture_aquisition_failed
+		virtual struct texture& next_texture(temporary_return_t, device& device) = 0; // May throw texture_acquisition_failed
 		virtual surface& present(device& device) = 0;
 
 		virtual void release() = 0;
@@ -193,8 +269,8 @@ namespace stylizer::api {
 			bool mip_linear = false;
 			float lod_min_clamp = 0;
 			float lod_max_clamp = 1;
-			size_t max_anisotropy = 0;
-			comparison_function depth_comparison_function = comparison_function::Less;
+			size_t max_anisotropy = 1;
+			comparison_function depth_comparison_function = comparison_function::NoDepthCompare;
 		};
 
 		virtual texture& configure_sampler(device& device, const sampler_config& config) = 0;
@@ -229,7 +305,58 @@ namespace stylizer::api {
 		{ T::zero_buffer(device, usage, size, just_released) } -> std::convertible_to<T>;
 	};
 
+	struct shader {
+		using language = shader_language;
+		using stage = shader_stage;
 
+		static slcross::shader_stage to_slcross(stage stage) {
+			switch(stage){
+			case shader_stage::Vertex: return slcross::shader_stage::Vertex;
+			case shader_stage::Fragment: return slcross::shader_stage::Fragment;
+			default: throw std::invalid_argument("The combined stage is only valid for WGSL");
+			}
+		}
+
+		template<typename T>
+		inline static T create_from_source(struct device& device, language lang, std::string_view source, stage stage = shader_stage::Combined, std::string_view entry_point = "main", std::string_view label = "Stylizer Shader") {
+			slcross::spirv module;
+			switch(lang) {
+			break; case language::GLSL:
+				module = slcross::glsl::parse_from_memory(to_slcross(stage), source, entry_point);
+			break; case language::Slang: {
+				static slcross::slang::session* session = nullptr;
+				if(!session) session = slcross::slang::create_session();
+
+				std::string module_name = slcross::detail::remove_whitespace(std::string{label});
+				std::string path = module_name + ".slang";
+				module = slcross::slang::parse_from_memory(session, source, entry_point, path, module_name); // TODO: Multiple shaders with same module cause issues?
+			}
+			break; case language::WGSL:
+				module = slcross::wgsl::parse_from_memory(source);
+			break; default: throw std::invalid_argument("SPIRV is not a valid language to compile from source");
+			}
+			return T::create_from_spirv(device, module, label);
+		}
+
+		virtual void release() = 0;
+		STYLIZER_API_AS_METHOD(shader);
+	};
+
+	template<typename T>
+	concept shader_concept = requires(T t, struct device& device, slcross::spirv_view spirv, std::string_view label) {
+		{ T::create_from_spirv(device, spirv, label) } -> std::convertible_to<T>;
+	};
+
+
+
+
+	struct pipeline {
+		struct entry_point {
+			struct shader* shader = nullptr;
+			std::string_view entry_point_name = "main";
+		};
+		using entry_points = std::unordered_map<shader::stage, entry_point>;
+	};
 
 	struct command_buffer {
 		virtual void submit(device& device, bool release = true) = 0;
@@ -246,25 +373,15 @@ namespace stylizer::api {
 	};
 
 	struct render_pass: public command_encoder {
-		struct color_attachment {
-			struct texture& texture;
-			struct texture* resolve_target = nullptr; // Used for multisampling
-			bool should_store = true; // False discards
-			std::optional<color32> clear_value = {}; // When set value is not loaded
-		};
-		struct depth_stencil_attachment {
-			struct texture& texture;
-			bool should_store_depth = true; // False discards
-			std::optional<float> depth_clear_value = {}; // When set value is not loaded
-			bool depth_readonly = false;
-
-			bool should_store_stencil = true; // False discards
-			std::optional<size_t> stencil_clear_value = {}; // When set value is not loaded // TODO: Should be uint32_t?
-			bool stencil_readonly = false;
-		};
+		using blend_state = api::blend_state;
+		using color_attachment = api::color_attachment;
+		using depth_stencil_attachment = api::depth_stencil_attachment;
 
 		virtual command_buffer& end(temporary_return_t, device& device) = 0;
 		virtual void submit(device& device, bool release = true) = 0;
+
+		virtual render_pass& bind_pipeline(const struct graphics_pipeline& pipeline) = 0;
+		virtual render_pass& draw(size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) = 0;
 
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(render_pass);
@@ -274,6 +391,89 @@ namespace stylizer::api {
 	concept render_pass_concept = std::derived_from<T, render_pass> && requires(T t, device device, std::span<render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, std::string_view label) {
 		{ T::create(device, colors, depth, /*is the resulting command buffer intended to only be used once?*/one_shot, label) } -> std::convertible_to<T>;
 	};
+
+	template<typename T>
+	struct vertex_buffer_type_format;
+
+	struct graphics_pipeline: public pipeline {
+		using blend_state = api::blend_state;
+		using color_attachment = api::color_attachment;
+		using depth_stencil_attachment = api::depth_stencil_attachment;
+
+		struct config {
+			enum class primitive_topology {
+				PointList,
+				LineList,
+				LineStrip,
+				TriangleList,
+				TriangleStrip,
+			} primitive_topology = primitive_topology::TriangleList;
+
+			float line_pixel_width = 1;
+
+			enum class cull_mode {
+				Back,
+				Front,
+				Both,
+				Neither
+			} cull_mode = cull_mode::Neither;
+			bool winding_order_clockwise = true;
+			bool u16_indices = false; // False implies u32 indices
+
+			struct vertex_buffer_layout {
+				struct attribute {
+					enum class format {
+						Invalid,
+						f32x1,
+						f32x2,
+						f32x3,
+						f32x4,
+						i32x1,
+						i32x2,
+						i32x3,
+						i32x4,
+						u32x1,
+						u32x2,
+						u32x3,
+						u32x4,
+					} format = format::f32x4;
+					std::optional<size_t> offset_override = {};
+					std::optional<size_t> shader_location_override = {};
+
+					template<typename T>
+					static constexpr enum format format_of(const T& ref = {}) {
+						return vertex_buffer_type_format<T>::format;
+					}
+				};
+				std::vector<attribute> attributes;
+				bool per_instance = false;
+				std::optional<size_t> stride_override = {}; // If not set stride is calculated from attributes
+			};
+			std::vector<vertex_buffer_layout> vertex_buffers = {};
+
+			// TODO: Multisampling
+			// TODO: Depth/stencil
+		};
+
+		virtual void release() = 0;
+		STYLIZER_API_AS_METHOD(graphics_pipeline);
+	};
+
+	template<typename T>
+	concept graphics_pipeline_concept = requires(T t,
+		device device, pipeline::entry_points entry_points, graphics_pipeline::config config, std::string_view label,
+		std::span<color_attachment> color_attachments, std::optional<depth_stencil_attachment> depth_attachment,
+		render_pass compatible_render_pass
+	) {
+		{ T::create(device, entry_points, color_attachments, depth_attachment, config, label) } -> std::convertible_to<T>;
+		{ T::create_from_compatible_render_pass(device, entry_points, compatible_render_pass, config, label) } -> std::convertible_to<T>;
+	};
+
+	template<typename T>
+	struct vertex_buffer_type_format { static constexpr auto format = graphics_pipeline::config::vertex_buffer_layout::attribute::format::Invalid; };
+	template<>
+	struct vertex_buffer_type_format<float> { static constexpr auto format = graphics_pipeline::config::vertex_buffer_layout::attribute::format::f32x1; };
+
 
 
 

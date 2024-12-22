@@ -29,6 +29,7 @@ namespace stylizer::api::webgpu {
 
 	namespace detail {
 		struct command_encoder: public api::command_encoder { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_encoder);
+			char type[4] = STYLIZER_API_WGPU_TYPE;
 			wgpu::CommandEncoder encoder = nullptr;
 
 			command_encoder(command_encoder&& o) { *this = std::move(o); }
