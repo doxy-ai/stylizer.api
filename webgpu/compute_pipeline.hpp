@@ -13,9 +13,9 @@ namespace stylizer::api::webgpu {
 			pipeline = std::exchange(o.pipeline, nullptr);
 			return *this;
 		}
-		inline operator bool() { return pipeline; }
+		inline operator bool() const override { return pipeline; }
 
-		static compute_pipeline create(api::device& device_, pipeline::entry_point entry_point, std::string_view label = "Stylizer Compute Pipeline") {
+		static compute_pipeline create(api::device& device_, pipeline::entry_point entry_point, const std::string_view label = "Stylizer Compute Pipeline") {
 			assert(entry_point.shader);
             auto& device = confirm_wgpu_type<webgpu::device>(device_);
             auto& shader = confirm_wgpu_type<webgpu::shader>(*entry_point.shader);

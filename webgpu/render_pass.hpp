@@ -25,10 +25,10 @@ namespace stylizer::api::webgpu {
 			render_used = std::exchange(o.render_used, false);
 			return *this;
 		}
-		inline operator bool() { return (webgpu::command_encoder&)*this || render_encoder || pass; }
+		inline operator bool() const override { return super::operator bool() || render_encoder || pass; }
 
 
-		static render_pass create(api::device& device_, std::span<const render_pass::color_attachment> colors, std::optional<depth_stencil_attachment> depth = {}, bool one_shot = false, std::string_view label = "Stylizer Render Pass") {
+		static render_pass create(api::device& device_, std::span<const render_pass::color_attachment> colors, const std::optional<depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") {
 			assert(colors.size() > 0);
 			assert(!(depth.has_value() && depth->depth_clear_value.has_value()) || depth->depth_clear_value >= 0);
 			assert(!(depth.has_value() && depth->depth_clear_value.has_value()) || depth->depth_clear_value <= 1);
@@ -80,7 +80,7 @@ namespace stylizer::api::webgpu {
 			return out;
 		}
 
-		api::command_encoder& copy_buffer_to_buffer(api::device& device, api::buffer& destination, api::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
+		api::command_encoder& copy_buffer_to_buffer(api::device& device, api::buffer& destination, const api::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
 			return super::copy_buffer_to_buffer(device, destination, source, destination_offset, source_offset, size_override);
 		}
 
@@ -146,7 +146,7 @@ namespace stylizer::api::webgpu {
 			if(pre_encoder) std::exchange(pre_encoder, nullptr).release();
 			if(compute_encoder) std::exchange(compute_encoder, nullptr).release();
 			if(compute_pass) std::exchange(compute_pass, nullptr).release();
-			// TODO: ^^^ Calling release on command encoder infinately recurses?
+			// TODO: ^^^ Calling release on command encoder infinitely recurses?
 			if(render_encoder) std::exchange(render_encoder, nullptr).release();
 			if(pass) std::exchange(pass, nullptr).release();
 		}
