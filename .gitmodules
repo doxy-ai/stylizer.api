@@ -1,9 +1,10 @@
 [submodule "thirdparty/slcross"]
 	path = thirdparty/slcross
 	url = https://github.com/doxy-ai/slcross
-[submodule "thirdparty/WebGPU-distribution"]
-	path = thirdparty/WebGPU-distribution
-	url = https://github.com/eliemichel/WebGPU-distribution.git
 [submodule "thirdparty/magic_enum"]
 	path = thirdparty/magic_enum
 	url = https://github.com/Neargye/magic_enum
+	shallow = true
+[submodule "webgpu/thirdparty/WebGPU-distribution"]
+	path = webgpu/thirdparty/WebGPU-distribution
+	url = https://github.com/eliemichel/WebGPU-distribution.git
