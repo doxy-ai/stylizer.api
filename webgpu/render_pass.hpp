@@ -84,8 +84,8 @@ namespace stylizer::api::webgpu {
 		api::command_encoder& copy_buffer_to_buffer(api::device& device, api::buffer& destination, const api::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
 			return super::copy_buffer_to_buffer(device, destination, source, destination_offset, source_offset, size_override);
 		}
-		api::command_encoder& copy_texture_to_texture(api::device& device, api::texture& destionation, const api::texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override {
-			return super::copy_texture_to_texture(device, destionation, source, destination_origin, source_origin, extent_override, min_mip_level, mip_levels_override);
+		api::command_encoder& copy_texture_to_texture(api::device& device, api::texture& destination, const api::texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override {
+			return super::copy_texture_to_texture(device, destination, source, destination_origin, source_origin, extent_override, min_mip_level, mip_levels_override);
 		}
 
 		api::command_encoder& bind_compute_pipeline(api::device& device, const api::compute_pipeline& pipeline) override {

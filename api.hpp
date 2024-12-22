@@ -1,5 +1,7 @@
 #pragma once
 
+#include "config.h"
+
 #include <future>
 #include <optional>
 #include <slcross.hpp>
@@ -32,24 +34,43 @@ namespace stylizer {
 	};
 
 #define STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(type)\
-		type() {}\
-		type(const type&) = default;\
-		type& operator=(const type&) = default;
+	type() {}\
+	type(const type&) = default;\
+	type& operator=(const type&) = default;
 
-#define STYLIZER_API_AS_METHOD(type) template<std::derived_from<type> T>\
-	T& as() {\
-		T* out = dynamic_cast<T*>(this);\
-		assert(out != nullptr);\
-		return *out;\
-	}
+#ifndef STYLIZER_NO_RTTI
+	#define STYLIZER_API_AS_METHOD(type) template<std::derived_from<type> T>\
+		T& as() {\
+			T* out = dynamic_cast<T*>(this);\
+			assert(out != nullptr);\
+			return *out;\
+		}\
+		template<std::derived_from<type> T>\
+		const T& as() const {\
+			const T* out = dynamic_cast<const T*>(this);\
+			assert(out != nullptr);\
+			return *out;\
+		}
+#else
+	#define STYLIZER_API_AS_METHOD(type) template<std::derived_from<type> T>\
+		T& as() { return *(T*)this; }\
+		template<std::derived_from<type> T>\
+		const T& as() const { return *(const T*)this; }
+#endif
 }
 
 namespace stylizer::api {
+	using bool32 = uint32_t;
+	struct vec2u { size_t x = 0, y = 0; };
+	struct vec3u { size_t x = 0, y = 0, z = 0; };
+	struct color32 { float r = 0, g = 0, b = 0, a = 1; };
+	struct color8 { uint8_t r = 0, g = 0, b = 0, a = 1; };
+
 	inline namespace operators {
 		using namespace magic_enum::bitwise_operators;
 	}
 
-#ifdef __cpp_exceptions
+#ifndef STYLIZER_NO_EXCEPTIONS
 	struct error: public std::runtime_error {
 		using std::runtime_error::runtime_error;
 	};
@@ -136,14 +157,6 @@ namespace stylizer::api {
 		NotEqual,
 		Always,
 	};
-
-
-	using bool32 = uint32_t;
-	struct vec2u { size_t x = 0, y = 0; };
-	struct vec3u { size_t x = 0, y = 0, z = 0; };
-	struct color32 { float r = 0, g = 0, b = 0, a = 1; };
-	struct color8 { uint8_t r = 0, g = 0, b = 0, a = 1; };
-
 
 
 	struct blend_state {
@@ -372,7 +385,7 @@ namespace stylizer::api {
 			switch(stage){
 			case shader_stage::Vertex: return slcross::shader_stage::Vertex;
 			case shader_stage::Fragment: return slcross::shader_stage::Fragment;
-			default: throw std::invalid_argument("The combined stage is only valid for WGSL");
+			default: STYLIZER_API_THROW("The combined stage is only valid for WGSL");
 			}
 		}
 
@@ -392,7 +405,7 @@ namespace stylizer::api {
 			}
 			break; case language::WGSL:
 				module = slcross::wgsl::parse_from_memory(source);
-			break; default: throw std::invalid_argument("SPIRV is not a valid language to compile from source");
+			break; default: STYLIZER_API_THROW("SPIRV is not a valid language to compile from source");
 			}
 			return T::create_from_spirv(device, module, label);
 		}
@@ -466,7 +479,7 @@ namespace stylizer::api {
 
 		// TODO: Copy functions
 		virtual command_encoder& copy_buffer_to_buffer(device& device, buffer& destination, const buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) = 0;
-		virtual command_encoder& copy_texture_to_texture(device& device, texture& destionation, const texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
+		virtual command_encoder& copy_texture_to_texture(device& device, texture& destination, const texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
 
 		virtual command_encoder& bind_compute_pipeline(device& device, const compute_pipeline& pipeline) = 0;
 		virtual command_encoder& bind_compute_group(device& device, const bind_group& group, std::optional<size_t> index_override = {}) = 0;

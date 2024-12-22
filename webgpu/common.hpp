@@ -73,7 +73,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			case alpha_mode::PreMultiplied: return wgpu::CompositeAlphaMode::Premultiplied;
 			case alpha_mode::Inherit: return wgpu::CompositeAlphaMode::Inherit;
 		}
-		throw error("Unknown Alpha Mode: " + std::string(magic_enum::enum_name(mode)));
+		STYLIZER_API_THROW("Unknown Alpha Mode: " + std::string(magic_enum::enum_name(mode)));
 	}
 
 	inline wgpu::TextureAspect to_wgpu(enum texture_view::create_config::aspect aspect) {
@@ -102,7 +102,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			case texture_format::RGBA8_SRGB: return wgpu::TextureFormat::RGBA8UnormSrgb;
 			case texture_format::BGRA8_SRGB: return wgpu::TextureFormat::BGRA8UnormSrgb;
 		}
-		throw error("Unknown Texture Format: " + std::string(magic_enum::enum_name(format)));
+		STYLIZER_API_THROW("Unknown Texture Format: " + std::string(magic_enum::enum_name(format)));
 	}
 
 	inline texture_format from_wgpu(wgpu::TextureFormat format) {
@@ -114,7 +114,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			case wgpu::TextureFormat::RGBA8Unorm: return texture_format::RGBA8;
 			case wgpu::TextureFormat::RGBA8UnormSrgb: return texture_format::RGBA8_SRGB;
 			case wgpu::TextureFormat::BGRA8UnormSrgb: return texture_format::BGRA8_SRGB;
-			default: throw error("Unknown Texture Format");
+			default: STYLIZER_API_THROW("Unknown Texture Format");
 		}
 	}
 
@@ -142,7 +142,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 		}
 
 		if(usage > usage::Invalid)
-			throw error("Invalid Texture Usage(s): " + std::string(magic_enum::enum_flags_name(usage)));
+			STYLIZER_API_THROW("Invalid Texture Usage(s): " + std::string(magic_enum::enum_flags_name(usage)));
 		return out;
 	}
 	inline usage from_wgpu(wgpu::TextureUsageFlags usage) {
@@ -194,7 +194,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			usage &= ~usage::MapWrite;
 		}
 		if(usage > usage::Invalid)
-			throw error("Invalid Buffer Usage(s): " + std::string(magic_enum::enum_flags_name(usage)));
+			STYLIZER_API_THROW("Invalid Buffer Usage(s): " + std::string(magic_enum::enum_flags_name(usage)));
 		return out;
 	}
 
@@ -210,7 +210,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			case comparison_function::NotEqual: return wgpu::CompareFunction::NotEqual;
 			case comparison_function::Always: return wgpu::CompareFunction::Always;
 		}
-		throw error("Unknown Comparison Function: " + std::string(magic_enum::enum_name(func)));
+		STYLIZER_API_THROW("Unknown Comparison Function: " + std::string(magic_enum::enum_name(func)));
 	}
 
 	inline wgpu::PresentMode to_wgpu(surface::present_mode mode) {
@@ -220,7 +220,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			case surface::present_mode::Immediate: return wgpu::PresentMode::Immediate;
 			case surface::present_mode::Mailbox: return wgpu::PresentMode::Mailbox;
 		}
-		throw error("Unknown Present Mode: " + std::string(magic_enum::enum_name(mode)));
+		STYLIZER_API_THROW("Unknown Present Mode: " + std::string(magic_enum::enum_name(mode)));
 	}
 
 	inline wgpu::AddressMode to_wgpu(texture::address_mode mode) {
@@ -229,7 +229,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			case texture::address_mode::MirrorRepeat: return wgpu::AddressMode::MirrorRepeat;
 			case texture::address_mode::ClampToEdge: return wgpu::AddressMode::ClampToEdge;
 		}
-		throw error("Unknown Address Mode: " + std::string(magic_enum::enum_name(mode)));
+		STYLIZER_API_THROW("Unknown Address Mode: " + std::string(magic_enum::enum_name(mode)));
 	}
 
 	inline wgpu::VertexFormat to_wgpu(enum render_pipeline::config::vertex_buffer_layout::attribute::format format) {
@@ -259,7 +259,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			case render_pipeline::config::primitive_topology::TriangleList: return wgpu::PrimitiveTopology::TriangleList;
 			case render_pipeline::config::primitive_topology::TriangleStrip: return wgpu::PrimitiveTopology::TriangleStrip;
 		}
-		throw error("Unknown Primitive Topology: " + std::string(magic_enum::enum_name(topology)));
+		STYLIZER_API_THROW("Unknown Primitive Topology: " + std::string(magic_enum::enum_name(topology)));
 	}
 
 	inline wgpu::CullMode to_wgpu(enum render_pipeline::config::cull_mode mode) {
@@ -269,7 +269,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			// case render_pipeline::config::cull_mode::Both: throw
 			case render_pipeline::config::cull_mode::Neither: return wgpu::CullMode::None;
 		}
-		throw error("Unknown Cull Mode: " + std::string(magic_enum::enum_name(mode)));
+		STYLIZER_API_THROW("Unknown Cull Mode: " + std::string(magic_enum::enum_name(mode)));
 	}
 
 	inline wgpu::BlendOperation to_wgpu(enum blend_state::operation op) {
@@ -280,7 +280,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			case blend_state::operation::Min: return wgpu::BlendOperation::Min;
 			case blend_state::operation::Max: return wgpu::BlendOperation::Max;
 		}
-		throw error("Unknown Blend Operation: " + std::string(magic_enum::enum_name(op)));
+		STYLIZER_API_THROW("Unknown Blend Operation: " + std::string(magic_enum::enum_name(op)));
 	}
 
 	inline wgpu::BlendFactor to_wgpu(enum blend_state::factor factor) {
@@ -299,6 +299,6 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			case blend_state::factor::Constant: return wgpu::BlendFactor::Constant;
 			case blend_state::factor::OneMinusConstant: return wgpu::BlendFactor::OneMinusConstant;
 		}
-		throw error("Unknown Blend Factor: " + std::string(magic_enum::enum_name(factor)));
+		STYLIZER_API_THROW("Unknown Blend Factor: " + std::string(magic_enum::enum_name(factor)));
 	}
 }
