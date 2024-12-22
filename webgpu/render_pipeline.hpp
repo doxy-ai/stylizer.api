@@ -13,9 +13,9 @@ namespace stylizer::api::webgpu {
 			pipeline = std::exchange(o.pipeline, nullptr);
 			return *this;
 		}
-		inline operator bool() { return pipeline; }
+		inline operator bool() const override { return pipeline; }
 
-		static render_pipeline create(api::device& device_, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, std::string_view label = "Stylizer Graphics Pipeline") {
+		static render_pipeline create(api::device& device_, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline") {
 			static constexpr auto format_stride = [](enum render_pipeline::config::vertex_buffer_layout::attribute::format format) -> size_t {
 				using fmt = enum render_pipeline::config::vertex_buffer_layout::attribute::format;
 				switch(format){
@@ -149,7 +149,7 @@ namespace stylizer::api::webgpu {
 			return out;
 		}
 
-		static render_pipeline create_from_compatible_render_pass(api::device& device, const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const render_pipeline::config& config = {}, std::string_view label = "Stylizer Graphics Pipeline") {
+		static render_pipeline create_from_compatible_render_pass(api::device& device, const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline") {
 			auto& render_pass = confirm_wgpu_type<webgpu::render_pass>(compatible_render_pass);
 			return create(device, entry_points, render_pass.color_attachments, render_pass.depth_attachment, config, label);
 		}

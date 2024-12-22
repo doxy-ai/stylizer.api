@@ -17,7 +17,7 @@ namespace stylizer::api::webgpu {
 			sampler = std::exchange(o.sampler, nullptr);
 			return *this;
 		}
-		inline operator bool() { return texture_ || view || sampler; }
+		inline operator bool() const override { return texture_ || view || sampler; }
 
 		static texture create(api::device& device_, const create_config& config = {}) {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
@@ -86,7 +86,7 @@ namespace stylizer::api::webgpu {
 			return sampler;
 		}
 
-		api::texture& write(api::device& device_, std::span<const std::byte> data, data_layout layout, vec3u extent, vec3u origin = {0, 0, 0}, size_t mip_level = 0) override {
+		api::texture& write(api::device& device_, std::span<const std::byte> data, const data_layout& layout, vec3u extent, vec3u origin = {0, 0, 0}, size_t mip_level = 0) override {
 			assert(data.size() >= layout.offset + layout.bytes_per_row * layout.rows_per_image);
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 

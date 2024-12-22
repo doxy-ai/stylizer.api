@@ -16,7 +16,7 @@ namespace stylizer::api::webgpu {
 			index = o.index;
 			return *this;
 		}
-		inline operator bool() { return group; }
+		inline operator bool() const override { return group; }
 
 		static bind_group internal_create(webgpu::device& device, size_t index, wgpu::BindGroupLayout layout, std::span<const bind_group::binding> bindings) {
 			uint32_t i = 0;

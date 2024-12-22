@@ -2,6 +2,7 @@
 
 #include "cstring_from_view.hpp"
 #include "device.hpp"
+#include <webgpu/webgpu.hpp>
 
 namespace stylizer::api::webgpu {
 	struct buffer: public api::buffer { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(buffer);
@@ -13,9 +14,9 @@ namespace stylizer::api::webgpu {
 			buffer_ = std::exchange(o.buffer_, nullptr);
 			return *this;
 		}
-		inline operator bool() { return buffer_; }
+		inline operator bool() const override { return buffer_; }
 
-		static buffer create(api::device& device_, usage usage, size_t size, bool mapped_at_creation = false, std::string_view label = "Stylizer Buffer"){
+		static buffer create(api::device& device_, usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer"){
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 
 			buffer out;
@@ -28,13 +29,13 @@ namespace stylizer::api::webgpu {
 			return out;
 		}
 
-		static buffer create_and_write(api::device& device, usage usage, std::span<const std::byte> data, size_t offset = 0, std::string_view label = "Stylizer Buffer") {
+		static buffer create_and_write(api::device& device, usage usage, std::span<const std::byte> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") {
 			auto out = create(device, usage | usage::CopyDestination, data.size(), false, label);
 			out.write(device, data, offset);
 			return out;
 		}
 		template<typename T> requires(!std::same_as<T, std::byte>)
-		static buffer create_and_write(api::device& device, usage usage, std::span<const T> data, size_t offset = 0, std::string_view label = "Stylizer Buffer") {
+		static buffer create_and_write(api::device& device, usage usage, std::span<const T> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") {
 			return create_and_write(device, usage, byte_span(data), offset, label);
 		}
 
@@ -75,13 +76,13 @@ namespace stylizer::api::webgpu {
 
 
 
-		static inline void copy_buffer_to_buffer_impl(wgpu::CommandEncoder e, webgpu::buffer& destination, webgpu::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) {
+		static inline void copy_buffer_to_buffer_impl(wgpu::CommandEncoder e, webgpu::buffer& destination, const webgpu::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) {
 			size_t size = std::min(destination.size() - destination_offset, source.size() - source_offset);
 			assert(size_override.value_or(size) <= size);
 			e.copyBufferToBuffer(source.buffer_, source_offset, destination.buffer_, destination_offset, size_override.value_or(size));
 		}
 
-		api::buffer& copy_from(api::device& device_, api::buffer& source_, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
+		api::buffer& copy_from(api::device& device_, const api::buffer& source_, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 			auto& source = confirm_wgpu_type<webgpu::buffer>(source_);
 			auto_release e = device.device_.createCommandEncoder();
@@ -93,7 +94,7 @@ namespace stylizer::api::webgpu {
 
 
 
-		bool is_mapped() override {
+		bool is_mapped() const override {
 			// return buffer_.getMapState() == wgpu::BufferMapState::Mapped;
 			assert(false && "Not Implemented in WEBGPU");
 		}

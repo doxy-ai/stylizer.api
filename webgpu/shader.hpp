@@ -15,9 +15,9 @@ namespace stylizer::api::webgpu {
 			spirv = std::exchange(o.spirv, {});
 			return *this;
 		}
-		inline operator bool() { return module; }
+		inline operator bool() const override { return module; }
 
-		static shader create_from_wgsl(api::device& device_, std::string_view wgsl, std::string_view label = "Stylizer Shader", std::optional<slcross::spirv> spirv = {}) {
+		static shader create_from_wgsl(api::device& device_, const std::string_view wgsl, const std::string_view label = "Stylizer Shader", std::optional<slcross::spirv> spirv = {}) {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 
 			shader out;
@@ -35,11 +35,11 @@ namespace stylizer::api::webgpu {
 			return out;
 		}
 
-		static shader create_from_spirv(api::device& device, slcross::spirv_view spirv, std::string_view label = "Stylizer Shader") {
+		static shader create_from_spirv(api::device& device, slcross::spirv_view spirv, const std::string_view label = "Stylizer Shader") {
 			return create_from_wgsl(device, slcross::wgsl::generate(spirv), label, slcross::spirv{spirv.begin(), spirv.end()});
 		}
 
-		inline static shader create_from_source(api::device& device, language lang, std::string_view source, stage stage = shader_stage::Combined, std::string_view entry_point = "main", std::string_view label = "Stylizer Shader") {
+		inline static shader create_from_source(api::device& device, language lang, const std::string_view source, stage stage = shader_stage::Combined, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") {
 			return api::shader::create_from_source<webgpu::shader>(device, lang, source, stage, entry_point, label);
 		}
 
