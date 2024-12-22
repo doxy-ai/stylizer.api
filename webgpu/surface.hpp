@@ -212,31 +212,31 @@ namespace stylizer::api::webgpu {
 				case WGPUSurfaceGetCurrentTextureStatus_Success: break;
 				case WGPUSurfaceGetCurrentTextureStatus_Timeout:
 #ifdef __cpp_exceptions
-					throw texture_aquisition_failed("Failed to get next surface texture: " "Timed out");
+					throw texture_acquisition_failed("Failed to get next surface texture: " "Timed out");
 #else
 					assert(("Failed to get next surface texture: " "Timed out", false));
 #endif
 				case WGPUSurfaceGetCurrentTextureStatus_Outdated:
 #ifdef __cpp_exceptions
-					throw texture_aquisition_failed("Failed to get next surface texture: " "Outdated");
+					throw texture_acquisition_failed("Failed to get next surface texture: " "Outdated");
 #else
 					assert(("Failed to get next surface texture: " "Outdated", false));
 #endif
 				case WGPUSurfaceGetCurrentTextureStatus_Lost:
 #ifdef __cpp_exceptions
-					throw texture_aquisition_failed("Failed to get next surface texture: " "Texture Lost");
+					throw texture_acquisition_failed("Failed to get next surface texture: " "Texture Lost");
 #else
 					assert(("Failed to get next surface texture: " "Texture Lost", false));
 #endif
 				case WGPUSurfaceGetCurrentTextureStatus_OutOfMemory:
 #ifdef __cpp_exceptions
-					throw texture_aquisition_failed("Failed to get next surface texture: " "Out of memory");
+					throw texture_acquisition_failed("Failed to get next surface texture: " "Out of memory");
 #else
 					assert(("Failed to get next surface texture: " "Out of memory", false));
 #endif
 				case WGPUSurfaceGetCurrentTextureStatus_DeviceLost:
 #ifdef __cpp_exceptions
-					throw texture_aquisition_failed("Failed to get next surface texture: " "Device Lost");
+					throw texture_acquisition_failed("Failed to get next surface texture: " "Device Lost");
 #else
 					assert(("Failed to get next surface texture: " "Device Lost", false));
 #endif
