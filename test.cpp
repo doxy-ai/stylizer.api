@@ -1,25 +1,27 @@
 #define STYLIZER_API_IMPLEMENTATION
-#include "webgpu/all.hpp"
+#include "current_platform.hpp"
 #include "glfw.hpp"
 
 #include <iostream>
 
 int main() {
+	using namespace stylizer::api::current_platform;
+
 	glfwInit();
 
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	GLFWwindow* window = glfwCreateWindow(640, 480, "Stylizer Test", NULL, NULL);
 
-	stylizer::auto_release surface = stylizer::api::create_surface_from_glfw<stylizer::api::webgpu::surface>(window);
-	auto device = stylizer::api::webgpu::device::create_default({.high_performance = true, .compatible_surface = &surface});
+	stylizer::auto_release surface = stylizer::api::glfw::create_surface<struct surface>(window);
+	stylizer::auto_release device = device::create_default({.high_performance = true, .compatible_surface = &surface});
 
-	surface.configure(device, surface.determine_optimal_config(device, stylizer::api::get_glfw_window_size(window)));
+	surface.configure(device, surface.determine_optimal_config(device, stylizer::api::glfw::get_window_size(window)));
 
 	std::array<stylizer::api::color8, 640 * 480> color_data; color_data.fill({1, 1, 1, 1});
 	constexpr size_t color8size = sizeof(stylizer::api::color8);
 
-	stylizer::auto_release shader = stylizer::api::webgpu::shader::create_from_source(device, stylizer::api::shader::language::WGSL, R"(
+	stylizer::auto_release shader = shader::create_from_source(device, shader::language::WGSL, R"(
 @vertex
 fn vertex(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4f {
 	var p = vec2f(0.0, 0.0);
@@ -38,38 +40,17 @@ fn fragment() -> @location(0) vec4f {
 	return vec4f(1.0, 0.4, 1.0, 1.0);
 })");
 
-	// stylizer::auto_release texture = surface.next_texture(device);
-	// stylizer::auto_release reference_render_pass = device.create_render_pass(
-	// 	span_from_value<stylizer::api::color_attachment>({
-	// 		.texture = &texture,
-	// 		.clear_value = {{.3, .5, 1}},
-	// 	})
-	// );
-
-	// stylizer::auto_release pipeline = stylizer::api::webgpu::graphics_pipeline::create_from_compatible_render_pass(device, {
-	// 	{stylizer::api::shader::stage::Vertex, {&shader, "vertex"}},
-	// 	{stylizer::api::shader::stage::Fragment, {&shader, "fragment"}}
-	// }, reference_render_pass);
-
-	// surface.present(device); // "Releases" the surface to fetch textures ("lock" grabbed for reference_render_pass)
-
-	std::vector<stylizer::api::color_attachment> color_attachments = {{
-		.texture_format = stylizer::api::texture::format::BGRA8_SRGB,
+	std::vector<render_pass::color_attachment> color_attachments = {{
+		.texture_format = texture::format::BGRA8_SRGB,
 		.clear_value = {{.3, .5, 1}},
 	}};
-	stylizer::auto_release pipeline = stylizer::api::webgpu::graphics_pipeline::create(
+	stylizer::auto_release pipeline = graphics_pipeline::create(
 		device,
 		{
-			{stylizer::api::shader::stage::Vertex, {&shader, "vertex"}},
-			{stylizer::api::shader::stage::Fragment, {&shader, "fragment"}}
+			{shader::stage::Vertex, {&shader, "vertex"}},
+			{shader::stage::Fragment, {&shader, "fragment"}}
 		},
-		color_attachments//,
-		// {},
-		// {.vertex_buffers = {
-		// 	{.attributes = {
-		// 		{.format = stylizer::api::graphics_pipeline::config::vertex_buffer_layout::attribute::format_of<float>()}
-		// 	}}
-		// }}
+		color_attachments
 	);
 
 	while(!glfwWindowShouldClose(window)) {
@@ -85,7 +66,7 @@ fn fragment() -> @location(0) vec4f {
 
 			render_pass.submit(device);
 			surface.present(device);
-		} catch(stylizer::api::surface::texture_acquisition_failed fail) {
+		} catch(surface::texture_acquisition_failed fail) {
 			std::cerr << fail.what() << std::endl;
 		}
 	}
