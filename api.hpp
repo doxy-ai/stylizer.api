@@ -227,12 +227,13 @@ namespace stylizer::api {
 		virtual struct texture& next_texture(temporary_return_t, device& device) = 0; // May throw texture_acquisition_failed
 		virtual surface& present(device& device) = 0;
 
+		virtual operator bool() const { return false; }
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(surface);
 	};
 
 	template<typename T>
-	concept surface_concept = std::derived_from<T, surface> && requires(T t, void* display, void* surface, void* layer, void* instance, void* window, std::string_view canvas_id, device device) {
+	concept surface_concept = std::derived_from<T, surface> && requires(T t, void* display, void* surface, void* layer, void* instance, void* window, const std::string_view canvas_id, device device) {
 		{ T::create_from_x11(display, window) } -> std::convertible_to<T>;
 		{ T::create_from_wayland(display, surface) } -> std::convertible_to<T>;
 		{ T::create_from_cocoa(layer, window) } -> std::convertible_to<T>;
@@ -246,7 +247,7 @@ namespace stylizer::api {
 		using format = texture_format;
 
 		struct create_config {
-			std::string_view label = "Stylizer Texture";
+			const std::string_view label = "Stylizer Texture";
 			enum texture_format format = format::RGBA8_SRGB;
 			enum usage usage = usage::TextureBinding;
 			vec3u size;
@@ -268,7 +269,7 @@ namespace stylizer::api {
 		};
 
 		struct sampler_config {
-			std::string_view label = "Stylizer Sampler";
+			const std::string_view label = "Stylizer Sampler";
 			address_mode mode = address_mode::Repeat;
 			bool magnify_linear = false;
 			bool minify_linear = false;
@@ -281,8 +282,9 @@ namespace stylizer::api {
 
 		virtual texture& configure_sampler(device& device, const sampler_config& config) = 0;
 		virtual bool sampled() const = 0;
-		virtual texture& write(device& device, std::span<const std::byte> data, data_layout layout, vec3u extent, vec3u origin = {0, 0, 0}, size_t mip_level = 0) = 0;
+		virtual texture& write(device& device, std::span<const std::byte> data, const data_layout& layout, vec3u extent, vec3u origin = {0, 0, 0}, size_t mip_level = 0) = 0;
 
+		virtual operator bool() const { return false; }
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(texture);
 	};
@@ -299,19 +301,20 @@ namespace stylizer::api {
 		virtual buffer& write(device& device, std::span<const std::byte> data, size_t offset = 0) = 0;
 		virtual size_t size() const = 0;
 
-		virtual buffer& copy_from(device& device, buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) = 0;
+		virtual buffer& copy_from(device& device, const buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) = 0;
 
-		virtual bool is_mapped() = 0;
+		virtual bool is_mapped() const = 0;
 		virtual std::future<std::byte*> map_async(api::device& device, bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) = 0;
 		virtual std::byte* map(api::device& device, bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) = 0;
 		virtual void unmap() = 0;
 
+		virtual operator bool() const { return false; }
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(buffer);
 	};
 
 	template<typename T>
-	concept buffer_concept = std::derived_from<T, buffer> && requires(T t, device device, usage usage, size_t size, bool mapped_at_creation, std::span<const std::byte> data, size_t offset, std::string_view label, buffer* just_released) {
+	concept buffer_concept = std::derived_from<T, buffer> && requires(T t, device device, usage usage, size_t size, bool mapped_at_creation, std::span<const std::byte> data, size_t offset, const std::string_view label, buffer* just_released) {
 		{ T::create(device, usage, size, mapped_at_creation, label) } -> std::convertible_to<T>;
 		{ T::create_and_write(device, usage, data, offset, label) } -> std::convertible_to<T>;
 
@@ -331,7 +334,7 @@ namespace stylizer::api {
 		}
 
 		template<typename T>
-		inline static T create_from_source(device& device, language lang, std::string_view source, stage stage = shader_stage::Combined, std::string_view entry_point = "main", std::string_view label = "Stylizer Shader") {
+		inline static T create_from_source(device& device, language lang, const std::string_view source, stage stage = shader_stage::Combined, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") {
 			slcross::spirv module;
 			switch(lang) {
 			break; case language::GLSL:
@@ -351,12 +354,13 @@ namespace stylizer::api {
 			return T::create_from_spirv(device, module, label);
 		}
 
+		virtual operator bool() const { return false; }
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(shader);
 	};
 
 	template<typename T>
-	concept shader_concept = requires(T t, device& device, slcross::spirv_view spirv, std::string_view label) {
+	concept shader_concept = requires(T t, device& device, slcross::spirv_view spirv, const std::string_view label) {
 		{ T::create_from_spirv(device, spirv, label) } -> std::convertible_to<T>;
 	};
 
@@ -366,7 +370,7 @@ namespace stylizer::api {
 	struct pipeline {
 		struct entry_point {
 			struct shader* shader = nullptr;
-			std::string_view entry_point_name = "main";
+			const std::string_view entry_point_name = "main";
 		};
 		using entry_points = std::unordered_map<shader::stage, entry_point>;
 	};
@@ -374,23 +378,25 @@ namespace stylizer::api {
 	struct command_buffer {
 		virtual void submit(device& device, bool release = true) = 0;
 
+		virtual operator bool() const { return false; }
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(command_buffer);
 	};
 
 	struct bind_group {
 		struct buffer_binding {
-			struct buffer* buffer;
+			const struct buffer* buffer;
 			size_t offset = 0;
 			std::optional<size_t> size_override = {};
 		};
 		struct texture_binding {
-			struct texture* texture;
+			const struct texture* texture;
 			bool sampled = true;
 		};
 		using binding = std::variant<buffer_binding, texture_binding>;
 		// TODO: Need create functions?
 
+		virtual operator bool() const { return false; }
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(bind_group);
 	};
@@ -402,12 +408,13 @@ namespace stylizer::api {
 
 		static void quick_dispatch(device& device, vec3u workgroups, const pipeline::entry_point& entry_point, std::span<const bind_group::binding> bindings = {});
 
+		virtual operator bool() const { return false; }
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(compute_pipeline);
 	};
 
 	template<typename T>
-	concept compute_pipeline_concept = std::derived_from<T, compute_pipeline> && requires(T t, device device, pipeline::entry_point entry_point, std::string_view label) {
+	concept compute_pipeline_concept = std::derived_from<T, compute_pipeline> && requires(T t, device device, pipeline::entry_point entry_point, const std::string_view label) {
 		{ T::create(device, entry_point, label) } -> std::convertible_to<T>;
 	};
 
@@ -415,7 +422,7 @@ namespace stylizer::api {
 		using pipeline = compute_pipeline;
 
 		// TODO: Copy functions
-		virtual command_encoder& copy_buffer_to_buffer(device& device, buffer& destination, buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) = 0;
+		virtual command_encoder& copy_buffer_to_buffer(device& device, buffer& destination, const buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) = 0;
 
 		virtual command_encoder& bind_compute_pipeline(device& device, const compute_pipeline& pipeline) = 0;
 		virtual command_encoder& bind_compute_group(device& device, const bind_group& group, std::optional<size_t> index_override = {}) = 0;
@@ -424,12 +431,13 @@ namespace stylizer::api {
 		virtual command_buffer& end(temporary_return_t, device& device) = 0;
 		virtual void one_shot_submit(device& device) = 0;
 
+		virtual operator bool() const { return false; }
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(command_encoder);
 	};
 
 	template<typename T>
-	concept command_encoder_concept = std::derived_from<T, command_encoder> && requires(T t, device device, bool one_shot, std::string_view label) {
+	concept command_encoder_concept = std::derived_from<T, command_encoder> && requires(T t, device device, bool one_shot, const std::string_view label) {
 		{ T::create(device, one_shot, label) } -> std::convertible_to<T>;
 	};
 
@@ -446,7 +454,7 @@ namespace stylizer::api {
 		using depth_stencil_attachment = api::depth_stencil_attachment;
 		using pipeline = struct render_pipeline;
 
-		virtual render_pass& bind_render_pipeline(const struct render_pipeline& pipeline) = 0;
+		virtual render_pass& bind_render_pipeline(const render_pipeline& pipeline) = 0;
 		virtual render_pass& bind_vertex_buffer(api::device& device, size_t slot, const api::buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
 		virtual render_pass& bind_index_buffer(api::device& device, const api::buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
 		virtual render_pass& draw(size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) = 0;
@@ -455,12 +463,13 @@ namespace stylizer::api {
 		virtual command_buffer& end(temporary_return_t, device& device) = 0;
 		virtual void one_shot_submit(device& device) = 0;
 
+		virtual operator bool() const { return false; }
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(render_pass);
 	};
 
 	template<typename T>
-	concept render_pass_concept = std::derived_from<T, render_pass> && requires(T t, device device, std::span<const render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, std::string_view label) {
+	concept render_pass_concept = std::derived_from<T, render_pass> && requires(T t, device device, std::span<const render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, const std::string_view label) {
 		{ T::create(device, colors, depth, /*is the resulting command buffer intended to only be used once?*/one_shot, label) } -> std::convertible_to<T>;
 	};
 
@@ -530,13 +539,14 @@ namespace stylizer::api {
 
 		virtual bind_group& create_bind_group(temporary_return_t, device& device, size_t index, std::span<const bind_group::binding> bindings) = 0;
 
+		virtual operator bool() const { return false; }
 		virtual void release() = 0;
 		STYLIZER_API_AS_METHOD(render_pipeline);
 	};
 
 	template<typename T>
 	concept render_pipeline_concept = std::derived_from<T, render_pipeline> && requires(T t,
-		device device, pipeline::entry_points entry_points, render_pipeline::config config, std::string_view label,
+		device device, pipeline::entry_points entry_points, render_pipeline::config config, const std::string_view label,
 		std::span<const color_attachment> color_attachments, std::optional<depth_stencil_attachment> depth_attachment,
 		render_pass compatible_render_pass
 	) {
@@ -553,7 +563,7 @@ namespace stylizer::api {
 
 	struct device {
 		struct create_config {
-			std::string_view label = "Stylizer Device";
+			const std::string_view label = "Stylizer Device";
 			bool high_performance = true;
 			struct surface* compatible_surface = nullptr; // When set to null the device will be configured in headless mode
 		};
@@ -561,8 +571,8 @@ namespace stylizer::api {
 		virtual texture& create_texture(temporary_return_t, const texture::create_config& config = {}) = 0;
 		virtual texture& create_and_write_texture(temporary_return_t, std::span<const std::byte> data, const texture::data_layout& layout, const texture::create_config& config = {}) = 0;
 
-		virtual buffer& create_buffer(temporary_return_t, usage usage, size_t size, bool mapped_at_creation = false, std::string_view label = "Stylizer Buffer") = 0;
-		virtual buffer& create_and_write_buffer(temporary_return_t, usage usage, std::span<const std::byte> data, size_t offset = 0, std::string_view label = "Stylizer Buffer") = 0;
+		virtual buffer& create_buffer(temporary_return_t, usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer") = 0;
+		virtual buffer& create_and_write_buffer(temporary_return_t, usage usage, std::span<const std::byte> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") = 0;
 
 		// NOTE: This function is more costly than the one on buffer (since it needs to create a temporary buffer), and thus should be avoided when possible!
 		virtual const buffer& get_zero_buffer_singleton(usage usage = usage::Storage, size_t minimum_size = 0, buffer* just_released = nullptr) {
@@ -574,18 +584,19 @@ namespace stylizer::api {
 
 		virtual shader& create_shader_from_spirv(temporary_return_t, slcross::spirv_view spirv, const std::string_view label = "Stylizer Shader") = 0;
 
-		virtual command_encoder& create_command_encoder(temporary_return_t, bool one_shot = false, std::string_view label = "Stylizer Command Encoder") = 0;
-		virtual render_pass& create_render_pass(temporary_return_t, std::span<const render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth = {}, bool one_shot = false, std::string_view label = "Stylizer Render Pass") = 0;
+		virtual command_encoder& create_command_encoder(temporary_return_t, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") = 0;
+		virtual render_pass& create_render_pass(temporary_return_t, std::span<const render_pass::color_attachment> colors, const std::optional<render_pass::depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") = 0;
 
-		virtual compute_pipeline& create_compute_pipeline(temporary_return_t, const pipeline::entry_point& entry_point, std::string_view label = "Stylizer Compute Pipeline") = 0;
-		virtual render_pipeline& create_render_pipeline(temporary_return_t, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, std::optional<depth_stencil_attachment> depth_attachment = {}, const render_pipeline::config& config = {}, std::string_view label = "Stylizer Render Pipeline") = 0;
-		virtual render_pipeline& create_render_pipeline_from_compatible_render_pass(temporary_return_t, const pipeline::entry_points& entry_points, const render_pass& compatible_render_pass, const render_pipeline::config& config = {}, std::string_view label = "Stylizer Render Pipeline") = 0;
+		virtual compute_pipeline& create_compute_pipeline(temporary_return_t, const pipeline::entry_point& entry_point, const std::string_view label = "Stylizer Compute Pipeline") = 0;
+		virtual render_pipeline& create_render_pipeline(temporary_return_t, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") = 0;
+		virtual render_pipeline& create_render_pipeline_from_compatible_render_pass(temporary_return_t, const pipeline::entry_points& entry_points, const render_pass& compatible_render_pass, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") = 0;
 
 		device& quick_compute_dispatch(vec3u workgroups, const pipeline::entry_point& entry_point, std::span<const bind_group::binding> bindings = {}) {
 			compute_pipeline::quick_dispatch(*this, workgroups, entry_point, bindings);
 			return *this;
 		}
 
+		virtual operator bool() const { return false; }
 		virtual void release(bool static_sub_objects = false) = 0;
 		STYLIZER_API_AS_METHOD(device);
 	};
@@ -593,7 +604,7 @@ namespace stylizer::api {
 	template<typename T>
 	concept device_concept = std::derived_from<T, device> && requires(T t, device::create_config config,
 		texture::create_config texture_config,
-		std::span<const render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, std::string_view label,
+		std::span<const render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, const std::string_view label,
 		usage usage, size_t size, bool mapped_at_creation, std::span<const std::byte> data, size_t offset
 	) {
 		{ T::create_default(config) } -> std::convertible_to<T>;

@@ -22,9 +22,9 @@ namespace stylizer::api::webgpu {
 			one_shot = o.one_shot;
 			return *this;
 		}
-		inline operator bool() { return pre_encoder || compute_encoder || compute_pass; }
+		inline operator bool() const override { return pre_encoder || compute_encoder || compute_pass; }
 
-		static command_encoder create(api::device& device_, bool one_shot = false, std::string_view label = "Stylizer Command Encoder") {
+		static command_encoder create(api::device& device_, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 
 			command_encoder out;
@@ -48,7 +48,7 @@ namespace stylizer::api::webgpu {
 		}
 	public:
 
-		api::command_encoder& copy_buffer_to_buffer(api::device& device_, api::buffer& destination, api::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
+		api::command_encoder& copy_buffer_to_buffer(api::device& device_, api::buffer& destination, const api::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 			auto& dest = confirm_wgpu_type<webgpu::buffer>(destination);
 			auto& src = confirm_wgpu_type<webgpu::buffer>(source);
