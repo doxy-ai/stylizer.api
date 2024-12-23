@@ -34,6 +34,8 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 		inline operator bool() const override { return adapter || device_; }
+		device&& move() { return std::move(*this); }
+
 
 		static webgpu::device create_default(const webgpu::device::create_config& config = {});
 
@@ -89,7 +91,7 @@ namespace stylizer::api::webgpu {
 
 		webgpu::compute_pipeline create_compute_pipeline(const pipeline::entry_point& entry_point, const std::string_view label = "Stylizer Compute Pipeline");
 		api::compute_pipeline& create_compute_pipeline(temporary_return_t, const pipeline::entry_point& entry_point, const std::string_view label = "Stylizer Compute Pipeline") override;
-		
+
 		webgpu::render_pipeline create_render_pipeline(const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, std::optional<depth_stencil_attachment> depth_attachment = {}, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline");
 		api::render_pipeline& create_render_pipeline(temporary_return_t, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") override;
 		webgpu::render_pipeline create_render_pipeline_from_compatible_render_pass(const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline");
