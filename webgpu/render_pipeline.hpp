@@ -14,6 +14,8 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 		inline operator bool() const override { return pipeline; }
+		render_pipeline&& move() { return std::move(*this); }
+
 
 		static render_pipeline create(api::device& device_, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline") {
 			static constexpr auto format_stride = [](enum render_pipeline::config::vertex_buffer_layout::attribute::format format) -> size_t {

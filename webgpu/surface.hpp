@@ -33,6 +33,8 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 		inline operator bool() const override { return surface_; }
+		surface&& move() { return std::move(*this); }
+
 
 		static surface create_from_emscripten(const std::string_view canvas_id = "canvas") {
 #ifdef STYLIZER_API_SURFACE_SUPPORT_EMSCRIPTEN

@@ -17,6 +17,8 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 		inline operator bool() const override { return pre || compute || render; }
+		command_buffer&& move() { return std::move(*this); }
+
 
 		void submit(api::device& device_, bool release = true) override {
 			assert(*this); // Ensures there is at least one thing to submit!

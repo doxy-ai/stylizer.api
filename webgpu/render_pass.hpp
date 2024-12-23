@@ -26,6 +26,7 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 		inline operator bool() const override { return super::operator bool() || render_encoder || pass; }
+		render_pass&& move() { return std::move(*this); }
 
 
 		static render_pass create(api::device& device_, std::span<const render_pass::color_attachment> colors, const std::optional<depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") {

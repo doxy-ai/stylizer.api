@@ -14,6 +14,8 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 		inline operator bool() const override { return pipeline; }
+		compute_pipeline&& move() { return std::move(*this); }
+
 
 		static compute_pipeline create(api::device& device_, pipeline::entry_point entry_point, const std::string_view label = "Stylizer Compute Pipeline") {
 			assert(entry_point.shader);

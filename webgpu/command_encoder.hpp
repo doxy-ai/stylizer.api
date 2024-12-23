@@ -26,6 +26,8 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 		inline operator bool() const override { return pre_encoder || compute_encoder || compute_pass; }
+		command_encoder&& move() { return std::move(*this); }
+
 
 		static command_encoder create(api::device& device_, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);

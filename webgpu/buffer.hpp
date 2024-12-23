@@ -13,6 +13,8 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 		inline operator bool() const override { return buffer_; }
+		buffer&& move() { return std::move(*this); }
+
 
 		static buffer create(api::device& device_, usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer"){
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
