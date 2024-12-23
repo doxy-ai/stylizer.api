@@ -17,6 +17,8 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 		inline operator bool() const override { return group; }
+		bind_group&& move() { return std::move(*this); }
+
 
 		static bind_group internal_create(webgpu::device& device, size_t index, wgpu::BindGroupLayout layout, std::span<const bind_group::binding> bindings) {
 			uint32_t i = 0;
@@ -35,7 +37,7 @@ namespace stylizer::api::webgpu {
 					});
 				}
 				break; case 1: {
-					auto& bind = std::get<bind_group::texture_binding>(binding); 
+					auto& bind = std::get<bind_group::texture_binding>(binding);
 					assert(bind.texture);
 					auto& texture = confirm_wgpu_type<webgpu::texture>(*bind.texture);
 					entries.emplace_back(WGPUBindGroupEntry{
@@ -48,7 +50,7 @@ namespace stylizer::api::webgpu {
 							.binding = i++,
 							.sampler = texture.sampler,
 						});
-					} 
+					}
 				}
 				}
 
