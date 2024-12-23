@@ -15,6 +15,8 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 		inline operator bool() const override { return module; }
+		shader&& move() { return std::move(*this); }
+
 
 		static shader create_from_wgsl(api::device& device_, const std::string_view wgsl, const std::string_view label = "Stylizer Shader", std::optional<slcross::spirv> spirv = {}) {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
