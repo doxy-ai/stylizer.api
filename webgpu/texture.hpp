@@ -19,6 +19,7 @@ namespace stylizer::api::webgpu {
 		inline operator bool() const override { return texture_ || sampler; }
 		texture&& move() { return std::move(*this); }
 
+
 		static texture create(api::device& device_, const create_config& config = {}) {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 
