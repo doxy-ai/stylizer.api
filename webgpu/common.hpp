@@ -12,6 +12,7 @@
 #endif // WEBGPU_BACKEND_WGPU
 
 #include <algorithm>
+#include "cstring_from_view.hpp"
 
 namespace stylizer::api::webgpu {
 
@@ -49,6 +50,22 @@ namespace stylizer::api::webgpu {
 		}
 		throw error("Unknown Alpha Mode: " + std::string(magic_enum::enum_name(mode)));
 	}
+
+	inline wgpu::TextureAspect to_wgpu(enum texture_view::create_config::aspect aspect) {
+		switch(aspect){
+		case texture_view::create_config::aspect::All: return wgpu::TextureAspect::All;
+		case texture_view::create_config::aspect::DepthOnly: return wgpu::TextureAspect::DepthOnly;
+		case texture_view::create_config::aspect::StencilOnly: return wgpu::TextureAspect::StencilOnly;
+		}
+		STYLIZER_API_THROW("Unknown Texture Aspect: " + std::string(magic_enum::enum_name(aspect)));
+	}
+
+	inline enum texture_view::create_config::aspect default_aspect(texture_format format) {
+		switch(format) {
+		case texture_format::Depth24: return texture_view::create_config::aspect::DepthOnly;
+		default: return texture_view::create_config::aspect::All;
+		}
+	};
 
 	inline wgpu::TextureFormat to_wgpu(texture_format format) {
 		switch(format){

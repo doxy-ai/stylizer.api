@@ -37,17 +37,31 @@ namespace stylizer::api::webgpu {
 
 		static webgpu::device create_default(const webgpu::device::create_config& config = {});
 
-		void process_events() {
+		bool process_events() {
 			// for (int i = 0 ; i < 5 ; ++i) {
 				// std::cout << "Tick/Poll device..." << std::endl;
 #if defined(WEBGPU_BACKEND_DAWN)
-				wgpuDeviceTick(device_);
+				return wgpuDeviceTick(device_);
 #elif defined(WEBGPU_BACKEND_WGPU)
-				wgpuDevicePoll(device_, false, nullptr);
+				return wgpuDevicePoll(device_, false, nullptr);
 #elif defined(WEBGPU_BACKEND_EMSCRIPTEN)
 				emscripten_sleep(1);
+				return true;
 #endif
 			// }
+		}
+		bool wait(bool for_queues = true) override {; // Wait for device to finish
+			if(!for_queues) return process_events();
+
+			bool success, done = false;
+			auto handle = queue.onSubmittedWorkDone([&done, &success](wgpu::QueueWorkDoneStatus status) {
+				success = status == wgpu::QueueWorkDoneStatus::Success;
+				// assert(success);
+				done = true;
+			});
+			while(!done) process_events(); // TODO: Should we have a sleep in here?
+			wgpuQueueOnSubmittedWorkDone(queue, nullptr, nullptr); // Clear the callback
+			return success;
 		}
 
 		webgpu::texture create_texture(const api::texture::create_config& config = {});

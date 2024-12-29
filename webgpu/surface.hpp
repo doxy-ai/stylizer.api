@@ -244,7 +244,6 @@ namespace stylizer::api::webgpu {
 
 			webgpu::texture out;
 			out.texture_ = texture.texture;
-			out.create_view(true);
 			return out;
 		}
 		api::texture& next_texture(temporary_return_t, api::device& device) override {
