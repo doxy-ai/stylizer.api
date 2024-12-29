@@ -1,23 +1,23 @@
 #pragma once
 
-#include "device.hpp"
-#include "cstring_from_view.hpp"
+#include "texture_view.hpp"
 
 namespace stylizer::api::webgpu {
 	struct texture: public api::texture { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture);
 		char type[4] = STYLIZER_API_WGPU_TYPE;
 		wgpu::Texture texture_ = nullptr;
-		wgpu::TextureView view = nullptr;
 		wgpu::Sampler sampler = nullptr;
+		mutable texture_view view = {}; // Mutable so may update while texture is const!
 
 		inline texture(texture&& o) { *this = std::move(o); }
 		inline texture& operator=(texture&& o) {
 			texture_ = std::exchange(o.texture_, nullptr);
-			view = std::exchange(o.view, nullptr);
 			sampler = std::exchange(o.sampler, nullptr);
+			view.release(); // Pointers have been invalidated
 			return *this;
 		}
-		inline operator bool() const override { return texture_ || view || sampler; }
+		inline operator bool() const override { return texture_ || sampler; }
+		texture&& move() { return std::move(*this); }
 
 		static texture create(api::device& device_, const create_config& config = {}) {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
@@ -35,7 +35,6 @@ namespace stylizer::api::webgpu {
 				.viewFormatCount = 1,
 				.viewFormats = &format,
 			});
-			out.create_view(true);
 			return out;
 		}
 
@@ -46,21 +45,17 @@ namespace stylizer::api::webgpu {
 			return out;
 		}
 
-		wgpu::TextureView create_view(const wgpu::TextureViewDescriptor& descript, bool save = true) {
-			auto out = texture_.createView(descript);
-			if(save) view = out;
-			return out;
+		webgpu::texture_view create_view(api::device& device, const view::create_config& config = {}) const {
+			return texture_view::create(device, *this, config);
 		}
-		wgpu::TextureView create_view(bool save = true) {
-			return create_view(WGPUTextureViewDescriptor{
-				.format = texture_.getFormat(),
-				.dimension = texture_.getDepthOrArrayLayers() > 0 ? wgpu::TextureViewDimension::_2D : wgpu::TextureViewDimension::_3D,
-				.baseMipLevel = 0,
-				.mipLevelCount = texture_.getMipLevelCount(),
-				.baseArrayLayer = 0,
-				.arrayLayerCount = std::max<uint32_t>(texture_.getDepthOrArrayLayers(), 1),
-				.aspect = wgpu::TextureAspect::All,
-			}, save);
+		api::texture_view& create_view(temporary_return_t, api::device& device, const view::create_config& config = {}) const override {
+			static webgpu::texture_view view;
+			return view = create_view(device, config);
+		}
+
+		const api::texture_view& full_view(api::device& device) const override {
+			if(view) return view;
+			return view = create_view(device, {.aspect = default_aspect(texture_format())});
 		}
 
 		api::texture& configure_sampler(api::device& device_, const sampler_config& config = {}) override {
@@ -106,8 +101,8 @@ namespace stylizer::api::webgpu {
 
 		void release() override {
 			if(texture_) std::exchange(texture_, nullptr).release();
-			if(view) std::exchange(view, nullptr).release();
 			if(sampler) std::exchange(sampler, nullptr).release();
+			if(view) std::exchange(view, {}).release();
 		}
 	};
 	static_assert(texture_concept<texture>);

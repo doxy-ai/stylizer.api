@@ -35,14 +35,18 @@ namespace stylizer::api::webgpu {
 					});
 				}
 				break; case 1: {
-					auto& bind = std::get<bind_group::texture_binding>(binding); 
-					assert(bind.texture);
-					auto& texture = confirm_wgpu_type<webgpu::texture>(*bind.texture);
+					auto& bind = std::get<bind_group::texture_binding>(binding);
+					assert(bind.texture || bind.texture_view);
+					auto& view = confirm_wgpu_type<webgpu::texture_view>(bind.texture 
+						? confirm_wgpu_type<webgpu::texture>(*bind.texture).full_view(device) 
+						: *bind.texture_view);
+					assert(view.owning_texture);
+					auto& texture = confirm_wgpu_type<webgpu::texture>(*view.owning_texture);
 					entries.emplace_back(WGPUBindGroupEntry{
 						.binding = i++,
-						.textureView = texture.view,
+						.textureView = view.view,
 					});
-					if(bind.sampled) {
+					if(bind.sampled_override.value_or(texture.sampled())) {
 						assert(texture.sampler);
 						entries.emplace_back(WGPUBindGroupEntry{
 							.binding = i++,

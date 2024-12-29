@@ -67,9 +67,10 @@ namespace stylizer::api::webgpu {
 
 			WGPUDepthStencilState depth_state{};
 			if(depth_attachment) {
-				assert(depth_attachment->texture || depth_attachment->texture_format != texture_format::Undefined);
+				assert(depth_attachment->texture || depth_attachment->view || depth_attachment->texture_format != texture_format::Undefined);
 				depth_state = WGPUDepthStencilState{
-					.format = depth_attachment->texture ? confirm_wgpu_type<webgpu::texture>(*depth_attachment->texture).texture_.getFormat() : to_wgpu(depth_attachment->texture_format),
+					.format = to_wgpu(depth_attachment->texture ? depth_attachment->texture->texture_format()
+						: depth_attachment->view ? (depth_attachment->view->texture().texture_format()) : depth_attachment->texture_format),
 					.depthWriteEnabled = depth_attachment->should_store_depth && !depth_attachment->depth_readonly,
 					.depthCompare = to_wgpu(depth_attachment->depth_comparison_function),
 					.stencilFront = wgpu::StencilFaceState{wgpu::Default},
@@ -90,7 +91,7 @@ namespace stylizer::api::webgpu {
 				blend_states.reserve(color_attachments.size());
 				color_targets.reserve(color_attachments.size());
 				for(auto& target: color_attachments) {
-					assert(target.texture || target.texture_format != texture_format::Undefined);
+					assert(depth_attachment->texture || depth_attachment->view || depth_attachment->texture_format != texture_format::Undefined);
 
 					auto color_blend = target.color_blend_state.value_or(blend_state{});
 					auto alpha_blend = target.alpha_blend_state.value_or(blend_state{});
@@ -107,7 +108,8 @@ namespace stylizer::api::webgpu {
 						});
 
 					color_targets.emplace_back(WGPUColorTargetState{
-						.format = target.texture ? confirm_wgpu_type<webgpu::texture>(*target.texture).texture_.getFormat() : to_wgpu(target.texture_format),
+						.format = to_wgpu(target.texture ? target.texture->texture_format()
+							: target.view ? (target.view->texture().texture_format()) : target.texture_format),
 						.blend = should_blend ? &blend_states.back() : nullptr,
 						.writeMask = wgpu::ColorWriteMask::All, // TODO: Expose write mask?
 					});

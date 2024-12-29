@@ -1,8 +1,6 @@
 #pragma once
 
-#include "cstring_from_view.hpp"
 #include "device.hpp"
-#include <webgpu/webgpu.hpp>
 
 namespace stylizer::api::webgpu {
 	struct buffer: public api::buffer { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(buffer);

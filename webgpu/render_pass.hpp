@@ -41,11 +41,11 @@ namespace stylizer::api::webgpu {
 
 			std::vector<WGPURenderPassColorAttachment> color_attachments; color_attachments.reserve(colors.size());
 			for(auto& attach: colors) {
-				assert(attach.texture);
-				auto view = confirm_wgpu_type<webgpu::texture>(*attach.texture).view;
+				assert(attach.texture || attach.view);
+				auto& view = confirm_wgpu_type<webgpu::texture_view>(attach.texture ? confirm_wgpu_type<webgpu::texture>(*attach.texture).full_view(device) : *attach.view);
 				color_attachments.emplace_back(WGPURenderPassColorAttachment{
-					.view = view,
-					.resolveTarget = attach.resolve_target ? confirm_wgpu_type<webgpu::texture>(*attach.resolve_target).view : nullptr,
+					.view = view.view,
+					.resolveTarget = attach.resolve_target ? confirm_wgpu_type<webgpu::texture_view>(*attach.resolve_target).view : nullptr,
 					.loadOp = attach.clear_value.has_value() ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load,
 					.storeOp = attach.should_store ? wgpu::StoreOp::Store : wgpu::StoreOp::Discard,
 					.clearValue = attach.clear_value.has_value() ? to_wgpu(*attach.clear_value) : to_wgpu(color32{}),
@@ -53,10 +53,11 @@ namespace stylizer::api::webgpu {
 			}
 			WGPURenderPassDepthStencilAttachment* depth_attachment = nullptr;
 			if(depth) {
-				assert(depth->texture);
+				assert(depth->texture || depth->view);
+				auto& view = confirm_wgpu_type<webgpu::texture_view>(depth->texture ? confirm_wgpu_type<webgpu::texture>(*depth->texture).full_view(device) : *depth->view);
 				static WGPURenderPassDepthStencilAttachment static_depth;
 				static_depth = {
-					.view = confirm_wgpu_type<webgpu::texture>(*depth->texture).view,
+					.view = view.view,
 					.depthLoadOp = depth->depth_clear_value.has_value() ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load,
 					.depthStoreOp = depth->should_store_depth ? wgpu::StoreOp::Store : wgpu::StoreOp::Discard,
 					.depthClearValue = depth->depth_clear_value.has_value() ? *depth->depth_clear_value : 1,

@@ -171,15 +171,15 @@ namespace stylizer::api {
 		} source_factor = blend_state::factor::One, destination_factor = blend_state::factor::Zero;
 	};
 	struct color_attachment {
-		struct texture* texture = nullptr; enum texture_format texture_format = texture_format::Undefined; // Texture format can be specified instead of texture when creating a pipeline
-		struct texture* resolve_target = nullptr; // Used for multisampling
+		struct texture* texture = nullptr; struct texture_view* view = nullptr; enum texture_format texture_format = texture_format::Undefined; // Only one of these need be specified, they will be calculated as needed (note if creating a pass only specifying the format will produce an error!)
+		struct texture_view* resolve_target = nullptr; // Used for multisampling
 		bool should_store = true; // False discards
 		std::optional<color32> clear_value = {}; // When set value is not loaded
 		std::optional<blend_state> color_blend_state = {};
 		std::optional<blend_state> alpha_blend_state = {};
 	};
 	struct depth_stencil_attachment {
-		struct texture* texture = nullptr; enum texture_format texture_format = texture_format::Undefined; // Texture format can be specified instead of texture when creating a pipeline
+		struct texture* texture = nullptr; struct texture_view* view = nullptr; enum texture_format texture_format = texture_format::Undefined; // Only one of these need be specified, they will be calculated as needed (note if creating a pass only specifying the format will produce an error!)
 		bool should_store_depth = true; // False discards
 		std::optional<float> depth_clear_value = {}; // When set value is not loaded
 		bool depth_readonly = false;
@@ -243,8 +243,37 @@ namespace stylizer::api {
 		{ t.next_texture(device) } -> std::derived_from<struct texture>;
 	};
 
+	struct texture_view {
+		struct create_config {
+			size_t base_mip_level = 0;
+			std::optional<size_t> mip_level_count_override = {};
+			// .baseArrayLayer = 0,
+			// .arrayLayerCount = std::max<uint32_t>(texture_.getDepthOrArrayLayers(), 1),
+			// bool view_depth = true; // TODO: Do we need this or is just computing it from the format good enough?
+
+			enum class aspect {
+				All = 0,
+				DepthOnly,
+				StencilOnly
+			} aspect = aspect::All;
+		};
+
+		virtual const struct texture& texture() const = 0;
+		operator const struct texture&() const { return texture(); }
+
+		virtual operator bool() const { return false; }
+		virtual void release() = 0;
+		STYLIZER_API_AS_METHOD(texture_view);
+	};
+
+	template<typename T>
+	concept texture_view_concept = std::derived_from<T, texture_view> && requires(T t, device device, struct texture texture, texture_view::create_config config) {
+		{ T::create(device, texture, config) } -> std::convertible_to<T>;
+	};
+
 	struct texture {
-		using format = texture_format;
+		using format = api::texture_format;
+		using view = texture_view;
 
 		struct create_config {
 			const std::string_view label = "Stylizer Texture";
@@ -280,6 +309,8 @@ namespace stylizer::api {
 			comparison_function depth_comparison_function = comparison_function::NoDepthCompare;
 		};
 
+		virtual texture_view& create_view(temporary_return_t, device& device, const view::create_config& config = {}) const = 0;
+		virtual const texture_view& full_view(device& device) const = 0;
 		virtual texture& configure_sampler(device& device, const sampler_config& config) = 0;
 		virtual bool sampled() const = 0;
 		virtual texture& write(device& device, std::span<const std::byte> data, const data_layout& layout, vec3u extent, vec3u origin = {0, 0, 0}, size_t mip_level = 0) = 0;
@@ -304,8 +335,8 @@ namespace stylizer::api {
 		virtual buffer& copy_from(device& device, const buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) = 0;
 
 		virtual bool is_mapped() const = 0;
-		virtual std::future<std::byte*> map_async(api::device& device, bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) = 0;
-		virtual std::byte* map(api::device& device, bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) = 0;
+		virtual std::future<std::byte*> map_async(device& device, bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) = 0;
+		virtual std::byte* map(device& device, bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) = 0;
 		virtual void unmap() = 0;
 
 		virtual operator bool() const { return false; }
@@ -390,8 +421,8 @@ namespace stylizer::api {
 			std::optional<size_t> size_override = {};
 		};
 		struct texture_binding {
-			const struct texture* texture;
-			bool sampled = true;
+			const struct texture* texture = nullptr; const struct texture_view* texture_view = nullptr; // Only one needs to be specified... if texture is provided the view is extracted from it
+			std::optional<bool> sampled_override = {};
 		};
 		using binding = std::variant<buffer_binding, texture_binding>;
 		// TODO: Need create functions?
@@ -455,10 +486,10 @@ namespace stylizer::api {
 		using pipeline = struct render_pipeline;
 
 		virtual render_pass& bind_render_pipeline(const render_pipeline& pipeline) = 0;
-		virtual render_pass& bind_vertex_buffer(api::device& device, size_t slot, const api::buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
-		virtual render_pass& bind_index_buffer(api::device& device, const api::buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
+		virtual render_pass& bind_vertex_buffer(device& device, size_t slot, const buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
+		virtual render_pass& bind_index_buffer(device& device, const buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
 		virtual render_pass& draw(size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) = 0;
-		virtual render_pass& draw_indexed(api::device& device, size_t index_count, size_t instance_count = 1, size_t first_index = 0, size_t base_vertex = 0, size_t first_instance = 0) = 0;
+		virtual render_pass& draw_indexed(device& device, size_t index_count, size_t instance_count = 1, size_t first_index = 0, size_t base_vertex = 0, size_t first_instance = 0) = 0;
 
 		virtual command_buffer& end(temporary_return_t, device& device) = 0;
 		virtual void one_shot_submit(device& device) = 0;
@@ -567,6 +598,8 @@ namespace stylizer::api {
 			bool high_performance = true;
 			struct surface* compatible_surface = nullptr; // When set to null the device will be configured in headless mode
 		};
+
+		virtual bool wait(bool for_queues = true) = 0; // Wait for device to finish
 
 		virtual texture& create_texture(temporary_return_t, const texture::create_config& config = {}) = 0;
 		virtual texture& create_and_write_texture(temporary_return_t, std::span<const std::byte> data, const texture::data_layout& layout, const texture::create_config& config = {}) = 0;
