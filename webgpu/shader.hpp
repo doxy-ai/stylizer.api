@@ -1,6 +1,5 @@
 #pragma once
 
-#include "cstring_from_view.hpp"
 #include "device.hpp"
 
 namespace stylizer::api::webgpu {
