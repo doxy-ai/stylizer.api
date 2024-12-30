@@ -21,7 +21,7 @@ namespace stylizer::api::webgpu {
 	}
 
 	struct device: public api::device { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(device);
-		char type[4] = STYLIZER_API_WGPU_TYPE;
+		uint32_t type = magic_number;
 		wgpu::Adapter adapter = nullptr;
 		wgpu::Device device_ = nullptr;
 		wgpu::Queue queue = nullptr;

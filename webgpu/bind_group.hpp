@@ -6,7 +6,7 @@
 
 namespace stylizer::api::webgpu {
 	struct bind_group: public api::bind_group { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(bind_group);
-		char type[4] = STYLIZER_API_WGPU_TYPE;
+		uint32_t type = magic_number;
 		wgpu::BindGroup group;
 		size_t index;
 

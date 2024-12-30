@@ -24,7 +24,7 @@
 
 namespace stylizer::api::webgpu {
 	struct surface: public api::surface { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(surface);
-		char type[4] = STYLIZER_API_WGPU_TYPE;
+		uint32_t type = magic_number;
 		wgpu::Surface surface_ = nullptr;
 
 		inline surface(surface&& o) { *this = std::move(o); }

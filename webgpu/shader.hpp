@@ -4,7 +4,7 @@
 
 namespace stylizer::api::webgpu {
 	struct shader: public api::shader { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(shader);
-		char type[4] = STYLIZER_API_WGPU_TYPE;
+		uint32_t type = magic_number;
 		wgpu::ShaderModule module = nullptr;
 		slcross::spirv spirv; // TODO: Can we store some sort of smaller reflection data?
 

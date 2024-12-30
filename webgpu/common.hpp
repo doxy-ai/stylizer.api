@@ -16,19 +16,19 @@
 
 namespace stylizer::api::webgpu {
 
-	#define STYLIZER_API_WGPU_TYPE "WGP"
-	constexpr static const std::string_view type_string = STYLIZER_API_WGPU_TYPE;
+	#define STYLIZER_API_WGPU_MAGIC_NUMBER 0x57475055/*"WGPU"*/
+	constexpr static const uint32_t magic_number = STYLIZER_API_WGPU_MAGIC_NUMBER;
 
 	template<typename Tto, typename Tfrom>
 	inline Tto& confirm_wgpu_type(Tfrom& ref) {
 		auto& res = ref.template as<Tto>();
-		assert(res.type == type_string);
+		assert(res.type == magic_number);
 		return res;
 	}
 	template<typename Tto, typename Tfrom>
 	inline const Tto& confirm_wgpu_type(const Tfrom& ref) {
 		auto& res = const_cast<Tfrom&>(ref).template as<Tto>();
-		assert(res.type == type_string);
+		assert(res.type == magic_number);
 		return res;
 	}
 

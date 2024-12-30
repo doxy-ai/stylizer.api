@@ -4,6 +4,7 @@
 
 namespace stylizer::api::webgpu {
 	struct command_buffer: public api::command_buffer { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_buffer);
+		uint32_t type = magic_number;
 		wgpu::CommandBuffer pre = nullptr;
 		wgpu::CommandBuffer compute = nullptr;
 		wgpu::CommandBuffer render = nullptr;
