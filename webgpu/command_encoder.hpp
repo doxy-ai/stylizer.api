@@ -7,7 +7,7 @@
 
 namespace stylizer::api::webgpu {
 	struct command_encoder: public api::command_encoder { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_encoder);
-		char type[4] = STYLIZER_API_WGPU_TYPE;
+		uint32_t type = magic_number;
 		event<void> deferred_to_release;
 		wgpu::CommandEncoder pre_encoder = nullptr;
 		wgpu::CommandEncoder compute_encoder = nullptr;
