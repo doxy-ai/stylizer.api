@@ -5,7 +5,7 @@
 
 namespace stylizer::api::webgpu {
 	struct compute_pipeline: public api::compute_pipeline { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(compute_pipeline);
-		char type[4] = STYLIZER_API_WGPU_TYPE;
+		uint32_t type = magic_number;
 		wgpu::ComputePipeline pipeline = nullptr;
 
 		compute_pipeline(compute_pipeline&& o) { *this = std::move(o); }

@@ -4,7 +4,7 @@
 
 namespace stylizer::api::webgpu {
 	struct texture: public api::texture { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture);
-		char type[4] = STYLIZER_API_WGPU_TYPE;
+		uint32_t type = magic_number;
 		wgpu::Texture texture_ = nullptr;
 		wgpu::Sampler sampler = nullptr;
 		mutable texture_view view = {}; // Mutable so may update while texture is const!

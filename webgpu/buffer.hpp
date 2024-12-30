@@ -4,7 +4,7 @@
 
 namespace stylizer::api::webgpu {
 	struct buffer: public api::buffer { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(buffer);
-		char type[4] = STYLIZER_API_WGPU_TYPE;
+		uint32_t type = magic_number;
 		wgpu::Buffer buffer_;
 
 		buffer(buffer&& o) { *this = std::move(o); }

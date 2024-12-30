@@ -4,7 +4,7 @@
 
 namespace stylizer::api::webgpu {
 	struct texture_view: public api::texture_view { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture_view);
-		char type[4] = STYLIZER_API_WGPU_TYPE;
+		uint32_t type = magic_number;
 		const webgpu::texture* owning_texture;
 		wgpu::TextureView view = nullptr;
 
