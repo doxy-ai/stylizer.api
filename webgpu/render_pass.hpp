@@ -8,6 +8,7 @@ namespace stylizer::api::webgpu {
 	struct render_pass: public webgpu::command_encoder, public api::render_pass { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(render_pass);
 		using super = webgpu::command_encoder;
 
+		// NOTE: Type gets inherited from command_encoder
 		wgpu::CommandEncoder render_encoder = nullptr;
 		wgpu::RenderPassEncoder pass = nullptr;
 		std::vector<color_attachment> color_attachments = {};
