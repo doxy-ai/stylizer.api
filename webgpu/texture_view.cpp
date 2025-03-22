@@ -19,7 +19,7 @@ namespace stylizer::api::webgpu {
 			.baseMipLevel = static_cast<uint32_t>(config.base_mip_level),
 			.mipLevelCount = static_cast<uint32_t>(config.mip_level_count_override.value_or(texture.mip_levels())),
 			.baseArrayLayer = 0,
-			.arrayLayerCount = std::max<uint32_t>(1/* texture_.getDepthOrArrayLayers() */, 1),
+			.arrayLayerCount = const_cast<wgpu::Texture&>(texture.texture_).getDepthOrArrayLayers(),
 			.aspect = to_wgpu(config.aspect),
 		}, texture);
 	}

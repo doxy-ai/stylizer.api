@@ -25,12 +25,14 @@ namespace stylizer::api::webgpu {
 		wgpu::Adapter adapter = nullptr;
 		wgpu::Device device_ = nullptr;
 		wgpu::Queue queue = nullptr;
+		std::unique_ptr<wgpu::ErrorCallback> error_callback = nullptr;
 
 		inline device(device&& o) { *this = std::move(o); }
 		inline device& operator=(device&& o) {
 			adapter = std::exchange(o.adapter, nullptr);
 			device_ = std::exchange(o.device_, nullptr);
 			queue = std::exchange(o.queue, nullptr);
+			error_callback = std::exchange(o.error_callback, nullptr);
 			return *this;
 		}
 		inline operator bool() const override { return adapter || device_; }
@@ -43,7 +45,8 @@ namespace stylizer::api::webgpu {
 			// for (int i = 0 ; i < 5 ; ++i) {
 				// std::cout << "Tick/Poll device..." << std::endl;
 #if defined(WEBGPU_BACKEND_DAWN)
-				return wgpuDeviceTick(device_);
+				device_.tick();
+				return true;
 #elif defined(WEBGPU_BACKEND_WGPU)
 				return wgpuDevicePoll(device_, false, nullptr);
 #elif defined(WEBGPU_BACKEND_EMSCRIPTEN)
@@ -51,6 +54,7 @@ namespace stylizer::api::webgpu {
 				return true;
 #endif
 			// }
+			return false;
 		}
 		bool wait(bool for_queues = true) override {; // Wait for device to finish
 			if(!for_queues) return process_events();

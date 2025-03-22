@@ -14,21 +14,9 @@
 #include <magic_enum/magic_enum_flags.hpp>
 
 #include "spans.hpp"
+#include "event.hpp"
 
 namespace stylizer {
-	template<typename... Args>
-	struct event: public std::vector<std::function<void(Args...)>> {
-		void operator()(Args... args) {
-			for(auto& f: *this) f(std::forward<Args>(args)...);
-		}
-	};
-	template<>
-	struct event<void>: public std::vector<std::function<void()>> {
-		void operator()() {
-			for(auto& f: *this) f();
-		}
-	};
-
 
 	template<typename T>
 	concept releasable = requires(T t) {
@@ -216,9 +204,12 @@ namespace stylizer::api {
 		float depth_bias_slope_scale = 0;
 		float depth_bias_clamp = 0;
 
-		bool should_store_stencil = false; // False discards
-		std::optional<size_t> stencil_clear_value = {}; // When set value is not loaded // TODO: Should be uint32_t?
-		bool stencil_readonly = false;
+		struct stencil_config {
+			bool should_store = true; // False discards
+			std::optional<size_t> clear_value = {}; // When set value is not loaded // TODO: Should be uint32_t?
+			bool readonly = false;
+		};
+		std::optional<stencil_config> stencil = {};
 		// WGPUStencilFaceState stencilFront;
 		// WGPUStencilFaceState stencilBack;
 		// uint32_t stencilReadMask;

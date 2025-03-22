@@ -23,6 +23,11 @@ namespace stylizer::api::webgpu {
 			.requiredLimits = nullptr,
 			.defaultQueue = { .label = "Stylizer Queue" },
 		});
+		out.error_callback = out.device_.setUncapturedErrorCallback([](wgpu::ErrorType type, char const * message){
+			if(type <= wgpu::ErrorType::Validation)
+				std::cerr << type << ": " << message << std::endl;
+			else STYLIZER_API_THROW(message);
+		});
 		out.queue = out.device_.getQueue();
 		return out;
 	}

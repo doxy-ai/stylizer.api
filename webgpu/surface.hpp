@@ -177,10 +177,18 @@ namespace stylizer::api::webgpu {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 			config out{.present_mode = present_mode::Fifo, .size = size};
 
-			out.texture_format = from_wgpu(surface_.getPreferredFormat(device.adapter));
-
 			wgpu::SurfaceCapabilities cap;
 			surface_.getCapabilities(device.adapter, &cap);
+
+			// Find the first SRGB surface format
+			out.texture_format = texture_format::Undefined;
+			for(size_t i = cap.formatCount; i--;)
+				if(is_srgb(cap.formats[i]))
+					out.texture_format = from_wgpu((wgpu::TextureFormat)cap.formats[i]); // TODO: Write better choose logic!
+			if(out.texture_format == texture_format::Undefined)
+				out.texture_format = from_wgpu((wgpu::TextureFormat)cap.formats[0]);
+
+			// Use the "Best" supported present mode
 			if(auto end = cap.presentModes + cap.presentModeCount; std::find(cap.presentModes, end, WGPUPresentMode_Mailbox) != end)
 				out.present_mode = present_mode::Mailbox;
 			else if(std::find(cap.presentModes, end, WGPUPresentMode_Immediate) != end)

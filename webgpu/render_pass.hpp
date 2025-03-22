@@ -3,6 +3,7 @@
 #include "command_encoder.hpp"
 #include "buffer.hpp"
 #include "texture.hpp"
+#include "webgpu/webgpu.hpp"
 
 namespace stylizer::api::webgpu {
 	struct render_pass: public webgpu::command_encoder, public api::render_pass { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(render_pass);
@@ -47,6 +48,7 @@ namespace stylizer::api::webgpu {
 				auto& view = confirm_wgpu_type<webgpu::texture_view>(attach.texture ? confirm_wgpu_type<webgpu::texture>(*attach.texture).full_view(device) : *attach.view);
 				color_attachments.emplace_back(WGPURenderPassColorAttachment{
 					.view = view.view,
+					.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
 					.resolveTarget = attach.resolve_target ? confirm_wgpu_type<webgpu::texture_view>(*attach.resolve_target).view : nullptr,
 					.loadOp = attach.clear_value.has_value() ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load,
 					.storeOp = attach.should_store ? wgpu::StoreOp::Store : wgpu::StoreOp::Discard,
@@ -57,6 +59,11 @@ namespace stylizer::api::webgpu {
 			if(depth) {
 				assert(depth->texture || depth->view);
 				auto& view = confirm_wgpu_type<webgpu::texture_view>(depth->texture ? confirm_wgpu_type<webgpu::texture>(*depth->texture).full_view(device) : *depth->view);
+				bool hasStencil = depth->stencil.has_value();
+				auto stencil = depth->stencil.value_or(depth_stencil_attachment::stencil_config{});
+				auto loadOP = stencil.clear_value.has_value() ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load;
+				auto storeOP = stencil.should_store ? wgpu::StoreOp::Store : wgpu::StoreOp::Discard;
+
 				static WGPURenderPassDepthStencilAttachment static_depth;
 				static_depth = {
 					.view = view.view,
@@ -64,10 +71,10 @@ namespace stylizer::api::webgpu {
 					.depthStoreOp = depth->should_store_depth ? wgpu::StoreOp::Store : wgpu::StoreOp::Discard,
 					.depthClearValue = depth->depth_clear_value.has_value() ? *depth->depth_clear_value : 1,
 					.depthReadOnly = depth->depth_readonly,
-					.stencilLoadOp = depth->stencil_clear_value.has_value() ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load,
-					.stencilStoreOp = depth->should_store_stencil ? wgpu::StoreOp::Store : wgpu::StoreOp::Discard,
-					.stencilClearValue = static_cast<uint32_t>(depth->stencil_clear_value.has_value() ? *depth->stencil_clear_value : 0),
-					.stencilReadOnly = depth->stencil_readonly,
+					.stencilLoadOp = hasStencil ? loadOP : wgpu::LoadOp::Undefined,
+					.stencilStoreOp = hasStencil ? storeOP : wgpu::StoreOp::Undefined,
+					.stencilClearValue = static_cast<uint32_t>(stencil.clear_value.has_value() ? *stencil.clear_value : 0),
+					.stencilReadOnly = stencil.readonly,
 				};
 				depth_attachment = &static_depth;
 			}
