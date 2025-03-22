@@ -25,7 +25,7 @@ namespace stylizer::api::webgpu {
 			out.spirv = std::move(spirv.value_or(slcross::wgsl::parse_from_memory(wgsl)));
 
 			WGPUShaderModuleWGSLDescriptor code {
-				.chain = { .sType = wgpu::SType::ShaderModuleWGSLDescriptor },
+				.chain = { .sType = wgpu::SType::ShaderSourceWGSL },
 				.code = cstring_from_view(wgsl),
 			};
 			WGPUShaderModuleDescriptor descriptor {

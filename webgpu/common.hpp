@@ -62,6 +62,10 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 }
 )_";
 
+	inline wgpu::OptionalBool to_wgpu(bool boolean) {
+		return boolean ? wgpu::OptionalBool::True : wgpu::OptionalBool::False;
+	}
+
 	inline wgpu::Color to_wgpu(color32 color) {
 		return {color.r, color.g, color.b, color.a};
 	}
@@ -92,6 +96,37 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 		}
 	};
 
+	inline bool is_srgb(wgpu::TextureFormat format) {
+		switch(format) {
+			case WGPUTextureFormat_RGBA8UnormSrgb:    
+			case WGPUTextureFormat_BGRA8UnormSrgb:  
+			case WGPUTextureFormat_BC1RGBAUnormSrgb:
+			case WGPUTextureFormat_BC2RGBAUnormSrgb:
+			case WGPUTextureFormat_BC3RGBAUnormSrgb:
+			case WGPUTextureFormat_BC7RGBAUnormSrgb:                
+			case WGPUTextureFormat_ETC2RGB8UnormSrgb:                
+			case WGPUTextureFormat_ETC2RGB8A1UnormSrgb:
+			case WGPUTextureFormat_ETC2RGBA8UnormSrgb:
+			case WGPUTextureFormat_ASTC4x4UnormSrgb:
+			case WGPUTextureFormat_ASTC5x4UnormSrgb:
+			case WGPUTextureFormat_ASTC5x5UnormSrgb:
+			case WGPUTextureFormat_ASTC6x5UnormSrgb:
+			case WGPUTextureFormat_ASTC6x6UnormSrgb:
+			case WGPUTextureFormat_ASTC8x5UnormSrgb:
+			case WGPUTextureFormat_ASTC8x6UnormSrgb:
+			case WGPUTextureFormat_ASTC8x8UnormSrgb:
+			case WGPUTextureFormat_ASTC10x5UnormSrgb:
+			case WGPUTextureFormat_ASTC10x6UnormSrgb:
+			case WGPUTextureFormat_ASTC10x8UnormSrgb:
+			case WGPUTextureFormat_ASTC10x10UnormSrgb:
+			case WGPUTextureFormat_ASTC12x10UnormSrgb:
+			case WGPUTextureFormat_ASTC12x12UnormSrgb:
+				return true;
+			default:
+				return false;
+		};
+    }
+
 	inline wgpu::TextureFormat to_wgpu(texture_format format) {
 		switch(format){
 			case texture_format::Depth24: return wgpu::TextureFormat::Depth24Plus;
@@ -118,8 +153,8 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 		}
 	}
 
-	inline wgpu::TextureUsageFlags to_wgpu_texture(usage usage) {
-		wgpu::TextureUsageFlags out = {};
+	inline wgpu::TextureUsage to_wgpu_texture(usage usage) {
+		wgpu::Flags out = {};
 		if((usage & usage::CopySource) > usage::Invalid) {
 			out |= wgpu::TextureUsage::CopySrc;
 			usage &= ~usage::CopySource;
@@ -145,7 +180,7 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 			STYLIZER_API_THROW("Invalid Texture Usage(s): " + std::string(magic_enum::enum_flags_name(usage)));
 		return out;
 	}
-	inline usage from_wgpu(wgpu::TextureUsageFlags usage) {
+	inline usage from_wgpu(wgpu::TextureUsage usage) {
 		auto out = usage::Invalid;
 		if(usage & wgpu::TextureUsage::CopySrc)
 			out |= usage::CopySource;
@@ -159,8 +194,8 @@ fn vertex(@builtin(vertex_index) vertex_index: u32) -> vertex_output {
 		return out;
 	}
 
-	inline wgpu::BufferUsageFlags to_wgpu_buffer(usage usage) {
-		wgpu::BufferUsageFlags out = {};
+	inline wgpu::BufferUsage to_wgpu_buffer(usage usage) {
+		wgpu::Flags out = {};
 		if((usage & usage::CopySource) > usage::Invalid) {
 			out |= wgpu::BufferUsage::CopySrc;
 			usage &= ~usage::CopySource;

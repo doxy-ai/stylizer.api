@@ -73,7 +73,7 @@ namespace stylizer::api::webgpu {
 				depth_state = WGPUDepthStencilState{
 					.format = to_wgpu(depth_attachment->texture ? depth_attachment->texture->texture_format()
 						: depth_attachment->view ? (depth_attachment->view->texture().texture_format()) : depth_attachment->texture_format),
-					.depthWriteEnabled = depth_attachment->should_store_depth && !depth_attachment->depth_readonly,
+					.depthWriteEnabled = to_wgpu(depth_attachment->should_store_depth && !depth_attachment->depth_readonly),
 					.depthCompare = to_wgpu(depth_attachment->depth_comparison_function),
 					.stencilFront = wgpu::StencilFaceState{wgpu::Default},
 					.stencilBack = wgpu::StencilFaceState{wgpu::Default},

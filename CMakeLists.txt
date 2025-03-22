@@ -15,6 +15,9 @@ option(STYLIZER_API_ENABLE_WEBGPU "Should the Stylizer Graphics API support the 
 
 set(CMAKE_CXX_STANDARD 20)
 
+if(STYLIZER_API_ENABLE_WEBGPU)
+	set(SLCROSS_ENABLE_DAWN ON CACHE BOOL "Should all of Dawn be built or just Tint?")
+endif()
 add_subdirectory(thirdparty/slcross EXCLUDE_FROM_ALL)
 add_subdirectory(thirdparty/magic_enum EXCLUDE_FROM_ALL)
 
