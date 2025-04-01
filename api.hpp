@@ -90,33 +90,17 @@ namespace stylizer::api {
 		Inherit,
 	};
 
-	enum class texture_format {
-		Undefined,
-		Depth24,
-
-		Rf32,
-		Ru8,
-
-		RGBA32,
-
-		RGBA8,
-		RGBA8_SRGB,
-
-		BGRA8_SRGB,
-
-		Gray32 = Rf32,
-		Gray8 = Ru8,
-	};
+	#include "texture_format.h"
 
 	inline size_t bytes_per_pixel(texture_format format) {
 		switch(format){
 			case texture_format::Depth24: return 24 / 8;
 			case texture_format::Rf32: return sizeof(float);
 			case texture_format::Ru8: return sizeof(uint8_t);
-			case texture_format::RGBA32: return sizeof(color32);
-			case texture_format::RGBA8: return sizeof(color8);
-			case texture_format::RGBA8_SRGB: return sizeof(color8);
-			case texture_format::BGRA8_SRGB: return sizeof(color8);
+			case texture_format::RGBAf32: return sizeof(color32);
+			case texture_format::RGBAu8: return sizeof(color8);
+			case texture_format::RGBAu8_NormalizedSRGB: return sizeof(color8);
+			case texture_format::BGRAu8_NormalizedSRGB: return sizeof(color8);
 		}
 		STYLIZER_API_THROW("An error has occurred finding the number of bytes per pixel in format: " + std::string(magic_enum::enum_name(format)));
 	}
@@ -235,7 +219,7 @@ namespace stylizer::api {
 
 		struct config {
 			enum present_mode present_mode = surface::present_mode::Fifo;
-			enum texture_format texture_format = texture_format::RGBA8_SRGB;
+			enum texture_format texture_format = texture_format::RGBAu8_NormalizedSRGB;
 			enum alpha_mode alpha_mode = alpha_mode::Opaque;
 			enum usage usage = usage::RenderAttachment;
 			vec2u size;
@@ -296,7 +280,7 @@ namespace stylizer::api {
 
 		struct create_config {
 			const std::string_view label = "Stylizer Texture";
-			enum texture_format format = format::RGBA8_SRGB;
+			enum texture_format format = format::RGBAu8_NormalizedSRGB;
 			enum usage usage = usage::TextureBinding;
 			vec3u size;
 			uint32_t mip_levels = 1;
