@@ -76,13 +76,13 @@ namespace stylizer::api::webgpu {
 
 
 
-		static inline void copy_buffer_to_buffer_impl(wgpu::CommandEncoder e, webgpu::buffer& destination, const webgpu::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) {
+		static inline void copy_buffer_to_buffer_impl(wgpu::CommandEncoder e, webgpu::buffer& destination, const webgpu::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, optional<size_t> size_override = {}) {
 			size_t size = std::min(destination.size() - destination_offset, source.size() - source_offset);
 			assert(size_override.value_or(size) <= size);
 			e.copyBufferToBuffer(source.buffer_, source_offset, destination.buffer_, destination_offset, size_override.value_or(size));
 		}
 
-		api::buffer& copy_from(api::device& device_, const api::buffer& source_, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
+		api::buffer& copy_from(api::device& device_, const api::buffer& source_, size_t destination_offset = 0, size_t source_offset = 0, optional<size_t> size_override = {}) override {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 			auto& source = confirm_wgpu_type<webgpu::buffer>(source_);
 			auto_release e = device.device_.createCommandEncoder();
@@ -104,7 +104,7 @@ namespace stylizer::api::webgpu {
 			return callback;
 		}
 
-		std::future<std::byte*> map_async(api::device& device, bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) override {
+		std::future<std::byte*> map_async(api::device& device, bool for_writing = false, size_t offset = 0, optional<size_t> size = {}) override {
 			static std::promise<std::byte*> res; res = {};
 			static constexpr auto set_promise_value = [](std::promise<std::byte*>& res, wgpu::Buffer buffer, size_t offset, size_t size, bool for_writing) {
 				if(for_writing) res.set_value((std::byte*)buffer.getMappedRange(offset, size));
@@ -124,13 +124,13 @@ namespace stylizer::api::webgpu {
 			return res.get_future();
 		}
 
-		std::byte* map(api::device& device, bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) override {
+		std::byte* map(api::device& device, bool for_writing = false, size_t offset = 0, optional<size_t> size = {}) override {
 			auto future = map_async(device, for_writing, offset, size);
 			confirm_wgpu_type<webgpu::device>(device).process_events();
 			return future.get();
 		}
 
-		std::byte* get_mapped_range(bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) {
+		std::byte* get_mapped_range(bool for_writing = false, size_t offset = 0, optional<size_t> size = {}) {
 			// assert(is_mapped());
 			if(for_writing) return (std::byte*)buffer_.getMappedRange(offset, size.value_or(this->size()));
 			else return (std::byte*)buffer_.getConstMappedRange(offset, size.value_or(this->size()));

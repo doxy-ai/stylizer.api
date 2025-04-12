@@ -17,7 +17,7 @@ namespace stylizer::api::webgpu {
 		render_pipeline&& move() { return std::move(*this); }
 
 
-		static render_pipeline create(api::device& device_, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline") {
+		static render_pipeline create(api::device& device_, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline") {
 			static constexpr auto format_stride = [](enum render_pipeline::config::vertex_buffer_layout::attribute::format format) -> size_t {
 				using fmt = enum render_pipeline::config::vertex_buffer_layout::attribute::format;
 				switch(format){
@@ -93,7 +93,7 @@ namespace stylizer::api::webgpu {
 				blend_states.reserve(color_attachments.size());
 				color_targets.reserve(color_attachments.size());
 				for(auto& target: color_attachments) {
-					assert(depth_attachment->texture || depth_attachment->view || depth_attachment->texture_format != texture_format::Undefined);
+					assert(target.texture || target.view || target.texture_format != texture_format::Undefined);
 
 					auto color_blend = target.color_blend_state.value_or(blend_state{});
 					auto alpha_blend = target.alpha_blend_state.value_or(blend_state{});

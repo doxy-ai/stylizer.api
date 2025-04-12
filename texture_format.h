@@ -127,6 +127,7 @@ enum stylizer_api_texture_format
 
 	// Some convenience overloads
 	RGBA8srgb = RGBAu8_NormalizedSRGB,
+	BGRA8srgb = BGRAu8_NormalizedSRGB,
 	RGBA32 = RGBAf32,
 	Depth24 = Depth_u24,
 
