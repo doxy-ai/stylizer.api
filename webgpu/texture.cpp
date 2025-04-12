@@ -2,7 +2,7 @@
 #include "render_pipeline.hpp"
 
 namespace stylizer::api::webgpu {
-	api::texture& texture::blit_from(api::device& device_, const api::texture& source_, std::optional<color32> clear_value /* = {} */, api::render_pipeline* pipeline_override /* = nullptr */, std::optional<size_t> vertex_count_override /* = {} */) {
+	api::texture& texture::blit_from(api::device& device_, const api::texture& source_, optional<color32> clear_value /* = {} */, api::render_pipeline* pipeline_override /* = nullptr */, optional<size_t> vertex_count_override /* = {} */) {
 		auto& device = confirm_wgpu_type<webgpu::device>(device_);
 		auto& source = confirm_wgpu_type<webgpu::texture>(source_);
 		assert(source.sampler);
@@ -140,7 +140,7 @@ fn fragment(vert: vertex_output) -> @location(0) vec4f {
 		}
 	}
 
-	api::texture& texture::generate_mipmaps(api::device& device_, size_t first_mip_level /* = 0 */, std::optional<size_t> mip_levels_override /* = {} */) {
+	api::texture& texture::generate_mipmaps(api::device& device_, size_t first_mip_level /* = 0 */, optional<size_t> mip_levels_override /* = {} */) {
 		auto& device = confirm_wgpu_type<webgpu::device>(device_);
 		auto size = this->size();
 		size_t size_max_levels = std::bit_width(std::min(size.x, size.y));

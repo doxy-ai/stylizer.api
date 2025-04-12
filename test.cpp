@@ -42,7 +42,7 @@ fn fragment() -> @location(0) vec4f {
 })");
 
 	std::vector<stylizer::api::color_attachment> color_attachments = {{
-		.texture_format = stylizer::api::texture::format::BGRA8_SRGB,
+		.texture_format = stylizer::api::texture::format::BGRAu8_NormalizedSRGB,
 		.clear_value = {{.3, .5, 1}},
 	}};
 	stylizer::auto_release pipeline = stylizer::api::webgpu::render_pipeline::create(

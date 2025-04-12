@@ -79,10 +79,10 @@ namespace stylizer::api::webgpu {
 		return encoder = create_command_encoder(one_shot, label);
 	}
 
-	webgpu::render_pass device::create_render_pass(std::span<const api::render_pass::color_attachment> colors, std::optional<api::render_pass::depth_stencil_attachment> depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) {
+	webgpu::render_pass device::create_render_pass(std::span<const api::render_pass::color_attachment> colors, optional<api::render_pass::depth_stencil_attachment> depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) {
 		return webgpu::render_pass::create(*this, colors, depth, one_shot, label);
 	}
-	api::render_pass& device::create_render_pass(temporary_return_t, std::span<const api::render_pass::color_attachment> colors, const std::optional<api::render_pass::depth_stencil_attachment>& depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) {
+	api::render_pass& device::create_render_pass(temporary_return_t, std::span<const api::render_pass::color_attachment> colors, const optional<api::render_pass::depth_stencil_attachment>& depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) {
 		static webgpu::render_pass render_pass;
 		return render_pass = create_render_pass(colors, depth, one_shot, label);
 	}
@@ -95,10 +95,10 @@ namespace stylizer::api::webgpu {
 		return pipeline = create_compute_pipeline(entry_point, label);
 	}
 	
-	webgpu::render_pipeline device::create_render_pipeline(const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments /* = {} */, std::optional<depth_stencil_attachment> depth_attachment /* = {} */, const api::render_pipeline::config& config /*=  {} */, const std::string_view label /* = "Stylizer Render Pipeline" */) {
+	webgpu::render_pipeline device::create_render_pipeline(const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments /* = {} */, optional<depth_stencil_attachment> depth_attachment /* = {} */, const api::render_pipeline::config& config /*=  {} */, const std::string_view label /* = "Stylizer Render Pipeline" */) {
 		return webgpu::render_pipeline::create(*this, entry_points, color_attachments, depth_attachment, config, label);
 	}
-	api::render_pipeline& device::create_render_pipeline(temporary_return_t, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments /* = {} */, const std::optional<depth_stencil_attachment>& depth_attachment /* = {} */, const api::render_pipeline::config& config /* = {} */, const std::string_view label /* = "Stylizer Render Pipeline" */) {
+	api::render_pipeline& device::create_render_pipeline(temporary_return_t, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments /* = {} */, const optional<depth_stencil_attachment>& depth_attachment /* = {} */, const api::render_pipeline::config& config /* = {} */, const std::string_view label /* = "Stylizer Render Pipeline" */) {
 		static webgpu::render_pipeline pipeline;
 		return pipeline = create_render_pipeline(entry_points, color_attachments, depth_attachment, config, label);
 	}

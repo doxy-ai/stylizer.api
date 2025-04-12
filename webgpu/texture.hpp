@@ -127,7 +127,7 @@ namespace stylizer::api::webgpu {
 		}
 
 
-		static inline void copy_texture_to_texture_impl(wgpu::CommandEncoder e, webgpu::texture& destination, const webgpu::texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) {
+		static inline void copy_texture_to_texture_impl(wgpu::CommandEncoder e, webgpu::texture& destination, const webgpu::texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, optional<vec3u> extent_override = {}, size_t min_mip_level = 0, optional<size_t> mip_levels_override = {}) {
 			vec3u max_origin = {std::max(destination_origin.x, source_origin.x), std::max(destination_origin.y, source_origin.y), std::max(destination_origin.z, source_origin.z)};
 			vec3u destSize = destination.size();
 			vec3u srcSize = source.size();
@@ -149,7 +149,7 @@ namespace stylizer::api::webgpu {
 				}, {static_cast<uint32_t>(extent.x), static_cast<uint32_t>(extent.y), static_cast<uint32_t>(extent.z)});
 		}
 
-		api::texture& copy_from(api::device& device_, const api::texture& source_, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override {
+		api::texture& copy_from(api::device& device_, const api::texture& source_, vec3u destination_origin = {}, vec3u source_origin = {}, optional<vec3u> extent_override = {}, size_t min_mip_level = 0, optional<size_t> mip_levels_override = {}) override {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 			auto& source = confirm_wgpu_type<webgpu::texture>(source_);
 			auto_release e = device.device_.createCommandEncoder();
@@ -159,10 +159,10 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 
-		api::texture& blit_from(api::device& device, const api::texture& source, std::optional<color32> clear_value = {}, api::render_pipeline* render_pipeline_override = nullptr, std::optional<size_t> vertex_count_override = {}) override;
+		api::texture& blit_from(api::device& device, const api::texture& source, optional<color32> clear_value = {}, api::render_pipeline* render_pipeline_override = nullptr, optional<size_t> vertex_count_override = {}) override;
 
 
-		api::texture& generate_mipmaps(api::device& device, size_t first_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override;
+		api::texture& generate_mipmaps(api::device& device, size_t first_mip_level = 0, optional<size_t> mip_levels_override = {}) override;
 
 
 		void release() override {

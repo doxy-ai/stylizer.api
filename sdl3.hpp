@@ -67,7 +67,7 @@ namespace stylizer::api::sdl3 {
 			return Tsurface::create_from_x11(x11_display, (void*)x11_window);
 		}
 #  endif // defined(SDL_VIDEO_DRIVER_X11)
-#  if defined(SDL_VIDEO_DRIVER_WAYLAND)
+// #  if defined(SDL_VIDEO_DRIVER_WAYLAND)
 		else if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
 			struct wl_display *wayland_display = (struct wl_display *)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, NULL);
 			struct wl_surface *wayland_surface = (struct wl_surface *)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
@@ -75,7 +75,7 @@ namespace stylizer::api::sdl3 {
 
 			return Tsurface::create_from_wayland(wayland_display, wayland_surface);
 		}
-#  endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
+// #  endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
 #elif defined(SDL_PLATFORM_WIN32)
 		{
 			HWND hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);

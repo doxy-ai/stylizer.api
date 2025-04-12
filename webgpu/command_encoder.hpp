@@ -57,7 +57,7 @@ namespace stylizer::api::webgpu {
 		}
 	public:
 
-		api::command_encoder& copy_buffer_to_buffer(api::device& device_, api::buffer& destination, const api::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
+		api::command_encoder& copy_buffer_to_buffer(api::device& device_, api::buffer& destination, const api::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, optional<size_t> size_override = {}) override {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 			auto& dest = confirm_wgpu_type<webgpu::buffer>(destination);
 			auto& src = confirm_wgpu_type<webgpu::buffer>(source);
@@ -65,7 +65,7 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 
-		api::command_encoder& copy_texture_to_texture(api::device& device_, api::texture& destination, const api::texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override {
+		api::command_encoder& copy_texture_to_texture(api::device& device_, api::texture& destination, const api::texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, optional<vec3u> extent_override = {}, size_t min_mip_level = 0, optional<size_t> mip_levels_override = {}) override {
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 			auto& dest = confirm_wgpu_type<webgpu::texture>(destination);
 			auto& src = confirm_wgpu_type<webgpu::texture>(source);
@@ -84,7 +84,7 @@ namespace stylizer::api::webgpu {
 			return *this;
 		}
 
-		api::command_encoder& bind_compute_group(api::device& device, const api::bind_group& group_, bool release_on_submit = false, std::optional<size_t> index_override = {}) override {
+		api::command_encoder& bind_compute_group(api::device& device, const api::bind_group& group_, bool release_on_submit = false, optional<size_t> index_override = {}) override {
 			auto& group = confirm_wgpu_type<webgpu::bind_group>(group_);
 			maybe_create_compute_pass(confirm_wgpu_type<webgpu::device>(device)).setBindGroup(index_override.value_or(group.index), group.group, 0, nullptr);
 			if(release_on_submit) deferred_to_release.emplace_back([group = std::move(group)]() mutable {

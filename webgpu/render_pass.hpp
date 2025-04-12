@@ -13,10 +13,10 @@ namespace stylizer::api::webgpu {
 		wgpu::CommandEncoder render_encoder = nullptr;
 		wgpu::RenderPassEncoder pass = nullptr;
 		std::vector<color_attachment> color_attachments = {};
-		std::optional<depth_stencil_attachment> depth_attachment = {};
+		optional<depth_stencil_attachment> depth_attachment = {};
 		bool render_used = false;
 
-		inline render_pass(std::vector<color_attachment> colors, std::optional<depth_stencil_attachment> depth): color_attachments(std::move(colors)), depth_attachment(depth) {}
+		inline render_pass(std::vector<color_attachment> colors, optional<depth_stencil_attachment> depth): color_attachments(std::move(colors)), depth_attachment(depth) {}
 		inline render_pass(render_pass&& o) { *this = std::move(o); }
 		inline render_pass& operator=(render_pass&& o) {
 			super::operator=(std::move(o));
@@ -31,10 +31,10 @@ namespace stylizer::api::webgpu {
 		render_pass&& move() { return std::move(*this); }
 
 
-		static render_pass create(api::device& device_, std::span<const render_pass::color_attachment> colors, const std::optional<depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") {
+		static render_pass create(api::device& device_, std::span<const render_pass::color_attachment> colors, const optional<depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") {
 			assert(colors.size() > 0);
-			assert(!(depth.has_value() && depth->depth_clear_value.has_value()) || depth->depth_clear_value >= 0);
-			assert(!(depth.has_value() && depth->depth_clear_value.has_value()) || depth->depth_clear_value <= 1);
+			assert(!(depth.has_value && depth->depth_clear_value.has_value) || depth->depth_clear_value >= 0);
+			assert(!(depth.has_value && depth->depth_clear_value.has_value) || depth->depth_clear_value <= 1);
 			auto& device = confirm_wgpu_type<webgpu::device>(device_);
 
 			render_pass out({colors.begin(), colors.end()}, depth);
@@ -50,30 +50,30 @@ namespace stylizer::api::webgpu {
 					.view = view.view,
 					.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
 					.resolveTarget = attach.resolve_target ? confirm_wgpu_type<webgpu::texture_view>(*attach.resolve_target).view : nullptr,
-					.loadOp = attach.clear_value.has_value() ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load,
+					.loadOp = attach.clear_value.has_value ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load,
 					.storeOp = attach.should_store ? wgpu::StoreOp::Store : wgpu::StoreOp::Discard,
-					.clearValue = attach.clear_value.has_value() ? to_wgpu(*attach.clear_value) : to_wgpu(color32{}),
+					.clearValue = attach.clear_value.has_value ? to_wgpu(*attach.clear_value) : to_wgpu(color32{}),
 				});
 			}
 			WGPURenderPassDepthStencilAttachment* depth_attachment = nullptr;
 			if(depth) {
 				assert(depth->texture || depth->view);
 				auto& view = confirm_wgpu_type<webgpu::texture_view>(depth->texture ? confirm_wgpu_type<webgpu::texture>(*depth->texture).full_view(device) : *depth->view);
-				bool hasStencil = depth->stencil.has_value();
+				bool hasStencil = depth->stencil.has_value;
 				auto stencil = depth->stencil.value_or(depth_stencil_attachment::stencil_config{});
-				auto loadOP = stencil.clear_value.has_value() ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load;
+				auto loadOP = stencil.clear_value.has_value ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load;
 				auto storeOP = stencil.should_store ? wgpu::StoreOp::Store : wgpu::StoreOp::Discard;
 
 				static WGPURenderPassDepthStencilAttachment static_depth;
 				static_depth = {
 					.view = view.view,
-					.depthLoadOp = depth->depth_clear_value.has_value() ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load,
+					.depthLoadOp = depth->depth_clear_value.has_value ? wgpu::LoadOp::Clear : wgpu::LoadOp::Load,
 					.depthStoreOp = depth->should_store_depth ? wgpu::StoreOp::Store : wgpu::StoreOp::Discard,
-					.depthClearValue = depth->depth_clear_value.has_value() ? *depth->depth_clear_value : 1,
+					.depthClearValue = depth->depth_clear_value.has_value ? *depth->depth_clear_value : 1,
 					.depthReadOnly = depth->depth_readonly,
 					.stencilLoadOp = hasStencil ? loadOP : wgpu::LoadOp::Undefined,
 					.stencilStoreOp = hasStencil ? storeOP : wgpu::StoreOp::Undefined,
-					.stencilClearValue = static_cast<uint32_t>(stencil.clear_value.has_value() ? *stencil.clear_value : 0),
+					.stencilClearValue = static_cast<uint32_t>(stencil.clear_value.has_value ? *stencil.clear_value : 0),
 					.stencilReadOnly = stencil.readonly,
 				};
 				depth_attachment = &static_depth;
@@ -94,17 +94,17 @@ namespace stylizer::api::webgpu {
 			return super::defer(std::move(func));
 		}
 
-		api::command_encoder& copy_buffer_to_buffer(api::device& device, api::buffer& destination, const api::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) override {
+		api::command_encoder& copy_buffer_to_buffer(api::device& device, api::buffer& destination, const api::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, optional<size_t> size_override = {}) override {
 			return super::copy_buffer_to_buffer(device, destination, source, destination_offset, source_offset, size_override);
 		}
-		api::command_encoder& copy_texture_to_texture(api::device& device, api::texture& destination, const api::texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override {
+		api::command_encoder& copy_texture_to_texture(api::device& device, api::texture& destination, const api::texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, optional<vec3u> extent_override = {}, size_t min_mip_level = 0, optional<size_t> mip_levels_override = {}) override {
 			return super::copy_texture_to_texture(device, destination, source, destination_origin, source_origin, extent_override, min_mip_level, mip_levels_override);
 		}
 
 		api::command_encoder& bind_compute_pipeline(api::device& device, const api::compute_pipeline& pipeline, bool release_on_submit = false) override {
 			return super::bind_compute_pipeline(device, pipeline, release_on_submit);
 		}
-		api::command_encoder& bind_compute_group(api::device& device, const api::bind_group& group, bool release_on_submit = false, std::optional<size_t> index_override = {}) override {
+		api::command_encoder& bind_compute_group(api::device& device, const api::bind_group& group, bool release_on_submit = false, optional<size_t> index_override = {}) override {
 			return super::bind_compute_group(device, group, release_on_submit, index_override);
 		}
 		api::command_encoder& dispatch_workgroups(api::device& device, vec3u workgroups) override {
@@ -112,7 +112,7 @@ namespace stylizer::api::webgpu {
 		}
 
 		render_pass& bind_render_pipeline(api::device& device, const api::render_pipeline& pipeline, bool release_on_submit = false) override;
-		render_pass& bind_render_group(api::device& device, const api::bind_group& group_, bool release_on_submit = false, std::optional<size_t> index_override = {}) override {
+		render_pass& bind_render_group(api::device& device, const api::bind_group& group_, bool release_on_submit = false, optional<size_t> index_override = {}) override {
 			auto& group = confirm_wgpu_type<webgpu::bind_group>(group_);
 			pass.setBindGroup(index_override.value_or(group.index), group.group, 0, nullptr);
 			if(release_on_submit) deferred_to_release.emplace_back([group = std::move(group)]() mutable {
@@ -120,13 +120,13 @@ namespace stylizer::api::webgpu {
 			});
 			return *this;
 		}
-		render_pass& bind_vertex_buffer(api::device& device, size_t slot, const api::buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) override {
+		render_pass& bind_vertex_buffer(api::device& device, size_t slot, const api::buffer& buffer_, size_t offset = 0, optional<size_t> size_override = {}) override {
 			render_used = true;
 			auto& buffer = confirm_wgpu_type<webgpu::buffer>(buffer_);
 			pass.setVertexBuffer(slot, buffer.buffer_, offset, size_override.value_or(buffer.size()));
 			return *this;
 		}
-		render_pass& bind_index_buffer(api::device& device, const api::buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) override {
+		render_pass& bind_index_buffer(api::device& device, const api::buffer& buffer_, size_t offset = 0, optional<size_t> size_override = {}) override {
 			render_used = true;
 			auto& buffer = confirm_wgpu_type<webgpu::buffer>(buffer_);
 			pass.setIndexBuffer(buffer.buffer_, wgpu::IndexFormat::Uint32, offset, size_override.value_or(buffer.size()));

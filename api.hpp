@@ -15,6 +15,7 @@
 
 #include "spans.hpp"
 #include "event.hpp"
+#include "optional.h"
 
 namespace stylizer {
 
@@ -69,9 +70,11 @@ namespace stylizer::api {
 	struct color32 { float r = 0, g = 0, b = 0, a = 1; };
 	struct color8 { uint8_t r = 0, g = 0, b = 0, a = 1; };
 
+#ifndef SWIG
 	inline namespace operators {
 		using namespace magic_enum::bitwise_operators;
 	}
+#endif // SWIG
 
 #ifndef STYLIZER_NO_EXCEPTIONS
 	struct error: public std::runtime_error {
@@ -174,14 +177,14 @@ namespace stylizer::api {
 		struct texture* texture = nullptr; struct texture_view* view = nullptr; enum texture_format texture_format = texture_format::Undefined; // Only one of these need be specified, they will be calculated as needed (note if creating a pass only specifying the format will produce an error!)
 		struct texture_view* resolve_target = nullptr; // Used for multisampling
 		bool should_store = true; // False discards
-		std::optional<color32> clear_value = {}; // When set value is not loaded
-		std::optional<blend_state> color_blend_state = {};
-		std::optional<blend_state> alpha_blend_state = {};
+		optional<color32> clear_value = {}; // When set value is not loaded
+		optional<blend_state> color_blend_state = {};
+		optional<blend_state> alpha_blend_state = {};
 	};
 	struct depth_stencil_attachment {
 		struct texture* texture = nullptr; struct texture_view* view = nullptr; enum texture_format texture_format = texture_format::Undefined; // Only one of these need be specified, they will be calculated as needed (note if creating a pass only specifying the format will produce an error!)
 		bool should_store_depth = true; // False discards
-		std::optional<float> depth_clear_value = {}; // When set value is not loaded
+		optional<float> depth_clear_value = {}; // When set value is not loaded
 		bool depth_readonly = false;
 		comparison_function depth_comparison_function = comparison_function::Less;
 		size_t depth_bias = 0;
@@ -190,14 +193,14 @@ namespace stylizer::api {
 
 		struct stencil_config {
 			bool should_store = true; // False discards
-			std::optional<size_t> clear_value = {}; // When set value is not loaded // TODO: Should be uint32_t?
+			optional<size_t> clear_value = {}; // When set value is not loaded // TODO: Should be uint32_t?
 			bool readonly = false;
+			// WGPUStencilFaceState stencilFront;
+			// WGPUStencilFaceState stencilBack;
+			// uint32_t stencilReadMask;
+			// uint32_t stencilWriteMask;
 		};
-		std::optional<stencil_config> stencil = {};
-		// WGPUStencilFaceState stencilFront;
-		// WGPUStencilFaceState stencilBack;
-		// uint32_t stencilReadMask;
-		// uint32_t stencilWriteMask;
+		optional<stencil_config> stencil = {};
 	};
 
 
@@ -249,7 +252,7 @@ namespace stylizer::api {
 	struct texture_view {
 		struct create_config {
 			size_t base_mip_level = 0;
-			std::optional<size_t> mip_level_count_override = {};
+			optional<size_t> mip_level_count_override = {};
 			// .baseArrayLayer = 0,
 			// .arrayLayerCount = std::max<uint32_t>(texture_.getDepthOrArrayLayers(), 1),
 			// bool view_depth = true; // TODO: Do we need this or is just computing it from the format good enough?
@@ -325,10 +328,10 @@ namespace stylizer::api {
 		virtual bool sampled() const = 0;
 		virtual texture& write(device& device, std::span<const std::byte> data, const data_layout& layout, vec3u extent, vec3u origin = {0, 0, 0}, size_t mip_level = 0) = 0;
 
-		virtual texture& copy_from(device& device, const texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
-		virtual texture& blit_from(device& device, const texture& source, std::optional<color32> clear_value = {}, struct render_pipeline* render_pipeline_override = nullptr, std::optional<size_t> vertex_count_override = {}) = 0;
+		virtual texture& copy_from(device& device, const texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, optional<vec3u> extent_override = {}, size_t min_mip_level = 0, optional<size_t> mip_levels_override = {}) = 0;
+		virtual texture& blit_from(device& device, const texture& source, optional<color32> clear_value = {}, struct render_pipeline* render_pipeline_override = nullptr, optional<size_t> vertex_count_override = {}) = 0;
 
-		virtual texture& generate_mipmaps(device& device, size_t first_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
+		virtual texture& generate_mipmaps(device& device, size_t first_mip_level = 0, optional<size_t> mip_levels_override = {}) = 0;
 
 		virtual operator bool() const { return false; }
 		virtual void release() = 0;
@@ -347,11 +350,11 @@ namespace stylizer::api {
 		virtual buffer& write(device& device, std::span<const std::byte> data, size_t offset = 0) = 0;
 		virtual size_t size() const = 0;
 
-		virtual buffer& copy_from(device& device, const buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) = 0;
+		virtual buffer& copy_from(device& device, const buffer& source, size_t destination_offset = 0, size_t source_offset = 0, optional<size_t> size_override = {}) = 0;
 
 		virtual bool is_mapped() const = 0;
-		virtual std::future<std::byte*> map_async(device& device, bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) = 0;
-		virtual std::byte* map(device& device, bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) = 0;
+		virtual std::future<std::byte*> map_async(device& device, bool for_writing = false, size_t offset = 0, optional<size_t> size = {}) = 0;
+		virtual std::byte* map(device& device, bool for_writing = false, size_t offset = 0, optional<size_t> size = {}) = 0;
 		virtual void unmap() = 0;
 
 		virtual operator bool() const { return false; }
@@ -437,11 +440,11 @@ namespace stylizer::api {
 		struct buffer_binding {
 			const struct buffer* buffer;
 			size_t offset = 0;
-			std::optional<size_t> size_override = {};
+			optional<size_t> size_override = {};
 		};
 		struct texture_binding {
 			const struct texture* texture = nullptr; const struct texture_view* texture_view = nullptr; // Only one needs to be specified... if texture is provided the view is extracted from it
-			std::optional<bool> sampled_override = {};
+			optional<bool> sampled_override = {};
 		};
 		using binding = std::variant<buffer_binding, texture_binding>;
 		// TODO: Need create functions?
@@ -474,11 +477,11 @@ namespace stylizer::api {
 		virtual command_encoder& defer(std::function<void()>&& func) = 0;
 
 		// TODO: Copy functions
-		virtual command_encoder& copy_buffer_to_buffer(device& device, buffer& destination, const buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) = 0;
-		virtual command_encoder& copy_texture_to_texture(device& device, texture& destination, const texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, std::optional<vec3u> extent_override = {}, size_t min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) = 0;
+		virtual command_encoder& copy_buffer_to_buffer(device& device, buffer& destination, const buffer& source, size_t destination_offset = 0, size_t source_offset = 0, optional<size_t> size_override = {}) = 0;
+		virtual command_encoder& copy_texture_to_texture(device& device, texture& destination, const texture& source, vec3u destination_origin = {}, vec3u source_origin = {}, optional<vec3u> extent_override = {}, size_t min_mip_level = 0, optional<size_t> mip_levels_override = {}) = 0;
 
 		virtual command_encoder& bind_compute_pipeline(device& device, const compute_pipeline& pipeline, bool release_on_submit = false) = 0;
-		virtual command_encoder& bind_compute_group(device& device, const bind_group& group, bool release_on_submit = false, std::optional<size_t> index_override = {}) = 0;
+		virtual command_encoder& bind_compute_group(device& device, const bind_group& group, bool release_on_submit = false, optional<size_t> index_override = {}) = 0;
 		virtual command_encoder& dispatch_workgroups(device& device, vec3u workgroups) = 0;
 
 		virtual command_buffer& end(temporary_return_t, device& device) = 0;
@@ -510,9 +513,9 @@ namespace stylizer::api {
 		using pipeline = struct render_pipeline;
 
 		virtual render_pass& bind_render_pipeline(device& device, const render_pipeline& pipeline, bool release_on_submit = false) = 0;
-		virtual render_pass& bind_render_group(device& device, const bind_group& group, bool release_on_submit = false, std::optional<size_t> index_override = {}) = 0;
-		virtual render_pass& bind_vertex_buffer(device& device, size_t slot, const buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
-		virtual render_pass& bind_index_buffer(device& device, const buffer& buffer_, size_t offset = 0, std::optional<size_t> size_override = {}) = 0;
+		virtual render_pass& bind_render_group(device& device, const bind_group& group, bool release_on_submit = false, optional<size_t> index_override = {}) = 0;
+		virtual render_pass& bind_vertex_buffer(device& device, size_t slot, const buffer& buffer_, size_t offset = 0, optional<size_t> size_override = {}) = 0;
+		virtual render_pass& bind_index_buffer(device& device, const buffer& buffer_, size_t offset = 0, optional<size_t> size_override = {}) = 0;
 		virtual render_pass& draw(device& device, size_t vertex_count, size_t instance_count = 1, size_t first_vertex = 0, size_t first_instance = 0) = 0;
 		virtual render_pass& draw_indexed(device& device, size_t index_count, size_t instance_count = 1, size_t first_index = 0, size_t base_vertex = 0, size_t first_instance = 0) = 0;
 
@@ -525,7 +528,7 @@ namespace stylizer::api {
 	};
 
 	template<typename T>
-	concept render_pass_concept = std::derived_from<T, render_pass> && requires(T t, device device, std::span<const render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, const std::string_view label) {
+	concept render_pass_concept = std::derived_from<T, render_pass> && requires(T t, device device, std::span<const render_pass::color_attachment> colors, optional<render_pass::depth_stencil_attachment> depth, bool one_shot, const std::string_view label) {
 		{ T::create(device, colors, depth, /*is the resulting command buffer intended to only be used once?*/one_shot, label) } -> std::convertible_to<T>;
 	};
 
@@ -575,8 +578,8 @@ namespace stylizer::api {
 						u32x3,
 						u32x4,
 					} format = format::f32x4;
-					std::optional<size_t> offset_override = {};
-					std::optional<size_t> shader_location_override = {};
+					optional<size_t> offset_override = {};
+					optional<size_t> shader_location_override = {};
 
 					template<typename T>
 					static constexpr enum format format_of(const T& ref = {}) {
@@ -585,7 +588,7 @@ namespace stylizer::api {
 				};
 				std::vector<attribute> attributes;
 				bool per_instance = false;
-				std::optional<size_t> stride_override = {}; // If not set stride is calculated from attributes
+				optional<size_t> stride_override = {}; // If not set stride is calculated from attributes
 			};
 			std::vector<vertex_buffer_layout> vertex_buffers = {};
 
@@ -603,7 +606,7 @@ namespace stylizer::api {
 	template<typename T>
 	concept render_pipeline_concept = std::derived_from<T, render_pipeline> && requires(T t,
 		device device, pipeline::entry_points entry_points, render_pipeline::config config, const std::string_view label,
-		std::span<const color_attachment> color_attachments, std::optional<depth_stencil_attachment> depth_attachment,
+		std::span<const color_attachment> color_attachments, optional<depth_stencil_attachment> depth_attachment,
 		render_pass compatible_render_pass
 	) {
 		{ T::create(device, entry_points, color_attachments, depth_attachment, config, label) } -> std::convertible_to<T>;
@@ -643,10 +646,10 @@ namespace stylizer::api {
 		virtual shader& create_shader_from_spirv(temporary_return_t, slcross::spirv_view spirv, const std::string_view label = "Stylizer Shader") = 0;
 
 		virtual command_encoder& create_command_encoder(temporary_return_t, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") = 0;
-		virtual render_pass& create_render_pass(temporary_return_t, std::span<const render_pass::color_attachment> colors, const std::optional<render_pass::depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") = 0;
+		virtual render_pass& create_render_pass(temporary_return_t, std::span<const render_pass::color_attachment> colors, const optional<render_pass::depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") = 0;
 
 		virtual compute_pipeline& create_compute_pipeline(temporary_return_t, const pipeline::entry_point& entry_point, const std::string_view label = "Stylizer Compute Pipeline") = 0;
-		virtual render_pipeline& create_render_pipeline(temporary_return_t, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") = 0;
+		virtual render_pipeline& create_render_pipeline(temporary_return_t, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") = 0;
 		virtual render_pipeline& create_render_pipeline_from_compatible_render_pass(temporary_return_t, const pipeline::entry_points& entry_points, const render_pass& compatible_render_pass, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") = 0;
 
 		device& quick_compute_dispatch(vec3u workgroups, const pipeline::entry_point& entry_point, std::span<const bind_group::binding> bindings = {}) {
@@ -662,7 +665,7 @@ namespace stylizer::api {
 	template<typename T>
 	concept device_concept = std::derived_from<T, device> && requires(T t, device::create_config config,
 		texture::create_config texture_config,
-		std::span<const render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, const std::string_view label,
+		std::span<const render_pass::color_attachment> colors, optional<render_pass::depth_stencil_attachment> depth, bool one_shot, const std::string_view label,
 		usage usage, size_t size, bool mapped_at_creation, std::span<const std::byte> data, size_t offset
 	) {
 		{ T::create_default(config) } -> std::convertible_to<T>;
