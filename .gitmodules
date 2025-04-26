@@ -1,0 +1,6 @@
+[submodule "thirdparty/slcross"]
+	path = thirdparty/slcross
+	url = https://github.com/doxy-ai/slcross
+[submodule "thirdparty/stdmath"]
+	path = thirdparty/stdmath
+	url = https://github.com/doxy-ai/stdmath
