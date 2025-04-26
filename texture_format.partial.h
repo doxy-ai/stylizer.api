@@ -1,0 +1,240 @@
+
+enum class texture_format {
+	Undefined,
+
+	Ru8_Normalized,
+	Ri8_Normalized,
+	Ru8,
+	Ri8,
+	Ru16,
+	Ri16,
+	Rf16,
+	RGu8_Normalized,
+	RGi8_Normalized,
+	RGu8,
+	RGi8,
+	Rf32,
+	Ru32,
+	Ri32,
+	RGu16,
+	RGi16,
+	RGf16,
+	RGBAu8_Normalized,
+	RGBAu8_NormalizedSRGB,
+	RGBAi8_Normalized,
+	RGBAu8,
+	RGBAi8,
+	BGRAu8_Normalized,
+	BGRAu8_NormalizedSRGB,
+	RGBu10Au2,
+	RGBu10Au2_Normalized,
+	RGf11Bf10,
+	// RGB9E5Ufloat, // ?
+	RGf32,
+	RGu32,
+	RGi32,
+	RGBAu16,
+	RGBAi16,
+	RGBAf16,
+	RGBAf32,
+	RGBAu32,
+	RGBAi32,
+
+	Stencil_u8,
+	Depth_u16,
+	Depth_u24,
+	Depth_u24Stencil_u8,
+	Depth_f32,
+	Depth_f32Stencil_u8,
+
+	BC1RGBA_Normalized,
+	BC1RGBA_NormalizedSRGB,
+	BC2RGBA_Normalized,
+	BC2RGBA_NormalizedSRGB,
+	BC3RGBA_Normalized,
+	BC3RGBA_NormalizedSRGB,
+
+	BC4Ru_Normalized,
+	BC4Ri_Normalized,
+	BC5RGu_Normalized,
+	BC5RGi_Normalized,
+	BC6HRGBUfloat,
+	BC6HRGBFloat,
+
+	BC7RGBA_Normalized,
+	BC7RGBA_NormalizedSRGB,
+
+	ETC2RGB8_Normalized,
+	ETC2RGB8_NormalizedSRGB,
+	ETC2RGB8A1_Normalized,
+	ETC2RGB8A1_NormalizedSRGB,
+	ETC2RGBA8_Normalized,
+	ETC2RGBA8_NormalizedSRGB,
+
+	EACRu11_Normalized,
+	EACRi11_Normalized,
+	EACRGu11_Normalized,
+	EACRGi11_Normalized,
+
+	ASTC4x4_Normalized,
+	ASTC4x4_NormalizedSRGB,
+	ASTC5x4_Normalized,
+	ASTC5x4_NormalizedSRGB,
+	ASTC5x5_Normalized,
+	ASTC5x5_NormalizedSRGB,
+	ASTC6x5_Normalized,
+	ASTC6x5_NormalizedSRGB,
+	ASTC6x6_Normalized,
+	ASTC6x6_NormalizedSRGB,
+	ASTC8x5_Normalized,
+	ASTC8x5_NormalizedSRGB,
+	ASTC8x6_Normalized,
+	ASTC8x6_NormalizedSRGB,
+	ASTC8x8_Normalized,
+	ASTC8x8_NormalizedSRGB,
+	ASTC10x5_Normalized,
+	ASTC10x5_NormalizedSRGB,
+	ASTC10x6_Normalized,
+	ASTC10x6_NormalizedSRGB,
+	ASTC10x8_Normalized,
+	ASTC10x8_NormalizedSRGB,
+	ASTC10x10_Normalized,
+	ASTC10x10_NormalizedSRGB,
+	ASTC12x10_Normalized,
+	ASTC12x10_NormalizedSRGB,
+	ASTC12x12_Normalized,
+	ASTC12x12_NormalizedSRGB,
+
+	Ru16_Normalized,
+	RGu16_Normalized,
+	RGBAu16_Normalized,
+
+	Ri16_Normalized,
+	RGi16_Normalized,
+	RGBAi16_Normalized,
+
+	R8BG8Biplanar420_Normalized,
+	R10X6BG10X6Biplanar420_Normalized,
+	R8BG8A8Triplanar420_Normalized,
+	R8BG8Biplanar422_Normalized,
+	R8BG8Biplanar444_Normalized,
+	R10X6BG10X6Biplanar422_Normalized,
+	R10X6BG10X6Biplanar444_Normalized,
+
+	// Some convenience overloads
+	RGBA8srgb = RGBAu8_NormalizedSRGB,
+	RGBA32 = RGBAf32,
+	Depth24 = Depth_u24,
+
+	Gray32 = Rf32,
+	Gray16 = Rf16,
+	Gray8 = Ru8_Normalized,
+};
+
+inline size_t bytes_per_pixel(texture_format format) {
+	switch(format){
+		case texture_format::Depth24: return 24 / 8;
+		case texture_format::Rf32: return sizeof(float);
+		case texture_format::Ru8: return sizeof(uint8_t);
+		case texture_format::RGBAf32: return sizeof(color32);
+		case texture_format::RGBAu8: return sizeof(color8);
+		case texture_format::RGBAu8_NormalizedSRGB: return sizeof(color8);
+		case texture_format::BGRAu8_NormalizedSRGB: return sizeof(color8);
+		// case texture_format::Undefined:
+		case texture_format::Ru8_Normalized: return sizeof(uint8_t);
+		case texture_format::Ri8_Normalized: return sizeof(int8_t);
+		case texture_format::Ri8: return sizeof(int8_t);
+		case texture_format::Ru16: return sizeof(uint16_t);
+		case texture_format::Ri16: return sizeof(int16_t);
+		case texture_format::Rf16: return sizeof(int16_t); // C doesn't have a standard f16 type
+		case texture_format::RGu8_Normalized: return 2 * sizeof(uint8_t);
+		case texture_format::RGi8_Normalized: return 2 * sizeof(int8_t);
+		case texture_format::RGu8: return 2 * sizeof(uint8_t);
+		case texture_format::RGi8: return 2 * sizeof(int8_t);
+		case texture_format::Ru32: return 2 * sizeof(uint32_t);
+		case texture_format::Ri32: return 2 * sizeof(int32_t);
+		case texture_format::RGu16: return 2 * sizeof(uint16_t);
+		case texture_format::RGi16: return 2 * sizeof(int16_t);
+		case texture_format::RGf16: return 2 * sizeof(uint16_t);
+		case texture_format::RGBAu8_Normalized: return 4 * sizeof(uint8_t);
+		case texture_format::RGBAi8_Normalized: return 4 * sizeof(int8_t);
+		case texture_format::RGBAi8: return 4 * sizeof(int8_t);
+		case texture_format::BGRAu8_Normalized: return 4 * sizeof(uint8_t);
+		// case texture_format::RGBu10Au2:
+		// case texture_format::RGBu10Au2_Normalized:
+		case texture_format::RGf11Bf10: return (2 * 11 + 10) / 8;
+		case texture_format::RGf32: return 2 * sizeof(float);
+		case texture_format::RGu32: return 2 * sizeof(uint32_t);
+		case texture_format::RGi32: return 2 * sizeof(int32_t);
+		case texture_format::RGBAu16: return 4 * sizeof(uint16_t);
+		case texture_format::RGBAi16: return 4 * sizeof(int16_t);
+		case texture_format::RGBAf16: return 4 * sizeof(uint16_t);
+		case texture_format::RGBAu32: return 4 * sizeof(float);
+		case texture_format::RGBAi32: return 4 * sizeof(int32_t);
+		case texture_format::Stencil_u8: return sizeof(uint8_t);
+		case texture_format::Depth_u16: return sizeof(uint16_t);
+		case texture_format::Depth_u24Stencil_u8: return sizeof(uint32_t);
+		case texture_format::Depth_f32: return sizeof(float);
+		// case texture_format::Depth_f32Stencil_u8:
+		// case texture_format::BC1RGBA_Normalized:
+		// case texture_format::BC1RGBA_NormalizedSRGB:
+		// case texture_format::BC2RGBA_Normalized:
+		// case texture_format::BC2RGBA_NormalizedSRGB:
+		// case texture_format::BC3RGBA_Normalized:
+		// case texture_format::BC3RGBA_NormalizedSRGB:
+		// case texture_format::BC7RGBA_Normalized:
+		// case texture_format::BC7RGBA_NormalizedSRGB:
+		// case texture_format::ETC2RGB8_Normalized:
+		// case texture_format::ETC2RGB8_NormalizedSRGB:
+		// case texture_format::ETC2RGB8A1_Normalized:
+		// case texture_format::ETC2RGB8A1_NormalizedSRGB:
+		// case texture_format::ETC2RGBA8_Normalized:
+		// case texture_format::ETC2RGBA8_NormalizedSRGB:
+		// case texture_format::EACRu11_Normalized:
+		// case texture_format::EACRi11_Normalized:
+		// case texture_format::EACRGu11_Normalized:
+		// case texture_format::EACRGi11_Normalized:
+		// case texture_format::ASTC4x4_Normalized:
+		// case texture_format::ASTC4x4_NormalizedSRGB:
+		// case texture_format::ASTC5x4_Normalized:
+		// case texture_format::ASTC5x4_NormalizedSRGB:
+		// case texture_format::ASTC5x5_Normalized:
+		// case texture_format::ASTC5x5_NormalizedSRGB:
+		// case texture_format::ASTC6x5_Normalized:
+		// case texture_format::ASTC6x5_NormalizedSRGB:
+		// case texture_format::ASTC6x6_Normalized:
+		// case texture_format::ASTC6x6_NormalizedSRGB:
+		// case texture_format::ASTC8x5_Normalized:
+		// case texture_format::ASTC8x5_NormalizedSRGB:
+		// case texture_format::ASTC8x6_Normalized:
+		// case texture_format::ASTC8x6_NormalizedSRGB:
+		// case texture_format::ASTC8x8_Normalized:
+		// case texture_format::ASTC8x8_NormalizedSRGB:
+		// case texture_format::ASTC10x5_Normalized:
+		// case texture_format::ASTC10x5_NormalizedSRGB:
+		// case texture_format::ASTC10x6_Normalized:
+		// case texture_format::ASTC10x6_NormalizedSRGB:
+		// case texture_format::ASTC10x8_Normalized:
+		// case texture_format::ASTC10x8_NormalizedSRGB:
+		// case texture_format::ASTC10x10_Normalized:
+		// case texture_format::ASTC10x10_NormalizedSRGB:
+		// case texture_format::ASTC12x10_Normalized:
+		// case texture_format::ASTC12x10_NormalizedSRGB:
+		// case texture_format::ASTC12x12_Normalized:
+		// case texture_format::ASTC12x12_NormalizedSRGB:
+		case texture_format::Ru16_Normalized: return sizeof(uint16_t);
+		case texture_format::RGu16_Normalized: return 2 * sizeof(uint16_t);
+		case texture_format::RGBAu16_Normalized: return 4 * sizeof(uint16_t);
+		case texture_format::Ri16_Normalized: return sizeof(int16_t);
+		case texture_format::RGi16_Normalized: return 2 * sizeof(int16_t);
+		case texture_format::RGBAi16_Normalized: return 4 * sizeof(int16_t);
+		// case texture_format::R8BG8Biplanar420_Normalized:
+		// case texture_format::R10X6BG10X6Biplanar420_Normalized:
+		// case texture_format::R8BG8A8Triplanar420_Normalized:
+		// case texture_format::R8BG8Biplanar422_Normalized:
+		// case texture_format::R8BG8Biplanar444_Normalized:
+		// case texture_format::R10X6BG10X6Biplanar422_Normalized:
+		// case texture_format::R10X6BG10X6Biplanar444_Normalized:
+	}
+	STYLIZER_API_THROW("An error has occurred finding the number of bytes per pixel in format: " + std::string(magic_enum::enum_name(format)));
+}

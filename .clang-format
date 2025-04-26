@@ -1,0 +1,22 @@
+﻿---
+BasedOnStyle: WebKit
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+BreakAdjacentStringLiterals: false
+BreakArrays: false
+BreakBeforeBraces: Attach
+CompactNamespaces: true
+FixNamespaceComments: true
+IncludeBlocks: Regroup
+NamespaceIndentation: All
+ReflowComments: false
+RemoveBracesLLVM: true
+RemoveParentheses: MultipleParentheses
+SortIncludes: CaseInsensitive
+SpaceAfterTemplateKeyword: false
+TabWidth: 4
+UseTab: Always
+Language: Cpp
