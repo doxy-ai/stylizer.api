@@ -7,7 +7,7 @@
 int main() {
 	auto& errors = stylizer::get_error_handler();
 	stylizer::auto_release c = errors.connect([](stylizer::api::error::severity severity, std::string_view message, size_t) {
-		if (severity > stylizer::api::error::severity::Error)
+		if (severity >= stylizer::api::error::severity::Error)
 			throw stylizer::api::error(message);
 		std::cerr << message << std::endl;
 	});
@@ -20,32 +20,27 @@ int main() {
 	}
 	defer_ { SDL_Quit(); };
 
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-	SDL_Window* window = SDL_CreateWindow("Stylizer Test", 800, 600, SDL_WINDOW_OPENGL);
+	stylizer::api::vec2u size = {800, 600};
+	SDL_Window* window = SDL_CreateWindow("Stylizer::API Test", size.x, size.y, 0);
 	if (!window) {
 		errors(stylizer::api::error::severity::Error, "Failed to create SDL window", 0);
 		return -1;
 	}
 	defer_ { SDL_DestroyWindow(window); };
 
-	stylizer::auto_release device = stylizer::api::current_backend::device::create_default();
-
-	SDL_GL_CreateContext(window);
-
-	auto glClearColor = (void (*)(float, float, float, float))SDL_GL_GetProcAddress("glClearColor");
-	if (!glClearColor) {
-		errors(stylizer::api::error::severity::Error, "Failed to find glClearColor", 0);
+	stylizer::auto_release<stylizer::api::current_backend::device> device;
+	stylizer::auto_release<stylizer::api::current_backend::surface> surface;
+	std::tie(device, surface) = stylizer::api::sdl3::create_surface_and_device<stylizer::api::current_backend::device, stylizer::api::current_backend::surface>(window);
+	if(!device) {
+		errors(stylizer::api::error::severity::Error, "Failed to create stylizer device", 0);
+		return -1;
+	}
+	if(!surface) {
+		errors(stylizer::api::error::severity::Error, "Failed to create stylizer surface", 0);
 		return -1;
 	}
 
-	auto glClear = (void (*)(uint32_t))SDL_GL_GetProcAddress("glClear");
-	if (!glClear) {
-		errors(stylizer::api::error::severity::Error, "Failed to find glClear", 0);
-		return -1;
-	}
+	surface.configure(device, surface.determine_optimal_default_config(device, size));
 
 	bool should_close = false;
 	while (!should_close) {
@@ -54,9 +49,8 @@ int main() {
 			should_close = true;
 		}
 
-		glClearColor(2.f/255, 7.f/255, 53.f/255, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
+		surface.next_texture(device);
 
-		SDL_GL_SwapWindow(window);
+		surface.present(device);
 	}
 }
