@@ -57,12 +57,14 @@ target_include_directories(stylizer_api PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMA
 # endif(STYLIZER_API_ENABLE_WEBGPU)
 
 if(${STYLIZER_API_BUILD_TEST})
-	find_package(glfw3 CONFIG REQUIRED)
+	find_package(SDL3 REQUIRED)
 
 	add_executable(api_tst "test.cpp")
-	target_link_libraries(api_tst PUBLIC stylizer_api glfw)
+	target_link_libraries(api_tst PUBLIC stylizer_api)
 
-	include(cmake/glfw.cmake)
-	target_setup_glfw_for_stylizer(api_tst)
+	include(cmake/sdl3.cmake)
+	target_setup_sdl3_for_stylizer(api_tst)
+	include(cmake/surface_support.cmake)
+	target_setup_surface_support_for_stylizer(api_tst)
 endif()
 
