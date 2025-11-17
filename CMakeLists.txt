@@ -56,13 +56,13 @@ target_include_directories(stylizer_api PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMA
 # 	message(FATAL_ERROR "WebGPU set as the current backend but it is not enabled!")
 # endif(STYLIZER_API_ENABLE_WEBGPU)
 
-# if(${STYLIZER_API_BUILD_TEST})
-# 	find_package(SDL3 REQUIRED)
+if(${STYLIZER_API_BUILD_TEST})
+	find_package(glfw3 CONFIG REQUIRED)
 
-# 	add_executable(api_tst "test.cpp")
-# 	target_link_libraries(api_tst PUBLIC stylizer::api::webgpu)
+	add_executable(api_tst "test.cpp")
+	target_link_libraries(api_tst PUBLIC stylizer_api glfw)
 
-# 	include(cmake/sdl3.cmake)
-# 	target_setup_sdl3_for_stylizer(api_tst)
-# endif()
+	include(cmake/glfw.cmake)
+	target_setup_glfw_for_stylizer(api_tst)
+endif()
 
