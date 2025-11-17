@@ -29,6 +29,7 @@ namespace stylizer::api::webgpu {
 
 	struct texture : public api::texture { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(texture);
 		uint32_t type = magic_number;
+		WGPUTexture texture_ = nullptr;
 
 		inline texture(texture&& o) { *this = std::move(o); }
 		inline texture& operator=(texture&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
@@ -269,29 +270,34 @@ namespace stylizer::api::webgpu {
 	struct surface : public api::surface { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(surface);  STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(surface);
 		uint32_t type = magic_number;
 		WGPUSurface surface_ = nullptr;
+		texture::format configured_format = texture::format::Undefined;
 
 		inline surface(surface&& o) { *this = std::move(o); }
-		inline surface& operator=(surface&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
-		inline operator bool() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		inline surface& operator=(surface&& o) {
+			surface_ = std::exchange(o.surface_, nullptr);
+			configured_format = std::exchange(o.configured_format, texture::format::Undefined);
+			return *this;
+		}
+		inline operator bool() const override { return surface_; }
 
-		static surface create_from_emscripten(const std::string_view canvas_id = "canvas") { STYLIZER_API_THROW("Not implemented yet!"); }
-		static surface create_from_cocoa(void* layer, void* window) { STYLIZER_API_THROW("Not implemented yet!"); }
-		static surface create_from_x11(void* display, void* window) { STYLIZER_API_THROW("Not implemented yet!"); }
-		static surface create_from_wayland(void* display, void* surface) { STYLIZER_API_THROW("Not implemented yet!"); }
-		static surface create_from_win32(void* window, void* instance) { STYLIZER_API_THROW("Not implemented yet!"); }
+		static webgpu::surface create_from_emscripten(const std::string_view canvas_id = "canvas");
+		static webgpu::surface create_from_cocoa(void* layer, void* window);
+		static webgpu::surface create_from_x11(void* display, void* window);
+		static webgpu::surface create_from_wayland(void* display, void* surface);
+		static webgpu::surface create_from_win32(void* window, void* instance);
 
-		config determine_optimal_default_config(api::device& device, vec2u size) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		config determine_optimal_default_config(api::device& device, vec2u size) override;
 
-		api::surface& configure(api::device& device, const config& config) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::surface& configure(api::device& device, const config& config) override;
 
-		webgpu::texture next_texture(api::device& device) { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::texture& next_texture(temporary_return_t, api::device& device) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::texture next_texture(api::device& device);
+		api::texture& next_texture(temporary_return_t, api::device& device) override;
 
-		texture::format configured_texture_format(api::device& device) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		texture::format configured_texture_format(api::device& device) override;
 
-		api::surface& present(api::device& device) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::surface& present(api::device& device) override;
 
-		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void release() override;
 		stylizer::auto_release<surface> auto_release() { return std::move(*this); }
 	};
 	static_assert(surface_concept<surface>);
