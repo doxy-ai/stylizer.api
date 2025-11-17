@@ -35,7 +35,7 @@ option(STYLIZER_API_USE_WINDOWS_UI "Should we build windows ui support?" ${WIN32
 option(STYLIZER_API_USE_X11 "Should we build X11 support?" ${LINUX})
 option(STYLIZER_API_USE_WAYLAND "Should we build wayland support?" ${STYLIZER_WAYLAND_PREFERRED})
 
-# option(STYLIZER_API_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
+option(STYLIZER_API_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
 
 set(CMAKE_CXX_STANDARD 26)
 
@@ -48,19 +48,28 @@ add_subdirectory(thirdparty/stdmath EXCLUDE_FROM_ALL)
 
 add_library(stylizer_api api.cpp)
 target_link_libraries(stylizer_api PUBLIC slcross magic_enum std::math)
-target_include_directories(stylizer_api PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/backends)
+target_include_directories(stylizer_api PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-# if(STYLIZER_API_ENABLE_WEBGPU)
-# 	add_subdirectory(backends/webgpu EXCLUDE_FROM_ALL)
-# elseif(STYLIZER_API_CURRENT_BACKEND_LOWER STREQUAL webgpu)
-# 	message(FATAL_ERROR "WebGPU set as the current backend but it is not enabled!")
-# endif(STYLIZER_API_ENABLE_WEBGPU)
+if(STYLIZER_API_ENABLE_WEBGPU)
+	add_subdirectory(backends/webgpu EXCLUDE_FROM_ALL)
+	if(STYLIZER_API_CURRENT_BACKEND_LOWER STREQUAL webgpu)
+		target_compile_definitions(stylizer_api PUBLIC STYLIZER_CURRENT_BACKEND=1)
+		add_library(stylizer::api::current_backend ALIAS stylizer_api_webgpu)
+	endif()
+elseif(STYLIZER_API_CURRENT_BACKEND_LOWER STREQUAL webgpu)
+	message(FATAL_ERROR "WebGPU set as the current backend but it is not enabled!")
+endif(STYLIZER_API_ENABLE_WEBGPU)
 
 if(${STYLIZER_API_BUILD_TEST})
 	find_package(SDL3 REQUIRED)
+	# add_subdirectory(SDL)
 
-	add_executable(api_tst "test.cpp")
-	target_link_libraries(api_tst PUBLIC stylizer_api)
+	if(WIN32)
+		add_executable(api_tst WIN32 "test.cpp")
+    else(WIN32)
+		add_executable(api_tst "test.cpp")
+	endif(WIN32)
+	target_link_libraries(api_tst PUBLIC stylizer::api::current_backend)
 
 	include(cmake/sdl3.cmake)
 	target_setup_sdl3_for_stylizer(api_tst)
