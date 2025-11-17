@@ -1,6 +1,5 @@
 #include "sdl3.hpp"
-
-#include <stub/stub.hpp>
+#include <backends/current_backend.hpp>
 
 #include <GL/gl.h>
 #include <iostream>
@@ -31,6 +30,8 @@ int main() {
 		return -1;
 	}
 	defer_ { SDL_DestroyWindow(window); };
+
+	stylizer::auto_release device = stylizer::api::current_backend::device::create_default();
 
 	SDL_GL_CreateContext(window);
 
