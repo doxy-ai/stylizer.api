@@ -1,8 +1,8 @@
-#include "api.hpp"
+#include "sdl3.hpp"
 
 #include <stub/stub.hpp>
 
-#include <GLFW/glfw3.h>
+#include <GL/gl.h>
 #include <iostream>
 
 int main() {
@@ -15,45 +15,47 @@ int main() {
 
 	errors(stylizer::api::error::severity::Info, "Hello World", 0);
 
-	if (!glfwInit()) {
-		errors(stylizer::api::error::severity::Error, "Failed to initialize GLFW", 0);
+	if (!SDL_Init(SDL_INIT_VIDEO)) {
+		errors(stylizer::api::error::severity::Error, "Failed to initialize SDL", 0);
 		return -1;
 	}
-	glfwSetErrorCallback(+[](int type, const char* message) {
-		stylizer::get_error_handler()(stylizer::api::error::severity::Error, std::string { "GLFW Error: " } + message, type);
-	});
-	defer_ { glfwTerminate(); };
+	defer_ { SDL_Quit(); };
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Stylizer Test", nullptr, nullptr);
+	SDL_Window* window = SDL_CreateWindow("Stylizer Test", 800, 600, SDL_WINDOW_OPENGL);
 	if (!window) {
-		errors(stylizer::api::error::severity::Error, "Failed to create GLFW window", 0);
+		errors(stylizer::api::error::severity::Error, "Failed to create SDL window", 0);
 		return -1;
 	}
-	defer_ { glfwDestroyWindow(window); };
+	defer_ { SDL_DestroyWindow(window); };
 
-	glfwMakeContextCurrent(window);
+	SDL_GL_CreateContext(window);
 
-	auto glClearColor = (void (*)(float, float, float, float))glfwGetProcAddress("glClearColor");
+	auto glClearColor = (void (*)(float, float, float, float))SDL_GL_GetProcAddress("glClearColor");
 	if (!glClearColor) {
 		errors(stylizer::api::error::severity::Error, "Failed to find glClearColor", 0);
 		return -1;
 	}
 
-	auto glClear = (void (*)(uint32_t))glfwGetProcAddress("glClear");
+	auto glClear = (void (*)(uint32_t))SDL_GL_GetProcAddress("glClear");
 	if (!glClear) {
 		errors(stylizer::api::error::severity::Error, "Failed to find glClear", 0);
 		return -1;
 	}
 
-	while (!glfwWindowShouldClose(window)) {
+	bool should_close = false;
+	while (!should_close) {
+		for (SDL_Event event; SDL_PollEvent(&event);) switch (event.type) {
+		break; case SDL_EVENT_QUIT:
+			should_close = true;
+		}
+
 		glClearColor(2.f/255, 7.f/255, 53.f/255, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		SDL_GL_SwapWindow(window);
 	}
 }
