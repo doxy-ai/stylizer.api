@@ -193,14 +193,14 @@ namespace stylizer::api::webgpu {
 		return temp = create_shader_from_source(lang, stage, source, entry_point.value_or("main"), label);
 	}
 
-	// webgpu::command_encoder device::create_command_encoder(bool one_shot /* = false */, const std::string_view label /* = "Stylizer Command Encoder" */) {
-	// 	return webgpu::command_encoder::create(*this, one_shot, label);
-	// }
+	webgpu::command_encoder device::create_command_encoder(bool one_shot /* = false */, const std::string_view label /* = "Stylizer Command Encoder" */) {
+		return webgpu::command_encoder::create(*this, one_shot, label);
+	}
 
-	// api::command_encoder& device::create_command_encoder(temporary_return_t, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Command Encoder" */) {
-	// 	static webgpu::command_encoder temp;
-	// 	return temp = create_command_encoder(one_shot, label);
-	// }
+	api::command_encoder& device::create_command_encoder(temporary_return_t, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Command Encoder" */) {
+		static webgpu::command_encoder temp;
+		return temp = create_command_encoder(one_shot, label);
+	}
 
 	// webgpu::render_pass device::create_render_pass(std::span<const api::render_pass::color_attachment> colors, std::optional<api::render_pass::depth_stencil_attachment> depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) {
 	// 	return webgpu::render_pass::create(*this, colors, depth, one_shot, label);
