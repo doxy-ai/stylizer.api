@@ -125,23 +125,23 @@ namespace stylizer::api::webgpu {
 		return true;
 	}
 
-	// webgpu::texture device::create_texture(const api::texture::create_config& config /* = {} */) {
-	// 	return webgpu::texture::create(*this, config);
-	// }
+	webgpu::texture device::create_texture(const api::texture::create_config& config /* = {} */) {
+		return webgpu::texture::create(*this, config);
+	}
 
-	// api::texture& device::create_texture(temporary_return_t, const api::texture::create_config& config /* = {} */) {
-	// 	static webgpu::texture temp;
-	// 	return temp = create_texture(config);
-	// }
+	api::texture& device::create_texture(temporary_return_t, const api::texture::create_config& config /* = {} */) {
+		static webgpu::texture temp;
+		return temp = create_texture(config);
+	}
 
-	// webgpu::texture device::create_and_write_texture(std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config /* = {} */) {
-	// 	return webgpu::texture::create_and_write(*this, data, layout, config);
-	// }
+	webgpu::texture device::create_and_write_texture(std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config /* = {} */) {
+		return webgpu::texture::create_and_write(*this, data, layout, config);
+	}
 
-	// api::texture& device::create_and_write_texture(temporary_return_t, std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config /* = {} */) {
-	// 	static webgpu::texture temp;
-	// 	return temp = create_and_write_texture(data, layout, config);
-	// }
+	api::texture& device::create_and_write_texture(temporary_return_t, std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config /* = {} */) {
+		static webgpu::texture temp;
+		return temp = create_and_write_texture(data, layout, config);
+	}
 
 	// webgpu::buffer device::create_buffer(usage usage, size_t size, bool mapped_at_creation /* = false */, const std::string_view label /* = "Stylizer Buffer" */) {
 	// 	return webgpu::buffer::create(*this, usage, size, mapped_at_creation, label);
