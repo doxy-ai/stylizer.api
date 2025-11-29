@@ -192,41 +192,61 @@ namespace stylizer::api::webgpu {
 	template<typename Tapi_return, typename Twebgpu_return>
 	struct command_encoder_base : public Tapi_return { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_encoder_base);
 		uint32_t type = magic_number;
-		std::shared_ptr<signal<void()>> deferred_to_release = std::make_shared<signal<void()>>();
+		std::shared_ptr<stylizer::signal<void()>> deferred_to_release = std::make_shared<stylizer::signal<void()>>();
+		WGPUCommandEncoder pre_encoder = nullptr;
+		WGPUCommandEncoder compute_encoder = nullptr;
+		WGPUComputePassEncoder compute_pass = nullptr;
+		std::string label;
+		bool one_shot = false;
 
 		inline command_encoder_base(command_encoder_base&& o) { *this = std::move(o); }
-		inline command_encoder_base& operator=(command_encoder_base&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
-		inline operator bool() const override  { STYLIZER_API_THROW("Not implemented yet!"); }
+		inline command_encoder_base& operator=(command_encoder_base&& o) {
+			deferred_to_release = std::move(o.deferred_to_release);
+			pre_encoder = std::exchange(o.pre_encoder, nullptr);
+			compute_encoder = std::exchange(o.compute_encoder, nullptr);
+			compute_pass = std::exchange(o.compute_pass, nullptr);
+			label = std::move(o.label);
+			one_shot = o.one_shot;
+			return *this;
+		}
+		inline operator bool() const override { return pre_encoder || compute_encoder || compute_pass; }
 		Twebgpu_return&& move() { return std::move(*(Twebgpu_return*)this); }
 
-
-		static Twebgpu_return create(api::device& device, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") { STYLIZER_API_THROW("Not implemented yet!"); }
+		static Twebgpu_return create(api::device& device, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder");
 
 		template<typename Tfunc>
-		Twebgpu_return& defer(Tfunc&& func) { STYLIZER_API_THROW("Not implemented yet!"); }
-		Tapi_return& defer(std::function<void()>&& func) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		Twebgpu_return& defer(Tfunc&& func) { deferred_to_release->connect(std::move(func)); return *this; }
+		Tapi_return& defer(std::function<void()>&& func) override { deferred_to_release->connect(std::move(func)); return *(Tapi_return*)this; }
 
-		Tapi_return& copy_buffer_to_buffer(api::device& device, api::buffer& destination, const api::buffer& source, std::optional<size_t> destination_offset = 0, std::optional<size_t> source_offset = 0, std::optional<size_t> size_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
+	protected:
+		WGPUCommandEncoder maybe_create_pre_encoder(webgpu::device& device);
+		WGPUComputePassEncoder maybe_create_compute_pass(webgpu::device& device);
+	public:
+
+		Tapi_return& copy_buffer_to_buffer(api::device& device, api::buffer& destination, const api::buffer& source, std::optional<size_t> destination_offset = 0, std::optional<size_t> source_offset = 0, std::optional<size_t> size_override = {}) override;
 		Tapi_return& copy_buffer_to_texture(api::device& device, api::buffer& destination, const api::texture& source, std::optional<size_t> destination_offset = 0, std::optional<vec3u> source_origin = { { 0, 0, 0 } }, std::optional<vec3u> extent_override = {}, std::optional<size_t> min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
 		Tapi_return& copy_texture_to_buffer(api::device& device, api::texture& destination, const api::buffer& source, std::optional<vec3u> destination_origin = { { 0, 0, 0 } }, std::optional<size_t> source_offset = 0, std::optional<vec3u> extent_override = {}, std::optional<size_t> min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override  { STYLIZER_API_THROW("Not implemented yet!"); }
-		Tapi_return& copy_texture_to_texture(api::device& device, api::texture& destination, const api::texture& source, std::optional<vec3u> destination_origin = { { 0, 0, 0 } }, std::optional<vec3u> source_origin = { { 0, 0, 0 } }, std::optional<vec3u> extent_override = {}, std::optional<size_t> min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		Tapi_return& copy_texture_to_texture(api::device& device, api::texture& destination, const api::texture& source, std::optional<vec3u> destination_origin = { { 0, 0, 0 } }, std::optional<vec3u> source_origin = { { 0, 0, 0 } }, std::optional<vec3u> extent_override = {}, std::optional<size_t> min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override;
 
-		Tapi_return& bind_compute_pipeline(api::device& device, const api::compute_pipeline& pipeline, bool release_on_submit = false) override { STYLIZER_API_THROW("Not implemented yet!"); }
-		Tapi_return& bind_compute_group(api::device& device, const api::bind_group& group, std::optional<bool> release_on_submit = false, std::optional<size_t> index_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
-		Tapi_return& dispatch_workgroups(api::device& device, vec3u workgroups) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		Tapi_return& bind_compute_pipeline(api::device& device, const api::compute_pipeline& pipeline, bool release_on_submit = false) override;
+		Tapi_return& bind_compute_group(api::device& device, const api::bind_group& group, std::optional<bool> release_on_submit = false, std::optional<size_t> index_override = {}) override;
+		Tapi_return& dispatch_workgroups(api::device& device, vec3u workgroups) override;
 
-		webgpu::command_buffer end(api::device& device) { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::command_buffer& end(temporary_return_t, api::device& device) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::command_buffer end(api::device& device);
+		api::command_buffer& end(temporary_return_t, api::device& device) override {
+			static command_buffer buffer;
+			return buffer = end(device);
+		}
 
-		void one_shot_submit(api::device& device) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void one_shot_submit(api::device& device) override;
 
-		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void release() override;
 	};
 
 	struct command_encoder : public command_encoder_base<api::command_encoder, command_encoder> { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_encoder); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(command_encoder);
 		using super = webgpu::command_encoder_base<api::command_encoder, command_encoder>;
 		inline command_encoder(command_encoder&& o) { *this = std::move(o); }
-		inline command_encoder& operator=(command_encoder&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
+		inline command_encoder& operator=(command_encoder&& o) { super::operator=(std::move(o)); return *this; }
 
 		stylizer::auto_release<command_encoder> auto_release() { return std::move(*this); }
 	};
@@ -371,8 +391,8 @@ namespace stylizer::api::webgpu {
 		webgpu::shader create_shader_from_source(shader::language lang, shader::stage stage, const std::string_view source, std::optional<const std::string_view> entry_point_ = "main", const std::string_view label = "Stylizer Shader");
 		api::shader& create_shader_from_source(temporary_return_t, shader::language lang, shader::stage stage, const std::string_view source, std::optional<const std::string_view> entry_point_ = "main", const std::string_view label = "Stylizer Shader") override;
 
-		webgpu::command_encoder create_command_encoder(bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::command_encoder& create_command_encoder(temporary_return_t, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::command_encoder create_command_encoder(bool one_shot = false, const std::string_view label = "Stylizer Command Encoder");
+		api::command_encoder& create_command_encoder(temporary_return_t, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") override;
 
 		webgpu::render_pass create_render_pass(std::span<const api::render_pass::color_attachment> colors, std::optional<api::render_pass::depth_stencil_attachment> depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") { STYLIZER_API_THROW("Not implemented yet!"); }
 		api::render_pass& create_render_pass(temporary_return_t, std::span<const api::render_pass::color_attachment> colors, const std::optional<api::render_pass::depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") override { STYLIZER_API_THROW("Not implemented yet!"); }
