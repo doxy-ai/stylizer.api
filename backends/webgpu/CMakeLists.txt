@@ -1,4 +1,4 @@
-add_library(stylizer_api_webgpu device.cpp surface.cpp texture.cpp buffer.cpp shader.cpp)
+add_library(stylizer_api_webgpu device.cpp surface.cpp texture.cpp buffer.cpp shader.cpp command_encoder.cpp)
 target_link_libraries(stylizer_api_webgpu PUBLIC stylizer_api)
 target_compile_definitions(stylizer_api_webgpu PUBLIC -DSTYLIZER_API_WEBGPU_AVAILABLE)
 if(NOT EMSCRIPTEN)
