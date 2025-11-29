@@ -13,16 +13,22 @@ namespace stylizer::api::webgpu {
 
 	struct texture_view : public api::texture_view { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture_view); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(texture_view);
 		uint32_t type = magic_number;
+		const webgpu::texture* owning_texture;
+		WGPUTextureView view = nullptr;
 
 		inline texture_view(texture_view&& o) { *this = std::move(o); }
-		inline texture_view& operator=(texture_view&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
-		inline operator bool() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		inline texture_view& operator=(texture_view&& o) {
+			owning_texture = std::exchange(o.owning_texture, nullptr);
+			view = std::exchange(o.view, nullptr);
+			return *this;
+		}
+		inline operator bool() const override { return view; }
 
-		static webgpu::texture_view create(api::device& device, const api::texture& texture, const texture_view::create_config& config = {}) { STYLIZER_API_THROW("Not implemented yet!"); }
+		static texture_view create(api::device& device, const api::texture& texture, const texture_view::create_config& config = {});
 
-		const api::texture& texture() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		const api::texture& texture() const override;
 
-		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void release() override;
 		stylizer::auto_release<texture_view> auto_release() { return std::move(*this); }
 	};
 	static_assert(texture_view_concept<texture_view>);
@@ -30,35 +36,42 @@ namespace stylizer::api::webgpu {
 	struct texture : public api::texture { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(texture);
 		uint32_t type = magic_number;
 		WGPUTexture texture_ = nullptr;
+		WGPUSampler sampler = nullptr;
+		mutable texture_view view = {}; // Mutable so may update while texture is const!
 
 		inline texture(texture&& o) { *this = std::move(o); }
-		inline texture& operator=(texture&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
-		inline operator bool() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		inline texture& operator=(texture&& o) {
+			texture_ = std::exchange(o.texture_, nullptr);
+			sampler = std::exchange(o.sampler, nullptr);
+			view.release(); // Pointers have been invalidated
+			return *this;
+		}
+		inline operator bool() const override { return texture_ || sampler; }
 
-		static webgpu::texture create(api::device& device, const create_config& config = {}) { STYLIZER_API_THROW("Not implemented yet!"); }
-		static webgpu::texture create_and_write(api::device& device, std::span<const std::byte> data, const data_layout& layout, create_config config = {}) { STYLIZER_API_THROW("Not implemented yet!"); }
+		static texture create(api::device& device, const create_config& config = {});
+		static texture create_and_write(api::device& device, std::span<const std::byte> data, const data_layout& layout, create_config config = {});
 
-		webgpu::texture_view create_view(api::device& device, const view::create_config& config = {}) const { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::texture_view& create_view(temporary_return_t, api::device& device, const view::create_config& config = {}) const override { STYLIZER_API_THROW("Not implemented yet!"); }
-		const api::texture_view& full_view(api::device& device, bool treat_as_cubemap = false) const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::texture_view create_view(api::device& device, const view::create_config& config = {}) const;
+		api::texture_view& create_view(temporary_return_t, api::device& device, const view::create_config& config = {}) const override;
+		const api::texture_view& full_view(api::device& device, bool treat_as_cubemap = false) const override;
 
-		vec3u size() const override { STYLIZER_API_THROW("Not implemented yet!"); }
-		enum texture_format texture_format() const override { STYLIZER_API_THROW("Not implemented yet!"); }
-		enum usage usage() const override { STYLIZER_API_THROW("Not implemented yet!"); }
-		uint32_t mip_levels() const override { STYLIZER_API_THROW("Not implemented yet!"); }
-		uint32_t samples() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		vec3u size() const override;
+		enum texture_format texture_format() const override;
+		enum usage usage() const override;
+		uint32_t mip_levels() const override;
+		uint32_t samples() const override;
 
-		api::texture& configure_sampler(api::device& device, const sampler_config& config = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
-		bool sampled() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::texture& configure_sampler(api::device& device, const sampler_config& config = {}) override;
+		bool sampled() const override;
 
-		api::texture& write(api::device& device, std::span<const std::byte> data, const data_layout& layout, vec3u extent, std::optional<vec3u> origin = { { 0, 0, 0 } }, size_t mip_level = 0) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::texture& write(api::device& device, std::span<const std::byte> data, const data_layout& layout, vec3u extent, std::optional<vec3u> origin = { { 0, 0, 0 } }, size_t mip_level = 0) override;
 
-		api::texture& copy_from(api::device& device, const api::texture& source, std::optional<vec3u> destination_origin = { { 0, 0, 0 } }, std::optional<vec3u> source_origin = { { 0, 0, 0 } }, std::optional<vec3u> extent_override = {}, std::optional<size_t> min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::texture& blit_from(api::device& device, const api::texture& source, std::optional<color32> clear_value = {}, STYLIZER_NULLABLE api::render_pipeline* render_pipeline_override = nullptr, std::optional<size_t> vertex_count_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::texture& copy_from(api::device& device, const api::texture& source, std::optional<vec3u> destination_origin = { { 0, 0, 0 } }, std::optional<vec3u> source_origin = { { 0, 0, 0 } }, std::optional<vec3u> extent_override = {}, std::optional<size_t> min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override;
+		api::texture& blit_from(api::device& device, const api::texture& source, std::optional<color32> clear_value = {}, STYLIZER_NULLABLE api::render_pipeline* render_pipeline_override = nullptr, std::optional<size_t> vertex_count_override = {}) override;
 
-		api::texture& generate_mipmaps(api::device& device, std::optional<size_t> first_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::texture& generate_mipmaps(api::device& device, std::optional<size_t> first_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override;
 
-		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void release() override;
 		stylizer::auto_release<texture> auto_release() { return std::move(*this); }
 	};
 	static_assert(texture_concept<texture>);
@@ -322,10 +335,10 @@ namespace stylizer::api::webgpu {
 		bool process_events();
 		bool tick(bool wait_for_queues = true) override;
 
-		webgpu::texture create_texture(const api::texture::create_config& config = {}) { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::texture& create_texture(temporary_return_t, const api::texture::create_config& config = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
-		webgpu::texture create_and_write_texture(std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config = {}) { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::texture& create_and_write_texture(temporary_return_t, std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::texture create_texture(const api::texture::create_config& config = {});
+		api::texture& create_texture(temporary_return_t, const api::texture::create_config& config = {}) override;
+		webgpu::texture create_and_write_texture(std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config = {});
+		api::texture& create_and_write_texture(temporary_return_t, std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config = {}) override;
 
 		webgpu::buffer create_buffer(usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer") { STYLIZER_API_THROW("Not implemented yet!"); }
 		api::buffer& create_buffer(temporary_return_t, usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer") override { STYLIZER_API_THROW("Not implemented yet!"); }

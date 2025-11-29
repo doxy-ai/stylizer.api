@@ -49,7 +49,7 @@ int main() {
 			should_close = true;
 		}
 
-		surface.next_texture(device);
+		stylizer::auto_release texture = surface.next_texture(device);
 
 		surface.present(device);
 	}
