@@ -161,37 +161,37 @@ namespace stylizer::api::webgpu {
 		return temp = create_and_write_buffer(usage, data, offset, label);
 	}
 
-	// webgpu::shader device::create_shader_from_wgsl(const std::string_view wgsl, const std::string_view label /* = "Stylizer Shader" */) {
-	// 	return webgpu::shader::create_from_wgsl(*this, wgsl, label);
-	// }
-	// api::shader& device::create_shader_from_wgsl(temporary_return_t, const std::string_view wgsl, const std::string_view label /* = "Stylizer Shader" */) {
-	// 	static webgpu::shader temp;
-	// 	return temp = create_shader_from_wgsl(wgsl, label);
-	// }
+	webgpu::shader device::create_shader_from_wgsl(const std::string_view wgsl, const std::string_view label /* = "Stylizer Shader" */) {
+		return webgpu::shader::create_from_wgsl(*this, wgsl, label);
+	}
+	api::shader& device::create_shader_from_wgsl(temporary_return_t, const std::string_view wgsl, const std::string_view label /* = "Stylizer Shader" */) {
+		static webgpu::shader temp;
+		return temp = create_shader_from_wgsl(wgsl, label);
+	}
 
-	// webgpu::shader device::create_shader_from_session(shader::stage stage, slcross::session session, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
-	// 	return webgpu::shader::create_from_session(*this, stage, session, entry_point, label);
-	// }
-	// api::shader& device::create_shader_from_session(temporary_return_t, shader::stage stage, slcross::session session, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
-	// 	static webgpu::shader temp;
-	// 	return temp = create_shader_from_session(stage, session, entry_point, label);
-	// }
+	webgpu::shader device::create_shader_from_session(shader::stage stage, slcross::session session, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
+		return webgpu::shader::create_from_session(*this, stage, session, entry_point, label);
+	}
+	api::shader& device::create_shader_from_session(temporary_return_t, shader::stage stage, slcross::session session, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
+		static webgpu::shader temp;
+		return temp = create_shader_from_session(stage, session, entry_point, label);
+	}
 
-	// webgpu::shader device::create_shader_from_spirv(shader::stage stage, spirv_view spirv, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
-	// 	return webgpu::shader::create_from_spirv(*this, stage, spirv, entry_point, label);
-	// }
-	// api::shader& device::create_shader_from_spirv(temporary_return_t, shader::stage stage, spirv_view spirv, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
-	// 	static webgpu::shader temp;
-	// 	return temp = create_shader_from_spirv(stage, spirv, entry_point, label);
-	// }
+	webgpu::shader device::create_shader_from_spirv(shader::stage stage, spirv_view spirv, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
+		return webgpu::shader::create_from_spirv(*this, stage, spirv, entry_point, label);
+	}
+	api::shader& device::create_shader_from_spirv(temporary_return_t, shader::stage stage, spirv_view spirv, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
+		static webgpu::shader temp;
+		return temp = create_shader_from_spirv(stage, spirv, entry_point, label);
+	}
 
-	// webgpu::shader device::create_shader_from_source(shader::language lang, shader::stage stage, const std::string_view source, std::optional<const std::string_view> entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
-	// 	return webgpu::shader::create_from_source(*this, lang, stage, source, entry_point.value_or("main"), label);
-	// }
-	// api::shader& device::create_shader_from_source(temporary_return_t, shader::language lang, shader::stage stage, const std::string_view source, std::optional<const std::string_view> entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
-	// 	static webgpu::shader temp;
-	// 	return temp = create_shader_from_source(lang, stage, source, entry_point.value_or("main"), label);
-	// }
+	webgpu::shader device::create_shader_from_source(shader::language lang, shader::stage stage, const std::string_view source, std::optional<const std::string_view> entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
+		return webgpu::shader::create_from_source(*this, lang, stage, source, entry_point.value_or("main"), label);
+	}
+	api::shader& device::create_shader_from_source(temporary_return_t, shader::language lang, shader::stage stage, const std::string_view source, std::optional<const std::string_view> entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
+		static webgpu::shader temp;
+		return temp = create_shader_from_source(lang, stage, source, entry_point.value_or("main"), label);
+	}
 
 	// webgpu::command_encoder device::create_command_encoder(bool one_shot /* = false */, const std::string_view label /* = "Stylizer Command Encoder" */) {
 	// 	return webgpu::command_encoder::create(*this, one_shot, label);
