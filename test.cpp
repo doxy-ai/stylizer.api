@@ -5,6 +5,8 @@
 #include <iostream>
 
 int main() {
+	using namespace stylizer::api::operators;
+
 	auto& errors = stylizer::get_error_handler();
 	stylizer::auto_release c = errors.connect([](stylizer::api::error::severity severity, std::string_view message, size_t) {
 		if (severity >= stylizer::api::error::severity::Error)
@@ -41,6 +43,14 @@ int main() {
 	}
 
 	surface.configure(device, surface.determine_optimal_default_config(device, size));
+
+	std::vector<int> data = {1, 2, 3, 4};
+	auto b = device.create_and_write_buffer(stylizer::api::usage::MapRead, stylizer::byte_span<int>(data));
+	auto ints = (int*)b.map(device);
+	assert(ints[0] == 1);
+	assert(ints[1] == 2);
+	assert(ints[2] == 3);
+	assert(ints[3] == 4);
 
 	bool should_close = false;
 	while (!should_close) {

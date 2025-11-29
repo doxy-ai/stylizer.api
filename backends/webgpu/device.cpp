@@ -143,23 +143,23 @@ namespace stylizer::api::webgpu {
 		return temp = create_and_write_texture(data, layout, config);
 	}
 
-	// webgpu::buffer device::create_buffer(usage usage, size_t size, bool mapped_at_creation /* = false */, const std::string_view label /* = "Stylizer Buffer" */) {
-	// 	return webgpu::buffer::create(*this, usage, size, mapped_at_creation, label);
-	// }
+	webgpu::buffer device::create_buffer(usage usage, size_t size, bool mapped_at_creation /* = false */, const std::string_view label /* = "Stylizer Buffer" */) {
+		return webgpu::buffer::create(*this, usage, size, mapped_at_creation, label);
+	}
 
-	// api::buffer& device::create_buffer(temporary_return_t, usage usage, size_t size, bool mapped_at_creation /* = false */, const std::string_view label /* = "Stylizer Buffer" */) {
-	// 	static webgpu::buffer temp;
-	// 	return temp = create_buffer(usage, size, mapped_at_creation);
-	// }
+	api::buffer& device::create_buffer(temporary_return_t, usage usage, size_t size, bool mapped_at_creation /* = false */, const std::string_view label /* = "Stylizer Buffer" */) {
+		static webgpu::buffer temp;
+		return temp = create_buffer(usage, size, mapped_at_creation);
+	}
 
-	// webgpu::buffer device::create_and_write_buffer(usage usage, std::span<const std::byte> data, size_t offset /* = 0 */, const std::string_view label /* = "Stylizer Buffer" */) {
-	// 	return webgpu::buffer::create_and_write(*this, usage, data, offset, label);
-	// }
+	webgpu::buffer device::create_and_write_buffer(usage usage, std::span<const std::byte> data, size_t offset /* = 0 */, const std::string_view label /* = "Stylizer Buffer" */) {
+		return webgpu::buffer::create_and_write(*this, usage, data, offset, label);
+	}
 
-	// api::buffer& device::create_and_write_buffer(temporary_return_t, usage usage, std::span<const std::byte> data, size_t offset /* = 0 */, const std::string_view label /* = "Stylizer Buffer" */) {
-	// 	static webgpu::buffer temp;
-	// 	return temp = create_and_write_buffer(usage, data, offset, label);
-	// }
+	api::buffer& device::create_and_write_buffer(temporary_return_t, usage usage, std::span<const std::byte> data, size_t offset /* = 0 */, const std::string_view label /* = "Stylizer Buffer" */) {
+		static webgpu::buffer temp;
+		return temp = create_and_write_buffer(usage, data, offset, label);
+	}
 
 	// webgpu::shader device::create_shader_from_wgsl(const std::string_view wgsl, const std::string_view label /* = "Stylizer Shader" */) {
 	// 	return webgpu::shader::create_from_wgsl(*this, wgsl, label);
