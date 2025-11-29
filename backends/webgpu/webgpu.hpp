@@ -127,17 +127,23 @@ namespace stylizer::api::webgpu {
 
 	struct shader : public api::shader { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(shader); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(shader);
 		uint32_t type = magic_number;
+		WGPUShaderModule module = nullptr;
+		// api::spirv spirv = {}; // TODO: Can we store some sort of smaller reflection data?
 
 		shader(shader&& o) { *this = std::move(o); }
-		shader& operator=(shader&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
-		inline operator bool() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		shader& operator=(shader&& o) {
+			module = std::exchange(o.module, nullptr);
+			// spirv = std::exchange(o.spirv, {});
+			return *this;
+		}
+		inline operator bool() const override { return module; }
 
-		static webgpu::shader create_from_wgsl(api::device& device, const std::string_view wgsl, const std::string_view label = "Stylizer Shader") { STYLIZER_API_THROW("Not implemented yet!"); }
-		static webgpu::shader create_from_session(api::device& device, shader::stage stage, slcross::session session, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") { STYLIZER_API_THROW("Not implemented yet!"); }
-		static webgpu::shader create_from_spirv(api::device& device, shader::stage stage, spirv_view spirv, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") { STYLIZER_API_THROW("Not implemented yet!"); }
-		static webgpu::shader create_from_source(api::device& device, language lang, shader::stage stage, const std::string_view source, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") { STYLIZER_API_THROW("Not implemented yet!"); }
+		static shader create_from_wgsl(api::device& device, const std::string_view wgsl, const std::string_view label = "Stylizer Shader");
+		static shader create_from_session(api::device& device, shader::stage stage, slcross::session session, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader");
+		static shader create_from_spirv(api::device& device, shader::stage stage, spirv_view spirv, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader");
+		static shader create_from_source(api::device& device, language lang, shader::stage stage, const std::string_view source, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader");
 
-		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void release() override;
 		stylizer::auto_release<shader> auto_release() { return std::move(*this); }
 	};
 	static_assert(shader_concept<shader>);
@@ -354,14 +360,16 @@ namespace stylizer::api::webgpu {
 		api::buffer& create_and_write_buffer(temporary_return_t, usage usage, std::span<const T> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") {
 			return create_and_write_buffer(usage, byte_span(data), offset, label);
 		}
-		webgpu::shader create_shader_from_session(shader::stage stage, slcross::session session, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::shader& create_shader_from_session(temporary_return_t, shader::stage stage, slcross::session session, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") override { STYLIZER_API_THROW("Not implemented yet!"); }
 
-		webgpu::shader create_shader_from_spirv(shader::stage stage, spirv_view spirv, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::shader& create_shader_from_spirv(temporary_return_t, shader::stage stage, spirv_view spirv, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::shader create_shader_from_wgsl(const std::string_view wgsl, const std::string_view label = "Stylizer Shader");
+		api::shader& create_shader_from_wgsl(temporary_return_t, const std::string_view wgsl, const std::string_view label = "Stylizer Shader");
 
-		webgpu::shader create_shader_from_source(shader::language lang, shader::stage stage, const std::string_view source, std::optional<const std::string_view> entry_point_ = "main", const std::string_view label = "Stylizer Shader") { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::shader& create_shader_from_source(temporary_return_t, shader::language lang, shader::stage stage, const std::string_view source, std::optional<const std::string_view> entry_point_ = "main", const std::string_view label = "Stylizer Shader") override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::shader create_shader_from_session(shader::stage stage, slcross::session session, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader");
+		api::shader& create_shader_from_session(temporary_return_t, shader::stage stage, slcross::session session, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") override;
+		webgpu::shader create_shader_from_spirv(shader::stage stage, spirv_view spirv, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader");
+		api::shader& create_shader_from_spirv(temporary_return_t, shader::stage stage, spirv_view spirv, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") override;
+		webgpu::shader create_shader_from_source(shader::language lang, shader::stage stage, const std::string_view source, std::optional<const std::string_view> entry_point_ = "main", const std::string_view label = "Stylizer Shader");
+		api::shader& create_shader_from_source(temporary_return_t, shader::language lang, shader::stage stage, const std::string_view source, std::optional<const std::string_view> entry_point_ = "main", const std::string_view label = "Stylizer Shader") override;
 
 		webgpu::command_encoder create_command_encoder(bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") { STYLIZER_API_THROW("Not implemented yet!"); }
 		api::command_encoder& create_command_encoder(temporary_return_t, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") override { STYLIZER_API_THROW("Not implemented yet!"); }
