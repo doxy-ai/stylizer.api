@@ -211,14 +211,14 @@ namespace stylizer::api::webgpu {
 	// 	return temp = create_render_pass(colors, depth, one_shot, label);
 	// }
 
-	// webgpu::compute_pipeline device::create_compute_pipeline(const pipeline::entry_point& entry_point, const std::string_view label /* = "Stylizer Compute Pipeline" */) {
-	// 	return webgpu::compute_pipeline::create(*this, entry_point, label);
-	// }
+	webgpu::compute_pipeline device::create_compute_pipeline(const pipeline::entry_point& entry_point, const std::string_view label /* = "Stylizer Compute Pipeline" */) {
+		return webgpu::compute_pipeline::create(*this, entry_point, label);
+	}
 
-	// api::compute_pipeline& device::create_compute_pipeline(temporary_return_t, const pipeline::entry_point& entry_point, const std::string_view label /* = "Stylizer Compute Pipeline" */) {
-	// 	static webgpu::compute_pipeline temp;
-	// 	return temp = create_compute_pipeline(entry_point, label);
-	// }
+	api::compute_pipeline& device::create_compute_pipeline(temporary_return_t, const pipeline::entry_point& entry_point, const std::string_view label /* = "Stylizer Compute Pipeline" */) {
+		static webgpu::compute_pipeline temp;
+		return temp = create_compute_pipeline(entry_point, label);
+	}
 
 	// webgpu::render_pipeline device::create_render_pipeline(const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments /* = {} */, std::optional<depth_stencil_attachment> depth_attachment /* = {} */, const api::render_pipeline::config& config /* = {} */, const std::string_view label /* = "Stylizer Render Pipeline" */) {
 	// 	return webgpu::render_pipeline::create(*this, entry_points, color_attachments, depth_attachment, config, label);
