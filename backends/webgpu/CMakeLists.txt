@@ -1,4 +1,7 @@
-add_library(stylizer_api_webgpu device.cpp surface.cpp texture.cpp buffer.cpp shader.cpp command_encoder.cpp)
+add_library(stylizer_api_webgpu 
+    device.cpp surface.cpp texture.cpp buffer.cpp shader.cpp command_encoder.cpp
+    command_buffer.cpp compute_pipeline.cpp
+)
 target_link_libraries(stylizer_api_webgpu PUBLIC stylizer_api)
 if(NOT EMSCRIPTEN)
     include(../../cmake/surface_support.cmake)
