@@ -78,44 +78,48 @@ namespace stylizer::api::webgpu {
 
 	struct buffer : public api::buffer { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(buffer); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(buffer);
 		uint32_t type = magic_number;
+		WGPUBuffer buffer_;
 
 		buffer(buffer&& o) { *this = std::move(o); }
-		buffer& operator=(buffer&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
-		inline operator bool() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		buffer& operator=(buffer&& o) {
+			buffer_ = std::exchange(o.buffer_, nullptr);
+			return *this;
+		}
+		inline operator bool() const override { return buffer_; }
 
-		static webgpu::buffer create(api::device& device, usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer") { STYLIZER_API_THROW("Not implemented yet!"); }
+		static buffer create(api::device& device, usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer");
 
-		static webgpu::buffer create_and_write(api::device& device, usage usage, std::span<const std::byte> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") { STYLIZER_API_THROW("Not implemented yet!"); }
+		static buffer create_and_write(api::device& device, usage usage, std::span<const std::byte> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer");
 		template<typename T>
 		requires(!std::same_as<T, std::byte>)
-		static webgpu::buffer create_and_write(api::device& device, usage usage, std::span<const T> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") {
+		static buffer create_and_write(api::device& device, usage usage, std::span<const T> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") {
 			return create_and_write(device, usage, byte_span(data), offset, label);
 		}
 
-		static const webgpu::buffer& zero_buffer(api::device& device, usage usage = usage::Storage, size_t minimum_size = 0, api::buffer* just_released = nullptr) { STYLIZER_API_THROW("Not implemented yet!"); }
-		const api::buffer& get_zero_buffer_singleton(api::device& device, usage usage = usage::Storage, size_t size = 0, api::buffer* just_released = nullptr) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		static const buffer& zero_buffer(api::device& device, usage usage = usage::Storage, size_t minimum_size = 0, api::buffer* just_released = nullptr);
+		const api::buffer& get_zero_buffer_singleton(api::device& device, usage usage = usage::Storage, size_t size = 0, api::buffer* just_released = nullptr) override;
 
-		api::buffer& write(api::device& device, std::span<const std::byte> data, size_t offset = 0) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::buffer& write(api::device& device, std::span<const std::byte> data, size_t offset = 0) override;
 		template<typename T>
 		requires(!std::same_as<T, std::byte>)
 		api::buffer& write(api::device& device, std::span<const T> data, size_t offset = 0) {
 			return write(device, byte_span(data), offset);
 		}
 
-		size_t size() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		size_t size() const override;
 
-		api::buffer& copy_from(api::device& device, const api::buffer& source, std::optional<size_t> destination_offset = 0, std::optional<size_t> source_offset = 0, std::optional<size_t> size_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::buffer& copy_from(api::device& device, const api::buffer& source, std::optional<size_t> destination_offset = 0, std::optional<size_t> source_offset = 0, std::optional<size_t> size_override = {}) override;
 
-		bool is_mapped() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		bool is_mapped() const override;
 
-		std::future<std::byte*> map_async(api::device& device, std::optional<bool> for_writing = false, std::optional<size_t> offset = 0, std::optional<size_t> size = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
-		std::byte* map(api::device& device, std::optional<bool> for_writing = false, std::optional<size_t> offset = 0, std::optional<size_t> size = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		std::future<std::byte*> map_async(api::device& device, std::optional<bool> for_writing = false, std::optional<size_t> offset = 0, std::optional<size_t> size = {}) override;
+		std::byte* map(api::device& device, std::optional<bool> for_writing = false, std::optional<size_t> offset = 0, std::optional<size_t> size = {}) override;
 
-		std::byte* get_mapped_range(bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) { STYLIZER_API_THROW("Not implemented yet!"); }
+		std::byte* get_mapped_range(bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {});
 
-		void unmap() override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void unmap() override;
 
-		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void release() override;
 		stylizer::auto_release<buffer> auto_release() { return std::move(*this); }
 	};
 	static_assert(buffer_concept<buffer>);
@@ -340,10 +344,10 @@ namespace stylizer::api::webgpu {
 		webgpu::texture create_and_write_texture(std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config = {});
 		api::texture& create_and_write_texture(temporary_return_t, std::span<const std::byte> data, const api::texture::data_layout& layout, const api::texture::create_config& config = {}) override;
 
-		webgpu::buffer create_buffer(usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer") { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::buffer& create_buffer(temporary_return_t, usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer") override { STYLIZER_API_THROW("Not implemented yet!"); }
-		webgpu::buffer create_and_write_buffer(usage usage, std::span<const std::byte> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::buffer& create_and_write_buffer(temporary_return_t, usage usage, std::span<const std::byte> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::buffer create_buffer(usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer");
+		api::buffer& create_buffer(temporary_return_t, usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer") override;
+		webgpu::buffer create_and_write_buffer(usage usage, std::span<const std::byte> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer");
+		api::buffer& create_and_write_buffer(temporary_return_t, usage usage, std::span<const std::byte> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") override;
 		template<typename T>
 		requires(!std::same_as<T, std::byte>) // NOTE: non temp return version can't compile since buffer isn't a defined type yet!
 		api::buffer& create_and_write_buffer(temporary_return_t, usage usage, std::span<const T> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") {
