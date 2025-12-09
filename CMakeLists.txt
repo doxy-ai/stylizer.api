@@ -5,6 +5,14 @@ if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(STYLIZER_SPLIT_DWARF_PREFERRED ${PROJECT_IS_TOP_LEVEL})
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(STYLIZER_SPLIT_DWARF_PREFERRED ${PROJECT_IS_TOP_LEVEL})
+else()
+	set(STYLIZER_SPLIT_DWARF_PREFERRED false)
+endif()
+
 set(STYLIZER_API_CURRENT_BACKEND_OPTIONS "webgpu" "none")
 set(STYLIZER_API_CURRENT_BACKEND webgpu CACHE STRING "Backend that is currently set as the default for the Stylizer Graphics API")
 set_property(CACHE STYLIZER_API_CURRENT_BACKEND PROPERTY STRINGS ${STYLIZER_API_CURRENT_BACKEND_OPTIONS})
@@ -13,7 +21,8 @@ if(NOT STYLIZER_API_CURRENT_BACKEND_LOWER IN_LIST STYLIZER_API_CURRENT_BACKEND_O
 	message(FATAL_ERROR "The current backend must be one of ${STYLIZER_API_CURRENT_BACKEND_OPTIONS} not ${STYLIZER_API_CURRENT_BACKEND_LOWER}")
 endif()
 
-# option(STYLIZER_API_BUILD_TEST "Should we build the test file?" ${PROJECT_IS_TOP_LEVEL})
+option(STYLIZER_API_BUILD_TEST "Should we build the test file?" ${PROJECT_IS_TOP_LEVEL})
+option(STYLIZER_API_USE_SPLIT_DWARF "Should debugging information be included in separated files?" ${STYLIZER_SPLIT_DWARF_PREFERRED})
 
 option(STYLIZER_USE_COCOA "Should we build cocoa support?" ${APPLE})
 option(STYLIZER_USE_WINDOWS_UI "Should we build windows ui support?" ${WIN32})
@@ -23,6 +32,10 @@ option(STYLIZER_USE_WAYLAND "Should we build wayland support?" OFF)
 # option(STYLIZER_API_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
 
 set(CMAKE_CXX_STANDARD 26)
+
+if(STYLIZER_API_USE_SPLIT_DWARF)
+	add_compile_options(-gsplit-dwarf)
+endif()
 
 add_subdirectory(thirdparty/slcross EXCLUDE_FROM_ALL)
 add_subdirectory(thirdparty/stdmath EXCLUDE_FROM_ALL)

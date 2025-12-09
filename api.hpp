@@ -10,7 +10,7 @@
 #include "util/spans.hpp"
 
 #include <future>
-#include <math/vec.hpp>
+#include <math/vector.hpp>
 #include <slcross.hpp>
 
 namespace stylizer {
@@ -37,13 +37,13 @@ namespace stylizer::api {
 
 	using bool32 = uint32_t;
 
-	using vec2u = stdmath::vec<size_t, 2>;
+	using vec2u = stdmath::vector<size_t, 2>;
 
-	using vec3u = stdmath::vec<size_t, 3>;
+	using vec3u = stdmath::vector<size_t, 3>;
 
-	using color32 = stdmath::vec<stdmath::stl::float32_t, 4>;
+	using color32 = stdmath::vector<stdmath::stl::float32_t, 4>;
 
-	using color8 = stdmath::vec<uint8_t, 4>;
+	using color8 = stdmath::vector<uint8_t, 4>;
 
 	using spirv = std::vector<uint32_t>;
 
