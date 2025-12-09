@@ -8,7 +8,7 @@ namespace stylizer::api::webgpu {
 		shader out;
 		// out.spirv = std::move(spirv.value_or(slcross::wgsl::parse_from_memory(wgsl)));
 
-		WGPUShaderModuleWGSLDescriptor code {
+		WGPUShaderSourceWGSL code {
 			.chain = { .sType = WGPUSType_ShaderSourceWGSL },
 			.code = to_webgpu(wgsl),
 		};
