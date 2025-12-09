@@ -27,7 +27,7 @@ if (TARGET dawn_native)
 	return()
 endif()
 
-set(DAWN_VERSION "7187" CACHE STRING "\
+set(DAWN_VERSION "7569" CACHE STRING "\
 	Version of the Dawn release to use. Must correspond to the number after 'chromium/' \
 	in the tag name of an existing release on DAWN_MIRROR. \
 	Warning: The webgpu.hpp file provided in include/ may not be compatible with other \

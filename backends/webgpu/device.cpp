@@ -8,7 +8,9 @@ namespace stylizer::api::webgpu {
 			~Singleton() { wgpuInstanceRelease(instance); }
 		} singleton = { [] {
 			WGPUInstanceDescriptor d = WGPU_INSTANCE_DESCRIPTOR_INIT;
-			d.capabilities.timedWaitAnyEnable = true;
+			std::array<WGPUInstanceFeatureName, 1> features = {WGPUInstanceFeatureName_TimedWaitAny};
+			d.requiredFeatureCount = features.size();
+			d.requiredFeatures = features.data();
 
 			WGPUDawnTogglesDescriptor toggles;
 			toggles.chain.next = nullptr;
@@ -105,7 +107,7 @@ namespace stylizer::api::webgpu {
 		bool done = false;
 		wgpuQueueOnSubmittedWorkDone(queue, {
 			.mode = WGPUCallbackMode_AllowProcessEvents,
-			.callback = [](WGPUQueueWorkDoneStatus status, void* userdata, void*){
+			.callback = [](WGPUQueueWorkDoneStatus status, WGPUStringView message, WGPU_NULLABLE void* userdata, WGPU_NULLABLE void*){
 				bool& done = *(bool*)userdata;
 				switch(status){
 				case WGPUQueueWorkDoneStatus_CallbackCancelled: [[fallthrough]];
