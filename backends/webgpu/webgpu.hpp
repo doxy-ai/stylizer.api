@@ -283,47 +283,63 @@ namespace stylizer::api::webgpu {
 		using super = webgpu::command_encoder_base<api::render_pass, render_pass>;
 
 		// NOTE: Type gets inherited from command_encoder
-		// inline render_pass(std::vector<color_attachment> colors, std::optional<depth_stencil_attachment> depth): color_attachments(std::move(colors)), depth_attachment(depth) {}
+		WGPUCommandEncoder render_encoder = nullptr;
+		WGPURenderPassEncoder pass = nullptr;
+		std::vector<color_attachment> color_attachments = {};
+		std::optional<depth_stencil_attachment> depth_attachment = {};
+		bool render_used = false;
+
+		inline render_pass(std::vector<color_attachment> colors, std::optional<depth_stencil_attachment> depth): color_attachments(std::move(colors)), depth_attachment(depth) {}
 		inline render_pass(render_pass&& o) { *this = std::move(o); }
-		inline render_pass& operator=(render_pass&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
-		inline operator bool() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		inline render_pass& operator=(render_pass&& o) {
+			super::operator=(std::move(o));
+			render_encoder = std::exchange(o.render_encoder, nullptr);
+			pass = std::exchange(o.pass, nullptr);
+			color_attachments = std::exchange(o.color_attachments, {});
+			depth_attachment = std::exchange(o.depth_attachment, {});
+			render_used = std::exchange(o.render_used, false);
+			return *this;
+		}
+		inline operator bool() const override { return super::operator bool() || render_encoder || pass; }
 
+		static render_pass create(api::device& device, std::span<const render_pass::color_attachment> colors, const std::optional<depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass");
 
-		static webgpu::render_pass create(api::device& device, std::span<const render_pass::color_attachment> colors, const std::optional<depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::render_pass& bind_render_pipeline(api::device& device, const api::render_pipeline& pipeline, bool release_on_submit =  false) override;
+		api::render_pass& bind_render_group(api::device& device, const api::bind_group& group, std::optional<bool> release_on_submit = false, std::optional<size_t> index_override = {}) override;
+		api::render_pass& bind_vertex_buffer(api::device& device, size_t slot, const api::buffer& buffer, std::optional<size_t> offset = 0, std::optional<size_t> size_override = {}) override;
+		api::render_pass& bind_index_buffer(api::device& device, const api::buffer& buffer, std::optional<size_t> offset = 0, std::optional<size_t> size_override = {}) override;
 
-		api::render_pass& bind_render_pipeline(api::device& device, const api::render_pipeline& pipeline, bool release_on_submit =  false) override { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::render_pass& bind_render_group(api::device& device, const api::bind_group& group, std::optional<bool> release_on_submit = false, std::optional<size_t> index_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::render_pass& bind_vertex_buffer(api::device& device, size_t slot, const api::buffer& buffer, std::optional<size_t> offset = 0, std::optional<size_t> size_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::render_pass& bind_index_buffer(api::device& device, const api::buffer& buffer, std::optional<size_t> offset = 0, std::optional<size_t> size_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::render_pass& draw(api::device& device, size_t vertex_count, std::optional<size_t> instance_count = 1, std::optional<size_t> first_vertex = 0, size_t first_instance = 0) override;
+		api::render_pass& draw_indexed(api::device& device, size_t index_count, std::optional<size_t> instance_count = 1, std::optional<size_t> first_index = 0, std::optional<size_t> base_vertex = 0, size_t first_instance = 0) override;
 
-		api::render_pass& draw(api::device& device, size_t vertex_count, std::optional<size_t> instance_count = 1, std::optional<size_t> first_vertex = 0, size_t first_instance = 0) override { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::render_pass& draw_indexed(api::device& device, size_t index_count, std::optional<size_t> instance_count = 1, std::optional<size_t> first_index = 0, std::optional<size_t> base_vertex = 0, size_t first_instance = 0) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::command_buffer end(api::device& device);
+		api::command_buffer& end(temporary_return_t, api::device& device) override;
 
-		webgpu::command_buffer end(api::device& device) { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::command_buffer& end(temporary_return_t, api::device& device) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void one_shot_submit(api::device& device) override;
 
-		void one_shot_submit(api::device& device) override { STYLIZER_API_THROW("Not implemented yet!"); }
-
-		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void release() override;
 		stylizer::auto_release<render_pass> auto_release() { return std::move(*this); }
 	};
 	static_assert(render_pass_concept<render_pass>);
 
 	struct render_pipeline : public api::render_pipeline { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(render_pipeline); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(render_pipeline);
 		uint32_t type = magic_number;
+		WGPURenderPipeline pipeline = nullptr;
 
 		render_pipeline(render_pipeline&& o) { *this = std::move(o); }
-		render_pipeline& operator=(render_pipeline&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
-		inline operator bool() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		render_pipeline& operator=(render_pipeline&& o) {
+			pipeline = std::exchange(o.pipeline, nullptr);
+			return *this;
+		}
+		inline operator bool() const override { return pipeline; }
 
+		static render_pipeline create(api::device& device, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline");
+		static render_pipeline create_from_compatible_render_pass(api::device& device, const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline");
 
-		static render_pipeline create(api::device& device, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline") { STYLIZER_API_THROW("Not implemented yet!"); }
-		static render_pipeline create_from_compatible_render_pass(api::device& device, const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline") { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::bind_group create_bind_group(api::device& device, size_t index, std::span<const bind_group::binding> bindings);
+		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings) override;
 
-		webgpu::bind_group create_bind_group(api::device& device, size_t index, std::span<const bind_group::binding> bindings) { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings) override { STYLIZER_API_THROW("Not implemented yet!"); }
-
-		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
+		void release() override;
 		stylizer::auto_release<render_pipeline> auto_release() { return std::move(*this); }
 	};
 	static_assert(render_pipeline_concept<render_pipeline>);
@@ -416,16 +432,16 @@ namespace stylizer::api::webgpu {
 		webgpu::command_encoder create_command_encoder(bool one_shot = false, const std::string_view label = "Stylizer Command Encoder");
 		api::command_encoder& create_command_encoder(temporary_return_t, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder") override;
 
-		webgpu::render_pass create_render_pass(std::span<const api::render_pass::color_attachment> colors, std::optional<api::render_pass::depth_stencil_attachment> depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::render_pass& create_render_pass(temporary_return_t, std::span<const api::render_pass::color_attachment> colors, const std::optional<api::render_pass::depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::render_pass create_render_pass(std::span<const api::render_pass::color_attachment> colors, std::optional<api::render_pass::depth_stencil_attachment> depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass");
+		api::render_pass& create_render_pass(temporary_return_t, std::span<const api::render_pass::color_attachment> colors, const std::optional<api::render_pass::depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") override;
 
 		webgpu::compute_pipeline create_compute_pipeline(const pipeline::entry_point& entry_point, const std::string_view label = "Stylizer Compute Pipeline");
 		api::compute_pipeline& create_compute_pipeline(temporary_return_t, const pipeline::entry_point& entry_point, const std::string_view label = "Stylizer Compute Pipeline") override;
 
-		webgpu::render_pipeline create_render_pipeline(const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, std::optional<depth_stencil_attachment> depth_attachment = {}, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::render_pipeline& create_render_pipeline(temporary_return_t, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") override { STYLIZER_API_THROW("Not implemented yet!"); }
-		webgpu::render_pipeline create_render_pipeline_from_compatible_render_pass(const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::render_pipeline& create_render_pipeline_from_compatible_render_pass(temporary_return_t, const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") override { STYLIZER_API_THROW("Not implemented yet!"); }
+		webgpu::render_pipeline create_render_pipeline(const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, std::optional<depth_stencil_attachment> depth_attachment = {}, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline");
+		api::render_pipeline& create_render_pipeline(temporary_return_t, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") override;
+		webgpu::render_pipeline create_render_pipeline_from_compatible_render_pass(const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline");
+		api::render_pipeline& create_render_pipeline_from_compatible_render_pass(temporary_return_t, const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const api::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") override;
 
 		void release(bool static_sub_objects = false) override;
 		stylizer::auto_release<device> auto_release() { return std::move(*this); }
