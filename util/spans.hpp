@@ -20,6 +20,8 @@ namespace stylizer {
 	*/
 	template<typename T>
 	std::span<const T> span_from_value(const T& value) { return {(T*)&value, 1}; }
+	template<typename T>
+	std::span<T> span_from_value(T& value) { return {(T*)&value, 1}; }
 
 	/**
 	* @brief Creates a byte span from a span of any type.
@@ -32,6 +34,6 @@ namespace stylizer {
 	* @return A byte span representing the same memory region as the input span.
 	*/
 	template<typename T>
-	std::span<const std::byte> byte_span(std::span<const T> span) { return {(std::byte*)span.data(), span.size_bytes()}; }
+	std::span<const std::byte> byte_span(std::span<const T> span) { return {(std::byte*)span.data(), span.size() * sizeof(T)}; }
 
 } // namespace stylizer

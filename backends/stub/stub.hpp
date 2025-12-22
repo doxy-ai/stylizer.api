@@ -68,17 +68,17 @@ namespace stylizer::api::stub {
 		buffer& operator=(buffer&& o) { STYLIZER_API_THROW("Not implemented yet!"); }
 		inline operator bool() const override { STYLIZER_API_THROW("Not implemented yet!"); }
 
-		static stub::buffer create(api::device& device, usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer") { STYLIZER_API_THROW("Not implemented yet!"); }
+		static stub::buffer create(api::device& device, enum usage usage, size_t size, bool mapped_at_creation = false, const std::string_view label = "Stylizer Buffer") { STYLIZER_API_THROW("Not implemented yet!"); }
 
-		static stub::buffer create_and_write(api::device& device, usage usage, std::span<const std::byte> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") { STYLIZER_API_THROW("Not implemented yet!"); }
+		static stub::buffer create_and_write(api::device& device, enum usage usage, std::span<const std::byte> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") { STYLIZER_API_THROW("Not implemented yet!"); }
 		template<typename T>
 		requires(!std::same_as<T, std::byte>)
-		static stub::buffer create_and_write(api::device& device, usage usage, std::span<const T> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") {
+		static stub::buffer create_and_write(api::device& device, enum usage usage, std::span<const T> data, size_t offset = 0, const std::string_view label = "Stylizer Buffer") {
 			return create_and_write(device, usage, byte_span(data), offset, label);
 		}
 
-		static const stub::buffer& zero_buffer(api::device& device, usage usage = usage::Storage, size_t minimum_size = 0, api::buffer* just_released = nullptr) { STYLIZER_API_THROW("Not implemented yet!"); }
-		const api::buffer& get_zero_buffer_singleton(api::device& device, usage usage = usage::Storage, size_t size = 0, api::buffer* just_released = nullptr) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		static const stub::buffer& zero_buffer(api::device& device, enum usage usage = usage::Storage, size_t minimum_size = 0, api::buffer* just_released = nullptr) { STYLIZER_API_THROW("Not implemented yet!"); }
+		const api::buffer& get_zero_buffer_singleton(api::device& device, enum usage usage = usage::Storage, size_t size = 0, api::buffer* just_released = nullptr) override { STYLIZER_API_THROW("Not implemented yet!"); }
 
 		api::buffer& write(api::device& device, std::span<const std::byte> data, size_t offset = 0) override { STYLIZER_API_THROW("Not implemented yet!"); }
 		template<typename T>
@@ -88,6 +88,7 @@ namespace stylizer::api::stub {
 		}
 
 		size_t size() const override { STYLIZER_API_THROW("Not implemented yet!"); }
+		enum usage usage() const override { STYLIZER_API_THROW("Not implemented yet!"); }
 
 		api::buffer& copy_from(api::device& device, const api::buffer& source, std::optional<size_t> destination_offset = 0, std::optional<size_t> source_offset = 0, std::optional<size_t> size_override = {}) override { STYLIZER_API_THROW("Not implemented yet!"); }
 
@@ -155,8 +156,8 @@ namespace stylizer::api::stub {
 
 		static stub::compute_pipeline create(api::device& device, pipeline::entry_point entry_point, const std::string_view label = "Stylizer Compute Pipeline") { STYLIZER_API_THROW("Not implemented yet!"); }
 
-		stub::bind_group create_bind_group(api::device& device, size_t index, std::span<const bind_group::binding> bindings) { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		stub::bind_group create_bind_group(api::device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label = "Stylizer Bind Group") { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label = "Stylizer Bind Group") override { STYLIZER_API_THROW("Not implemented yet!"); }
 
 		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
 		stylizer::auto_release<compute_pipeline> auto_release() { return std::move(*this); }
@@ -206,6 +207,11 @@ namespace stylizer::api::stub {
 	};
 	static_assert(command_encoder_concept<command_encoder>);
 
+	namespace compute {
+		using pipeline = compute_pipeline;
+		using pass = command_encoder;
+	}
+
 	struct render_pass : public command_encoder_base<api::render_pass, render_pass> { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(render_pass); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(render_pass);
 		using super = stub::command_encoder_base<api::render_pass, render_pass>;
 
@@ -247,13 +253,18 @@ namespace stylizer::api::stub {
 		static render_pipeline create(api::device& device, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline") { STYLIZER_API_THROW("Not implemented yet!"); }
 		static render_pipeline create_from_compatible_render_pass(api::device& device, const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline") { STYLIZER_API_THROW("Not implemented yet!"); }
 
-		stub::bind_group create_bind_group(api::device& device, size_t index, std::span<const bind_group::binding> bindings) { STYLIZER_API_THROW("Not implemented yet!"); }
-		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings) override { STYLIZER_API_THROW("Not implemented yet!"); }
+		stub::bind_group create_bind_group(api::device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label = "Stylizer Render Bind Group") { STYLIZER_API_THROW("Not implemented yet!"); }
+		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label = "Stylizer Render Bind Group") override { STYLIZER_API_THROW("Not implemented yet!"); }
 
 		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
 		stylizer::auto_release<render_pipeline> auto_release() { return std::move(*this); }
 	};
 	static_assert(render_pipeline_concept<render_pipeline>);
+
+	namespace render {
+		using pipeline = render_pipeline;
+		using pass = render_pass;
+	}
 
 	struct surface : public api::surface { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(surface);  STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(surface);
 		uint32_t type = magic_number;

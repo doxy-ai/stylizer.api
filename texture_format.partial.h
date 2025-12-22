@@ -235,6 +235,53 @@ inline size_t bytes_per_pixel(texture_format format) {
 		// case texture_format::R8BG8Biplanar444_Normalized:
 		// case texture_format::R10X6BG10X6Biplanar422_Normalized:
 		// case texture_format::R10X6BG10X6Biplanar444_Normalized:
+		default: 
+			STYLIZER_API_THROW("An error has occurred finding the number of bytes per pixel in format: " + std::string(magic_enum::enum_name(format)));
+			return 0;
 	}
-	STYLIZER_API_THROW("An error has occurred finding the number of bytes per pixel in format: " + std::string(magic_enum::enum_name(format)));
+}
+
+inline bool is_srgb(texture_format format) {
+	switch(format){
+	case texture_format::RGBAu8_NormalizedSRGB:
+	case texture_format::BGRAu8_NormalizedSRGB:
+	case texture_format::BC1RGBA_NormalizedSRGB:
+	case texture_format::BC2RGBA_NormalizedSRGB:
+	case texture_format::BC3RGBA_NormalizedSRGB:
+	case texture_format::BC7RGBA_NormalizedSRGB:
+	case texture_format::ETC2RGB8_NormalizedSRGB:
+	case texture_format::ETC2RGB8A1_NormalizedSRGB:
+	case texture_format::ETC2RGBA8_NormalizedSRGB:
+	case texture_format::ASTC4x4_NormalizedSRGB:
+	case texture_format::ASTC5x4_NormalizedSRGB:
+	case texture_format::ASTC5x5_NormalizedSRGB:
+	case texture_format::ASTC6x5_NormalizedSRGB:
+	case texture_format::ASTC6x6_NormalizedSRGB:
+	case texture_format::ASTC8x5_NormalizedSRGB:
+	case texture_format::ASTC8x6_NormalizedSRGB:
+	case texture_format::ASTC8x8_NormalizedSRGB:
+	case texture_format::ASTC10x5_NormalizedSRGB:
+	case texture_format::ASTC10x6_NormalizedSRGB:
+	case texture_format::ASTC10x8_NormalizedSRGB:
+	case texture_format::ASTC10x10_NormalizedSRGB:
+	case texture_format::ASTC12x10_NormalizedSRGB:
+	case texture_format::ASTC12x12_NormalizedSRGB:	
+		return true;
+	default:
+		return false;
+	}
+}
+
+inline bool is_depth_stencil(texture_format format) {
+	switch(format) {
+	case texture_format::Stencil_u8:
+	case texture_format::Depth_u16:
+	case texture_format::Depth_u24:
+	case texture_format::Depth_u24Stencil_u8:
+	case texture_format::Depth_f32:
+	case texture_format::Depth_f32Stencil_u8:
+		return true;
+	default:
+		return false;
+	}
 }

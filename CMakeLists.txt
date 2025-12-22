@@ -5,6 +5,12 @@ if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
+if(DEFINED ENV{XDG_SESSION_TYPE} AND "$ENV{XDG_SESSION_TYPE}" STREQUAL "wayland")
+    set(STYLIZER_WAYLAND_PREFERRED ${LINUX})
+else()
+    set(STYLIZER_WAYLAND_PREFERRED FALSE)
+endif()
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(STYLIZER_SPLIT_DWARF_PREFERRED ${PROJECT_IS_TOP_LEVEL})
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -24,10 +30,10 @@ endif()
 option(STYLIZER_API_BUILD_TEST "Should we build the test file?" ${PROJECT_IS_TOP_LEVEL})
 option(STYLIZER_API_USE_SPLIT_DWARF "Should debugging information be included in separated files?" ${STYLIZER_SPLIT_DWARF_PREFERRED})
 
-option(STYLIZER_USE_COCOA "Should we build cocoa support?" ${APPLE})
-option(STYLIZER_USE_WINDOWS_UI "Should we build windows ui support?" ${WIN32})
-option(STYLIZER_USE_X11 "Should we build X11 support?" ${LINUX})
-option(STYLIZER_USE_WAYLAND "Should we build wayland support?" OFF)
+option(STYLIZER_API_USE_COCOA "Should we build cocoa support?" ${APPLE})
+option(STYLIZER_API_USE_WINDOWS_UI "Should we build windows ui support?" ${WIN32})
+option(STYLIZER_API_USE_X11 "Should we build X11 support?" ${LINUX})
+option(STYLIZER_API_USE_WAYLAND "Should we build wayland support?" ${STYLIZER_WAYLAND_PREFERRED})
 
 # option(STYLIZER_API_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
 

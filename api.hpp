@@ -10,15 +10,9 @@
 #include "util/spans.hpp"
 
 #include <future>
-#include <math/vector.hpp>
+#include <math/color.hpp>
 #include <slcross.hpp>
 #include <variant>
-
-#ifdef _MSC_VER
-	#define STYLIZER_ENUM_CLASS enum class
-#else
-	#define STYLIZER_ENUM_CLASS enum
-#endif
 
 namespace stylizer {
 	using namespace fteng;
@@ -48,9 +42,9 @@ namespace stylizer::api {
 
 	using vec3u = stdmath::vector<size_t, 3>;
 
-	using color32 = stdmath::vector<stdmath::stl::float32_t, 4>;
+	using color32 = stdmath::color32;
 
-	using color8 = stdmath::vector<uint8_t, 4>;
+	using color8 = stdmath::color8;
 
 	using spirv = std::vector<uint32_t>;
 
@@ -286,6 +280,7 @@ namespace stylizer::api {
 		{ T::create_from_emscripten(canvas_id) } -> std::convertible_to<T>;
 		{ t.next_texture(device) } -> std::derived_from<struct texture>;
 		{ t.auto_release() } -> std::convertible_to<auto_release<T>>;
+		{ t.type } -> std::convertible_to<size_t>;
 	};
 
 	struct texture_view {
@@ -321,6 +316,7 @@ namespace stylizer::api {
 	concept texture_view_concept = std::derived_from<T, texture_view> && requires(T t, device device, struct texture texture, texture_view::create_config config) {
 		{ T::create(device, texture, config) } -> std::convertible_to<T>;
 		{ t.auto_release() } -> std::convertible_to<auto_release<T>>;
+		{ t.type } -> std::convertible_to<size_t>;
 	};
 
 	struct texture {
@@ -328,7 +324,7 @@ namespace stylizer::api {
 		using view = texture_view;
 
 		struct create_config {
-			const std::string_view label = "Stylizer Texture";
+			std::string_view label = "Stylizer Texture";
 			enum texture_format format = format::RGBAu8_NormalizedSRGB;
 			enum usage usage = usage::Texture;
 			vec3u size;
@@ -350,7 +346,7 @@ namespace stylizer::api {
 		};
 
 		struct sampler_config {
-			const std::string_view label = "Stylizer Sampler";
+			std::string_view label = "Stylizer Sampler";
 			address_mode mode = address_mode::Repeat;
 			std::optional<address_mode> mode_x_override = {};
 			std::optional<address_mode> mode_y_override = {};
@@ -379,6 +375,7 @@ namespace stylizer::api {
 		virtual uint32_t samples() const = 0;
 
 		virtual texture& configure_sampler(device& device, const sampler_config& config) = 0;
+		// virtual texture& copy_sampler_from(texture&) = 0; // TODO: implement the ability to copy the sampler from another texture!
 
 		virtual bool sampled() const = 0;
 
@@ -405,14 +402,17 @@ namespace stylizer::api {
 		{ T::create(device, config) } -> std::convertible_to<T>;
 		{ T::create_and_write(device, data, layout, config) } -> std::convertible_to<T>;
 		{ t.auto_release() } -> std::convertible_to<auto_release<T>>;
+		{ t.type } -> std::convertible_to<size_t>;
 	};
 
 	struct buffer {
-		virtual const buffer& get_zero_buffer_singleton(device& device, usage usage = usage::Storage, size_t minimum_size = 0, STYLIZER_NULLABLE buffer* just_released = nullptr) = 0;
+		virtual const buffer& get_zero_buffer_singleton(device& device, enum usage usage = usage::Storage, size_t minimum_size = 0, STYLIZER_NULLABLE buffer* just_released = nullptr) = 0;
 
 		virtual buffer& write(device& device, std::span<const std::byte> data, size_t offset = 0) = 0;
 
 		virtual size_t size() const = 0;
+		
+		virtual enum usage usage() const = 0;
 
 		virtual buffer& copy_from(device& device, const buffer& source, std::optional<size_t> destination_offset = 0, std::optional<size_t> source_offset = 0, std::optional<size_t> size_override = {}) = 0;
 
@@ -441,6 +441,7 @@ namespace stylizer::api {
 		{ T::create_and_write(device, usage, data, offset, label) } -> std::convertible_to<T>;
 		{ T::zero_buffer(device, usage, size, just_released) } -> std::convertible_to<T>;
 		{ t.auto_release() } -> std::convertible_to<auto_release<T>>;
+		{ t.type } -> std::convertible_to<size_t>;
 	};
 
 	struct shader {
@@ -489,6 +490,7 @@ namespace stylizer::api {
 		{ T::create_from_session(device, stage, session, entry_point, label) } -> std::convertible_to<T>;
 		{ T::create_from_spirv(device, stage, spirv, entry_point, label) } -> std::convertible_to<T>;
 		{ t.auto_release() } -> std::convertible_to<auto_release<T>>;
+		{ t.type } -> std::convertible_to<size_t>;
 	};
 
 	struct pipeline {
@@ -551,7 +553,7 @@ namespace stylizer::api {
 	struct compute_pipeline : public pipeline {
 		using pass = struct command_encoder;
 
-		virtual bind_group& create_bind_group(temporary_return_t, device& device, size_t index, std::span<const bind_group::binding> bindings) = 0;
+		virtual bind_group& create_bind_group(temporary_return_t, device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label = "Stylizer Bind Group") = 0;
 
 		static void quick_dispatch(device& device, vec3u workgroups, const pipeline::entry_point& entry_point, std::span<const bind_group::binding> bindings = {});
 
@@ -570,6 +572,7 @@ namespace stylizer::api {
 	concept compute_pipeline_concept = std::derived_from<T, compute_pipeline> && requires(T t, device device, pipeline::entry_point entry_point, const std::string_view label) {
 		{ T::create(device, entry_point, label) } -> std::convertible_to<T>;
 		{ t.auto_release() } -> std::convertible_to<auto_release<T>>;
+		{ t.type } -> std::convertible_to<size_t>;
 	};
 
 	template<typename Treturn>
@@ -614,6 +617,7 @@ namespace stylizer::api {
 		{ t.deferred_to_release } -> convertible_to_pointer<stylizer::signal<void()>>;
 		{ T::create(device, one_shot, label) } -> std::convertible_to<T>;
 		{ t.auto_release() } -> std::convertible_to<auto_release<T>>;
+		{ t.type } -> std::convertible_to<size_t>;
 	};
 
 	namespace compute {
@@ -650,6 +654,7 @@ namespace stylizer::api {
 	concept render_pass_concept = std::derived_from<T, render_pass> && requires(T t, device device, std::span<const render_pass::color_attachment> colors, std::optional<render_pass::depth_stencil_attachment> depth, bool one_shot, const std::string_view label) {
 		{ T::create(device, colors, depth, one_shot, label) } -> std::convertible_to<T>;
 		{ t.auto_release() } -> std::convertible_to<auto_release<T>>;
+		{ t.type } -> std::convertible_to<size_t>;
 	};
 
 	template<typename T>
@@ -689,13 +694,13 @@ namespace stylizer::api {
 						Invalid,
 						f32x1,
 						f32x2,
-						f32x3,
+						f32x3, // Note: GPUs expect them to be aligned on 4
 						f32x4,
 						f16x2,
 						f16x4,
 						i32x1,
 						i32x2,
-						i32x3,
+						i32x3, // Note: GPUs expect them to be aligned on 4
 						i32x4,
 						i16x2,
 						i16x4,
@@ -707,7 +712,7 @@ namespace stylizer::api {
 						i8x4_normalized,
 						u32x1,
 						u32x2,
-						u32x3,
+						u32x3, // Note: GPUs expect them to be aligned on 4
 						u32x4,
 						u16x2,
 						u16x4,
@@ -741,7 +746,7 @@ namespace stylizer::api {
 			} multisampling = {};
 		};
 
-		virtual bind_group& create_bind_group(temporary_return_t, device& device, size_t index, std::span<const bind_group::binding> bindings) = 0;
+		virtual bind_group& create_bind_group(temporary_return_t, device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label = "Stylizer Render Bind Group") = 0;
 
 		virtual operator bool() const { return false; }
 
@@ -759,6 +764,7 @@ namespace stylizer::api {
 		{ T::create(device, entry_points, color_attachments, depth_attachment, config, label) } -> std::convertible_to<T>;
 		{ T::create_from_compatible_render_pass(device, entry_points, compatible_render_pass, config, label) } -> std::convertible_to<T>;
 		{ t.auto_release() } -> std::convertible_to<auto_release<T>>;
+		{ t.type } -> std::convertible_to<size_t>;
 	};
 
 	namespace render {
@@ -831,6 +837,7 @@ namespace stylizer::api {
 		{ t.create_and_write_buffer(usage, data, offset, label) } -> std::derived_from<buffer>;
 		{ t.create_render_pass(colors, depth, one_shot, label) } -> std::derived_from<render_pass>;
 		{ t.auto_release() } -> std::convertible_to<auto_release<T>>;
+		{ t.type } -> std::convertible_to<size_t>;
 	};
 
 	inline texture::format surface::configured_texture_format(device& device) {
