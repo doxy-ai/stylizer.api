@@ -235,6 +235,8 @@ inline size_t bytes_per_pixel(texture_format format) {
 		// case texture_format::R8BG8Biplanar444_Normalized:
 		// case texture_format::R10X6BG10X6Biplanar422_Normalized:
 		// case texture_format::R10X6BG10X6Biplanar444_Normalized:
+		default: 
+			STYLIZER_API_THROW("An error has occurred finding the number of bytes per pixel in format: " + std::string(magic_enum::enum_name(format)));
+			return 0;
 	}
-	STYLIZER_API_THROW("An error has occurred finding the number of bytes per pixel in format: " + std::string(magic_enum::enum_name(format)));
 }

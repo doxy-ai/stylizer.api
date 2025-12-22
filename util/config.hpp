@@ -16,4 +16,10 @@
 	#endif
 #endif
 
+#ifdef _MSC_VER
+	#define STYLIZER_ENUM_CLASS enum class
+#else
+	#define STYLIZER_ENUM_CLASS enum
+#endif
+
 #define STYLIZER_NULLABLE
