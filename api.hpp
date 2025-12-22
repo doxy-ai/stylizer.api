@@ -14,12 +14,6 @@
 #include <slcross.hpp>
 #include <variant>
 
-#ifdef _MSC_VER
-	#define STYLIZER_ENUM_CLASS enum class
-#else
-	#define STYLIZER_ENUM_CLASS enum
-#endif
-
 namespace stylizer {
 	using namespace fteng;
 
