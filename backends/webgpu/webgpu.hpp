@@ -207,6 +207,11 @@ namespace stylizer::api::webgpu {
 	};
 	static_assert(command_encoder_concept<command_encoder>);
 
+	namespace compute {
+		using pipeline = compute_pipeline;
+		using pass = command_encoder;
+	}
+
 	struct render_pass : public command_encoder_base<api::render_pass, render_pass> { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(render_pass); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(render_pass);
 		using super = webgpu::command_encoder_base<api::render_pass, render_pass>;
 
@@ -255,6 +260,11 @@ namespace stylizer::api::webgpu {
 		stylizer::auto_release<render_pipeline> auto_release() { return std::move(*this); }
 	};
 	static_assert(render_pipeline_concept<render_pipeline>);
+
+	namespace render {
+		using pipeline = render_pipeline;
+		using pass = render_pass;
+	}
 
 	struct surface : public api::surface { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(surface);  STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(surface);
 		uint32_t type = magic_number;
