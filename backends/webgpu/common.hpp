@@ -95,14 +95,14 @@ namespace stylizer::api::webgpu {
 	inline comparison_function from_webgpu(WGPUCompareFunction func) {
 		switch (func) {
 		case WGPUCompareFunction_Undefined: return comparison_function::NoDepthCompare;
-		case WGPUCompareFunction_Never: return comparison_function::Never;
+		case WGPUCompareFunction_Never: return comparison_function::NeverPass;
 		case WGPUCompareFunction_Less: return comparison_function::Less;
 		case WGPUCompareFunction_LessEqual: return comparison_function::LessEqual;
 		case WGPUCompareFunction_Greater: return comparison_function::Greater;
 		case WGPUCompareFunction_GreaterEqual: return comparison_function::GreaterEqual;
 		case WGPUCompareFunction_Equal: return comparison_function::Equal;
 		case WGPUCompareFunction_NotEqual: return comparison_function::NotEqual;
-		case WGPUCompareFunction_Always: return comparison_function::Always;
+		case WGPUCompareFunction_Always: return comparison_function::AlwaysPass;
 		default:
 			STYLIZER_API_THROW(std::string("Failed to find compare function: ") + std::string(magic_enum::enum_name(func)));
 		}
@@ -112,14 +112,14 @@ namespace stylizer::api::webgpu {
 	inline WGPUCompareFunction to_webgpu(comparison_function func) {
 		switch (func) {
 		case comparison_function::NoDepthCompare: return WGPUCompareFunction_Undefined;
-		case comparison_function::Never: return WGPUCompareFunction_Never;
+		case comparison_function::NeverPass: return WGPUCompareFunction_Never;
 		case comparison_function::Less: return WGPUCompareFunction_Less;
 		case comparison_function::LessEqual: return WGPUCompareFunction_LessEqual;
 		case comparison_function::Greater: return WGPUCompareFunction_Greater;
 		case comparison_function::GreaterEqual: return WGPUCompareFunction_GreaterEqual;
 		case comparison_function::Equal: return WGPUCompareFunction_Equal;
 		case comparison_function::NotEqual: return WGPUCompareFunction_NotEqual;
-		case comparison_function::Always: return WGPUCompareFunction_Always;
+		case comparison_function::AlwaysPass: return WGPUCompareFunction_Always;
 		}
 		std::unreachable();
 	}
