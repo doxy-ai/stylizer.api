@@ -322,7 +322,7 @@ namespace stylizer::api {
 		using view = texture_view;
 
 		struct create_config {
-			const std::string_view label = "Stylizer Texture";
+			std::string_view label = "Stylizer Texture";
 			enum texture_format format = format::RGBAu8_NormalizedSRGB;
 			enum usage usage = usage::Texture;
 			vec3u size;
