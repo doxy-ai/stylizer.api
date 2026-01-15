@@ -220,8 +220,34 @@ namespace stylizer::api::webgpu {
 			switch(format){
 			case fmt::f32x1: return sizeof(float) * 1;
 			case fmt::f32x2: return sizeof(float) * 2;
-			case fmt::f32x3: return sizeof(float) * 3;
+			case fmt::f32x3: return sizeof(float) * 4; // Note: GPUs expect them to be aligned on 4
 			case fmt::f32x4: return sizeof(float) * 4;
+			case fmt::f16x2: return sizeof(uint16_t) * 2;
+			case fmt::f16x4: return sizeof(uint16_t) * 4;
+			case fmt::i32x1: return sizeof(int32_t) * 1;
+			case fmt::i32x2: return sizeof(int32_t) * 2;
+			case fmt::i32x3: return sizeof(int32_t) * 4; // Note: GPUs expect them to be aligned on 4
+			case fmt::i32x4: return sizeof(int32_t) * 4;
+			case fmt::i16x2: return sizeof(int16_t) * 2;
+			case fmt::i16x4: return sizeof(int16_t) * 4;
+			case fmt::i16x2_normalized: return sizeof(int16_t) * 2;
+			case fmt::i16x4_normalized: return sizeof(int16_t) * 4;
+			case fmt::i8x2: return sizeof(int8_t) * 2;
+			case fmt::i8x4: return sizeof(int8_t) * 4;
+			case fmt::i8x2_normalized: return sizeof(int8_t) * 2;
+			case fmt::i8x4_normalized: return sizeof(int8_t) * 4;
+			case fmt::u32x1: return sizeof(int32_t) * 1;
+			case fmt::u32x2: return sizeof(int32_t) * 2;
+			case fmt::u32x3: return sizeof(int32_t) * 4; // Note: GPUs expect them to be aligned on 4
+			case fmt::u32x4: return sizeof(int32_t) * 4;
+			case fmt::u16x2: return sizeof(int16_t) * 2;
+			case fmt::u16x4: return sizeof(int16_t) * 4;
+			case fmt::u16x2_normalized: return sizeof(int16_t) * 2;
+			case fmt::u16x4_normalized: return sizeof(int16_t) * 4;
+			case fmt::u8x2: return sizeof(int8_t) * 2;
+			case fmt::u8x4: return sizeof(int8_t) * 4;
+			case fmt::u8x2_normalized: return sizeof(int8_t) * 2;
+			case fmt::u8x4_normalized: return sizeof(int8_t) * 4;
 			default: return 0;
 			}
 		};
@@ -369,15 +395,15 @@ namespace stylizer::api::webgpu {
 	}
 
 	// NOTE: Defined in compute_pipeline.cpp
-	bind_group internal_bind_group_create(webgpu::device& device, size_t index, WGPUBindGroupLayout layout, std::span<const bind_group::binding> bindings);
+	bind_group internal_bind_group_create(webgpu::device& device, size_t index, WGPUBindGroupLayout layout, std::span<const bind_group::binding> bindings, std::string_view label);
 
-	webgpu::bind_group render_pipeline::create_bind_group(api::device& device_, size_t index, std::span<const bind_group::binding> bindings) {
+	webgpu::bind_group render_pipeline::create_bind_group(api::device& device_, size_t index, std::span<const bind_group::binding> bindings, std::string_view label /* = "Stylizer Render Bind Group" */) {
 		auto& device = confirm_webgpu_type<webgpu::device>(device_);
-		return internal_bind_group_create(device, index, wgpuRenderPipelineGetBindGroupLayout(pipeline, index), bindings);
+		return internal_bind_group_create(device, index, wgpuRenderPipelineGetBindGroupLayout(pipeline, index), bindings, label);
 	}
-	api::bind_group& render_pipeline::create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings) {
+	api::bind_group& render_pipeline::create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label /* = "Stylizer Render Bind Group" */) {
 		static webgpu::bind_group group_;
-		return group_ = create_bind_group(device, index, bindings);
+		return group_ = create_bind_group(device, index, bindings, label);
 	}
 
 	void render_pipeline::release(){

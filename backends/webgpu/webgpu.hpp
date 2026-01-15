@@ -336,8 +336,8 @@ namespace stylizer::api::webgpu {
 		static render_pipeline create(api::device& device, const pipeline::entry_points& entry_points, std::span<const color_attachment> color_attachments = {}, const std::optional<depth_stencil_attachment>& depth_attachment = {}, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline");
 		static render_pipeline create_from_compatible_render_pass(api::device& device, const pipeline::entry_points& entry_points, const api::render_pass& compatible_render_pass, const render_pipeline::config& config = {}, const std::string_view label = "Stylizer Graphics Pipeline");
 
-		webgpu::bind_group create_bind_group(api::device& device, size_t index, std::span<const bind_group::binding> bindings);
-		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings) override;
+		webgpu::bind_group create_bind_group(api::device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label = "Stylizer Render Bind Group");
+		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label = "Stylizer Render Bind Group") override;
 
 		void release() override;
 		stylizer::auto_release<render_pipeline> auto_release() { return std::move(*this); }
