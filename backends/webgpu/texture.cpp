@@ -97,6 +97,7 @@ namespace stylizer::api::webgpu {
 
 	texture texture::create_and_write(api::device& device, std::span<const std::byte> data, const data_layout& layout, create_config config /* = {} */) {
 		config.size = { data.size() / layout.rows_per_image / bytes_per_pixel(config.format), layout.rows_per_image, 1 };
+		config.usage |= api::usage::CopyDestination;
 		auto out = create(device, config);
 		out.write(device, data, layout, config.size);
 		return out;
@@ -213,97 +214,130 @@ namespace stylizer::api::webgpu {
 	}
 
 	api::texture& texture::blit_from(api::device& device_, const api::texture& source_, std::optional<color32> clear_value /* = {} */, api::render_pipeline* pipeline_override /* = nullptr */, std::optional<size_t> vertex_count_override /* = {} */) {
-		// 		auto& device = confirm_wgpu_type<webgpu::device>(device_);
-		// 		auto& source = confirm_wgpu_type<webgpu::texture>(source_);
-		// 		assert(source.sampler);
+		auto& device = confirm_webgpu_type<webgpu::device>(device_);
+		auto& source = confirm_webgpu_type<webgpu::texture>(source_);
+		assert(source.sampler);
 
-		// 		auto attachment = std::array<color_attachment, 1>{color_attachment{
-		// 			.texture = this,
-		// 			.clear_value = clear_value
-		// 		}};
-		// 		webgpu::render_pipeline* pipeline; bool release_pipeline = false;
-		// 		if(!pipeline_override) {
-		// 			static auto_release<shader> shader;
-		// 			shader = webgpu::shader::create_from_wgsl(device, std::string{fullscreen_triangle_vertex_shader} + R"_(
-		// @fragment
-		// fn fragment(vert: vertex_output) -> @location(0) vec4f {
-		// 	return textureSample(texture, sampler_, vert.uv);
-		// })_");
-		// 			pipeline = &confirm_wgpu_type<webgpu::render_pipeline>(device.create_render_pipeline(temporary_return, {
-		// 				{shader::stage::Vertex, {&shader, "vertex"}},
-		// 				{shader::stage::Fragment, {&shader, "fragment"}},
-		// 			}, attachment, {}, {}, "Stylizer Blit Pipeline"));
-		// 			release_pipeline = true;
-		// 		} else pipeline = &confirm_wgpu_type<webgpu::render_pipeline>(*pipeline_override);
+		auto attachment = std::array<color_attachment, 1>{color_attachment{
+			.texture = this,
+			.clear_value = clear_value
+		}};
+		static thread_local stylizer::auto_release<webgpu::render_pipeline> pipeline_cache = {};
+		if(!pipeline_override && pipeline_cache)
+			pipeline_override = &pipeline_cache;
 
-		// 		device.create_render_pass(attachment, {}, true, "Stylizer Blit Renderpass")
-		// 			.bind_render_pipeline(device, *pipeline)
-		// 			.bind_render_group(device, pipeline->create_bind_group(device, 0, std::array<bind_group::binding, 1>{
-		// 				bind_group::texture_binding{&source}
-		// 			}), true)
-		// 			.draw(device, vertex_count_override.value_or(3))
-		// 			.one_shot_submit(device);
-		// 		if(release_pipeline) pipeline->release();
+		webgpu::render_pipeline* pipeline;
+		if(!pipeline_override) {
+			static thread_local stylizer::auto_release<webgpu::shader> shader;
+			shader = webgpu::shader::create_from_wgsl(device, R"_(
+@group(0) @binding(0) var texture: texture_2d<f32>;
+@group(0) @binding(1) var sampler_: sampler;
+
+struct vertex_output {
+	@builtin(position) position: vec4f,
+	@location(0) uv: vec2f
+}
+
+@vertex
+fn vertex(@builtin(vertex_index) index: u32) -> vertex_output {
+	var out: vertex_output;
+    switch(index) {
+		case 0: {
+			out.position = vec4f(-1, -1, 0, 1);
+			out.uv = vec2f(0, 0);
+		}
+		case 1: {
+			out.position = vec4f(3, -1, 0, 1);
+			out.uv = vec2f(2, 0);
+		}
+		default: {
+			out.position = vec4f(-1, 3, 0, 1);
+			out.uv = vec2f(0, 2);
+		} 
+	}
+    return out;
+}
+
+@fragment
+fn fragment(v: vertex_output) -> @location(0) vec4f {
+	// let c = textureSample(texture, sampler_, vert.uv);
+	// return vec4f(vert.uv, 0, 1) + c * .01;
+	var vert = v;
+	vert.uv.y = -vert.uv.y; // Unflip v axis
+	return textureSample(texture, sampler_, vert.uv);
+})_");
+			pipeline = &(pipeline_cache = std::move(device.create_render_pipeline({
+				{shader::stage::Vertex, {&shader, "vertex"}},
+				{shader::stage::Fragment, {&shader, "fragment"}},
+			}, attachment, {}, {}, "Stylizer Blit Pipeline")));
+		} else pipeline = &confirm_webgpu_type<webgpu::render_pipeline>(*pipeline_override);
+
+		device.create_render_pass(attachment, {}, true, "Stylizer Blit Renderpass")
+			.bind_render_pipeline(device, *pipeline)
+			.bind_render_group(device, pipeline->create_bind_group(device, 0, std::array<bind_group::binding, 1>{
+				bind_group::texture_binding{&source}
+			}), true)
+			.draw(device, vertex_count_override.value_or(3))
+			.one_shot_submit(device);
 		return *this;
 	}
 
-	api::texture& texture::generate_mipmaps(api::device& device, std::optional<size_t> first_mip_level /* = 0 */, std::optional<size_t> mip_levels_override /* = {} */) {
-		STYLIZER_API_THROW("Not implemented yet!");
-		// 		auto& device = confirm_wgpu_type<webgpu::device>(device_);
-		// 		auto size = this->size();
-		// 		size_t size_max_levels = std::bit_width(std::min(size.x, size.y));
-		// 		uint32_t mip_levels = first_mip_level + mip_levels_override.value_or(size_max_levels - first_mip_level);
-		// 		assert(mip_levels <= size_max_levels);
+	api::texture& texture::generate_mipmaps(api::device& device_, std::optional<size_t> first_mip_level_ /* = 0 */, std::optional<size_t> mip_levels_override /* = {} */) {
+		auto& device = confirm_webgpu_type<webgpu::device>(device_);
+		auto size = this->size();
+		size_t size_max_levels = std::bit_width(std::min(size.x, size.y));
+		size_t first_mip_level = first_mip_level_.value_or(0);
+		uint32_t mip_levels = first_mip_level + mip_levels_override.value_or(size_max_levels - first_mip_level);
+		assert(mip_levels <= size_max_levels);
 
-		// 		auto formatStr = format_to_string(texture_.getFormat());
-		// 		auto_release mipShader = webgpu::shader::create_from_wgsl(device, R"_(
-		// @group(0) @binding(0) var previousMipLevel: texture_2d<f32>;
-		// @group(0) @binding(1) var nextMipLevel: texture_storage_2d<)_" + formatStr + R"_(, write>;
+		auto formatStr = format_to_string(wgpuTextureGetFormat(texture_));
+		stylizer::auto_release mipShader = webgpu::shader::create_from_wgsl(device, R"_(
+@group(0) @binding(0) var previousMipLevel: texture_2d<f32>;
+@group(0) @binding(1) var nextMipLevel: texture_storage_2d<)_" + formatStr + R"_(, write>;
 
-		// @compute @workgroup_size(8, 8)
-		// fn compute(@builtin(global_invocation_id) id: vec3<u32>) {
-		// 	let offset = vec2<u32>(0, 1);
-		// 	let color = (
-		// 		textureLoad(previousMipLevel, 2 * id.xy + offset.xx, 0) +
-		// 		textureLoad(previousMipLevel, 2 * id.xy + offset.xy, 0) +
-		// 		textureLoad(previousMipLevel, 2 * id.xy + offset.yx, 0) +
-		// 		textureLoad(previousMipLevel, 2 * id.xy + offset.yy, 0)
-		// 	) * 0.25;
-		// 	textureStore(nextMipLevel, id.xy, color);
-		// })_");
+@compute @workgroup_size(8, 8)
+fn compute(@builtin(global_invocation_id) id: vec3<u32>) {
+	let offset = vec2<u32>(0, 1);
+	let color = (
+		textureLoad(previousMipLevel, 2 * id.xy + offset.xx, 0) +
+		textureLoad(previousMipLevel, 2 * id.xy + offset.xy, 0) +
+		textureLoad(previousMipLevel, 2 * id.xy + offset.yx, 0) +
+		textureLoad(previousMipLevel, 2 * id.xy + offset.yy, 0)
+	) * 0.25;
+	textureStore(nextMipLevel, id.xy, color);
+})_");
 
-		// 		auto_release new_texture = device.create_texture({.format = this->texture_format(), .usage = usage() | usage::CopyDestination | usage::Storage, .size = size, .mip_levels = mip_levels, .samples = samples()});
-		// 		new_texture.copy_from(device, *this, {}, {}, {}, 0, 1);
+		stylizer::auto_release new_texture = device.create_texture({.format = this->texture_format(), .usage = usage() | usage::CopyDestination | usage::Storage, .size = size, .mip_levels = mip_levels, .samples = samples()});
+		new_texture.copy_from(device, *this, {}, {}, {}, 0, 1);
 
-		// 		auto_release pipeline = device.create_compute_pipeline({&mipShader, "compute"}, "Stylizer Mipmapping Pipeline");
-		// 		auto encoder = device.create_command_encoder(true);
-		// 		encoder.bind_compute_pipeline(device, pipeline);
+		stylizer::auto_release pipeline = device.create_compute_pipeline({&mipShader, "compute"}, "Stylizer Mipmapping Pipeline");
+		auto encoder = device.create_command_encoder(true);
+		encoder.bind_compute_pipeline(device, pipeline);
 
-		// 		// wgpu::Extent3D mipLevelSize = {size.x, size.y, 1}; // TODO: do we need a tweak to properly handle cubemaps?
-		// 		for (uint32_t level = 1; level < mip_levels; ++level) {
-		// 			vec3u invocationCount = {size.x / 2, size.y / 2, 1};
-		// 			constexpr uint32_t workgroupSizePerDim = 8;
+		// wgpu::Extent3D mipLevelSize = {size.x, size.y, 1}; // TODO: do we need a tweak to properly handle cubemaps?
+		for (uint32_t level = 1; level < mip_levels; ++level) {
+			vec3u invocationCount = {size.x / 2, size.y / 2, 1};
+			constexpr uint32_t workgroupSizePerDim = 8;
 
-		// 			auto previous = new_texture.create_view(device, {.base_mip_level = level - 1, .mip_level_count_override = 1});
-		// 			auto current = new_texture.create_view(device, {.base_mip_level = level, .mip_level_count_override = 1});
+			auto previous = new_texture.create_view(device, {.base_mip_level = level - 1, .mip_level_count_override = 1});
+			auto current = new_texture.create_view(device, {.base_mip_level = level, .mip_level_count_override = 1});
 
-		// 			vec3u workgroups = {(invocationCount.x + workgroupSizePerDim + 1) / workgroupSizePerDim, (invocationCount.y + workgroupSizePerDim + 1) / workgroupSizePerDim, 1};
-		// 			encoder.bind_compute_group(device, pipeline.create_bind_group(device, 0, std::array<bind_group::binding, 2>{
-		// 					bind_group::texture_binding{.texture_view = &previous, .sampled_override = false}, bind_group::texture_binding{.texture_view = &current, .sampled_override = false}
-		// 				}), true)
-		// 				.dispatch_workgroups(device, workgroups);
+			vec3u workgroups = {(invocationCount.x + workgroupSizePerDim + 1) / workgroupSizePerDim, (invocationCount.y + workgroupSizePerDim + 1) / workgroupSizePerDim, 1};
+			encoder.bind_compute_group(device, pipeline.create_bind_group(device, 0, std::array<bind_group::binding, 2>{
+					bind_group::texture_binding{.texture_view = &previous, .sampled_override = false}, bind_group::texture_binding{.texture_view = &current, .sampled_override = false}
+				}), true)
+				.dispatch_workgroups(device, workgroups);
 
-		// 			size = invocationCount;
-		// 			encoder.defer([view = std::move(previous)]() mutable { view.release(); });
-		// 			encoder.defer([view = std::move(current)]() mutable { view.release(); });
-		// 		}
-		// 		encoder.one_shot_submit(device);
+			size = invocationCount;
+			encoder.defer([view = std::move(previous)]() mutable { view.release(); });
+			encoder.defer([view = std::move(current)]() mutable { view.release(); });
+		}
+		encoder.one_shot_submit(device);
 
-		// 		new_texture.sampler = std::exchange(sampler, nullptr);
+		new_texture.sampler = std::exchange(sampler, nullptr);
 
-		// 		this->release();
-		//		return (*this) = std::move(new_texture);
-		return *this;
+		this->release();
+		return (*this) = std::move(new_texture);
 	}
 
 	void texture::release() {
