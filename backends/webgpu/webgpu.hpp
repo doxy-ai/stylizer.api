@@ -215,7 +215,7 @@ namespace stylizer::api::webgpu {
 		static Twebgpu_return create(api::device& device, bool one_shot = false, const std::string_view label = "Stylizer Command Encoder");
 
 		template<typename Tfunc>
-		Twebgpu_return& defer(Tfunc&& func) { deferred_to_release->connect(std::move(func)); return *this; }
+		Twebgpu_return& defer(Tfunc&& func) { deferred_to_release->connect(std::move(func)); return *(Twebgpu_return*)this; }
 		Tapi_return& defer(std::function<void()>&& func) override { deferred_to_release->connect(std::move(func)); return *(Tapi_return*)this; }
 
 	protected:
