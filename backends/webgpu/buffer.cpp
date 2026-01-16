@@ -29,7 +29,7 @@ namespace stylizer::api::webgpu {
 		return out;
 	}
 
-	buffer buffer::create(api::device& device_, usage usage, size_t size, bool mapped_at_creation /* = false */, const std::string_view label /* = "Stylizer Buffer" */) {
+	buffer buffer::create(api::device& device_, enum usage usage, size_t size, bool mapped_at_creation /* = false */, const std::string_view label /* = "Stylizer Buffer" */) {
 		auto& device = confirm_webgpu_type<webgpu::device>(device_);
 
 		buffer out;
@@ -42,13 +42,13 @@ namespace stylizer::api::webgpu {
 		return out;
 	}
 
-	buffer buffer::create_and_write(api::device& device, usage usage, std::span<const std::byte> data, size_t offset /* = 0 */, const std::string_view label /* = "Stylizer Buffer" */) {
+	buffer buffer::create_and_write(api::device& device, enum usage usage, std::span<const std::byte> data, size_t offset /* = 0 */, const std::string_view label /* = "Stylizer Buffer" */) {
 		auto out = create(device, usage | usage::CopyDestination, data.size(), false, label);
 		out.write(device, data, offset);
 		return out;
 	}
 
-	const buffer& buffer::zero_buffer(api::device& device, usage usage /* = usage::Storage */, size_t minimum_size /* = 0 */, api::buffer* just_released /* = nullptr */) {
+	const buffer& buffer::zero_buffer(api::device& device, enum usage usage /* = usage::Storage */, size_t minimum_size /* = 0 */, api::buffer* just_released /* = nullptr */) {
 		static constexpr auto create = [](api::device& device, enum usage usage, size_t minimum_size) {
 			std::vector<std::byte> data(minimum_size, std::byte { 0 });
 			return create_and_write(device, usage, data, 0, "Stylizer Zero Buffer");
@@ -67,7 +67,7 @@ namespace stylizer::api::webgpu {
 
 		return buffers[usage];
 	}
-	const api::buffer& buffer::get_zero_buffer_singleton(api::device& device, usage usage /* = usage::Storage */, size_t size /* = 0 */, api::buffer* just_released /* = nullptr */) {
+	const api::buffer& buffer::get_zero_buffer_singleton(api::device& device, enum usage usage /* = usage::Storage */, size_t size /* = 0 */, api::buffer* just_released /* = nullptr */) {
 		return webgpu::buffer::zero_buffer(device, usage, size, just_released);
 	}
 
@@ -78,6 +78,8 @@ namespace stylizer::api::webgpu {
 	}
 
 	size_t buffer::size() const { return wgpuBufferGetSize(buffer_); }
+
+	enum usage buffer::usage() const { return from_webgpu(wgpuBufferGetUsage(buffer_)); }
 
 	void copy_buffer_to_buffer_impl(WGPUCommandEncoder e, webgpu::buffer& destination, const webgpu::buffer& source, size_t destination_offset = 0, size_t source_offset = 0, std::optional<size_t> size_override = {}) {
 		size_t size = std::min(destination.size() - destination_offset, source.size() - source_offset);
