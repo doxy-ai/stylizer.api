@@ -104,14 +104,14 @@ namespace stylizer::api {
 
 	enum class comparison_function {
 		NoDepthCompare,
-		Never,
+		NeverPass,
 		Less,
 		LessEqual,
 		Greater,
 		GreaterEqual,
 		Equal,
 		NotEqual,
-		Always,
+		AlwaysPass,
 	};
 
 	struct blend_state {
@@ -178,22 +178,17 @@ namespace stylizer::api {
 					DecrementWrap
 				};
 
+				comparison_function compare = comparison_function::AlwaysPass;
 
-				comparison_function compare;
-
-				operation fail_operation;
-
-				operation depth_fail_operation;
-
-				operation pass_operation;
+				operation fail_operation = operation::Keep;
+				operation depth_fail_operation = operation::Keep;
+				operation pass_operation = operation::Keep;
 			};
 
 			face_state front = {};
-
 			face_state back = {};
 
 			uint32_t stencilReadMask = 0;
-
 			uint32_t stencilWriteMask = 0;
 		};
 
