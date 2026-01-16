@@ -188,7 +188,7 @@ namespace stylizer::api::webgpu {
 		// Find the first SRGB surface format
 		out.texture_format = texture_format::Undefined;
 		for (size_t i = cap.formatCount; i--;)
-			if (is_texture_format_srgb(cap.formats[i]))
+			if (is_srgb(from_webgpu(cap.formats[i])))
 				out.texture_format = from_webgpu(cap.formats[i]); // TODO: Write better choose logic!
 		if (out.texture_format == texture_format::Undefined)
 			out.texture_format = from_webgpu(cap.formats[0]);

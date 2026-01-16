@@ -124,38 +124,6 @@ namespace stylizer::api::webgpu {
 		std::unreachable();
 	}
 
-
-	inline bool is_texture_format_srgb(WGPUTextureFormat format) {
-		switch(format){
-		case WGPUTextureFormat_RGBA8UnormSrgb:
-		case WGPUTextureFormat_BGRA8UnormSrgb:
-		case WGPUTextureFormat_BC1RGBAUnormSrgb:
-		case WGPUTextureFormat_BC2RGBAUnormSrgb:
-		case WGPUTextureFormat_BC3RGBAUnormSrgb:
-		case WGPUTextureFormat_BC7RGBAUnormSrgb:
-		case WGPUTextureFormat_ETC2RGB8UnormSrgb:
-		case WGPUTextureFormat_ETC2RGB8A1UnormSrgb:
-		case WGPUTextureFormat_ETC2RGBA8UnormSrgb:
-		case WGPUTextureFormat_ASTC4x4UnormSrgb:
-		case WGPUTextureFormat_ASTC5x4UnormSrgb:
-		case WGPUTextureFormat_ASTC5x5UnormSrgb:
-		case WGPUTextureFormat_ASTC6x5UnormSrgb:
-		case WGPUTextureFormat_ASTC6x6UnormSrgb:
-		case WGPUTextureFormat_ASTC8x5UnormSrgb:
-		case WGPUTextureFormat_ASTC8x6UnormSrgb:
-		case WGPUTextureFormat_ASTC8x8UnormSrgb:
-		case WGPUTextureFormat_ASTC10x5UnormSrgb:
-		case WGPUTextureFormat_ASTC10x6UnormSrgb:
-		case WGPUTextureFormat_ASTC10x8UnormSrgb:
-		case WGPUTextureFormat_ASTC10x10UnormSrgb:
-		case WGPUTextureFormat_ASTC12x10UnormSrgb:
-		case WGPUTextureFormat_ASTC12x12UnormSrgb:
-			return true;
-		default:
-			return false;
-		}
-	}
-
 	inline texture_format from_webgpu(WGPUTextureFormat format) {
 		switch(format) {
 		case WGPUTextureFormat_Undefined: return texture_format::Undefined;
