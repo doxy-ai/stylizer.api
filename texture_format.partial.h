@@ -1,6 +1,9 @@
 
+/**
+ * @brief Defines the available texture formats.
+ */
 enum class texture_format {
-	Undefined,
+	Undefined, ///< Undefined format.
 
 	Ru8_Normalized,
 	Ri8_Normalized,
@@ -131,6 +134,12 @@ enum class texture_format {
 	Gray8 = Ru8_Normalized,
 };
 
+/**
+ * @brief Returns the number of bytes per pixel for a given texture format.
+ *
+ * @param format The texture format.
+ * @return The size of a single pixel in bytes.
+ */
 inline size_t bytes_per_pixel(texture_format format) {
 	switch(format){
 		case texture_format::Depth24: return 24 / 8;
@@ -241,6 +250,12 @@ inline size_t bytes_per_pixel(texture_format format) {
 	}
 }
 
+/**
+ * @brief Checks if a given texture format is an sRGB format.
+ *
+ * @param format The texture format.
+ * @return true if the format is sRGB, false otherwise.
+ */
 inline bool is_srgb(texture_format format) {
 	switch(format){
 	case texture_format::RGBAu8_NormalizedSRGB:

@@ -6,11 +6,15 @@
 #include <utility>
 #include <webgpu/webgpu.h>
 
+/**
+ * @brief Namespace for the WebGPU backend implementation of the Stylizer API.
+ */
 namespace stylizer::api::webgpu {
 	constexpr static uint32_t magic_number = string2magic("WEBGPU");
 	struct device;
 	struct texture;
 
+	/** @brief WebGPU implementation of a texture view. */
 	struct texture_view : public api::texture_view { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture_view); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(texture_view);
 		uint32_t type = magic_number;
 		const webgpu::texture* owning_texture;
@@ -33,6 +37,7 @@ namespace stylizer::api::webgpu {
 	};
 	static_assert(texture_view_concept<texture_view>);
 
+	/** @brief WebGPU implementation of a texture. */
 	struct texture : public api::texture { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(texture);
 		uint32_t type = magic_number;
 		WGPUTexture texture_ = nullptr;
@@ -76,6 +81,7 @@ namespace stylizer::api::webgpu {
 	};
 	static_assert(texture_concept<texture>);
 
+	/** @brief WebGPU implementation of a buffer. */
 	struct buffer : public api::buffer { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(buffer); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(buffer);
 		uint32_t type = magic_number;
 		WGPUBuffer buffer_ = nullptr;
@@ -125,6 +131,7 @@ namespace stylizer::api::webgpu {
 	};
 	static_assert(buffer_concept<buffer>);
 
+	/** @brief WebGPU implementation of a shader module. */
 	struct shader : public api::shader { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(shader); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(shader);
 		uint32_t type = magic_number;
 		WGPUShaderModule module = nullptr;
@@ -149,6 +156,7 @@ namespace stylizer::api::webgpu {
 	static_assert(shader_concept<shader>);
 
 	struct pipeline : public api::pipeline { };
+	/** @brief WebGPU implementation of a command buffer. */
 	struct command_buffer: public api::command_buffer { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_buffer); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(command_buffer);
 		uint32_t type = magic_number;
 		WGPUCommandBuffer pre = nullptr;
@@ -171,6 +179,7 @@ namespace stylizer::api::webgpu {
 		stylizer::auto_release<command_buffer> auto_release() { return std::move(*this); }
 	};
 
+	/** @brief WebGPU implementation of a bind group. */
 	struct bind_group: public api::bind_group { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(bind_group); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(bind_group);
 		uint32_t type = magic_number;
 		WGPUBindGroup group = nullptr;
@@ -190,6 +199,7 @@ namespace stylizer::api::webgpu {
 		stylizer::auto_release<bind_group> auto_release() { return std::move(*this); }
 	};
 
+	/** @brief WebGPU implementation of a compute pipeline. */
 	struct compute_pipeline: public api::compute_pipeline { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(compute_pipeline); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(compute_pipeline);
 		uint32_t type = magic_number;
 		WGPUComputePipeline pipeline = nullptr;
@@ -265,6 +275,7 @@ namespace stylizer::api::webgpu {
 		void release() override;
 	};
 
+	/** @brief WebGPU implementation of a command encoder. */
 	struct command_encoder : public command_encoder_base<api::command_encoder, command_encoder> { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_encoder); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(command_encoder);
 		using super = webgpu::command_encoder_base<api::command_encoder, command_encoder>;
 		inline command_encoder(command_encoder&& o) { *this = std::move(o); }
@@ -279,6 +290,7 @@ namespace stylizer::api::webgpu {
 		using pass = command_encoder;
 	}
 
+	/** @brief WebGPU implementation of a render pass. */
 	struct render_pass : public command_encoder_base<api::render_pass, render_pass> { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(render_pass); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(render_pass);
 		using super = webgpu::command_encoder_base<api::render_pass, render_pass>;
 
@@ -322,6 +334,7 @@ namespace stylizer::api::webgpu {
 	};
 	static_assert(render_pass_concept<render_pass>);
 
+	/** @brief WebGPU implementation of a render pipeline. */
 	struct render_pipeline : public api::render_pipeline { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(render_pipeline); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(render_pipeline);
 		uint32_t type = magic_number;
 		WGPURenderPipeline pipeline = nullptr;
@@ -349,6 +362,7 @@ namespace stylizer::api::webgpu {
 		using pass = render_pass;
 	}
 
+	/** @brief WebGPU implementation of a surface. */
 	struct surface : public api::surface { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(surface);  STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(surface);
 		uint32_t type = magic_number;
 		WGPUSurface surface_ = nullptr;
@@ -384,6 +398,7 @@ namespace stylizer::api::webgpu {
 	};
 	static_assert(surface_concept<surface>);
 
+	/** @brief WebGPU implementation of a device. */
 	struct device : public api::device { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(device); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(device);
 		uint32_t type = magic_number;
 		WGPUAdapter adapter = nullptr;
