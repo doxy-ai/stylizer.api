@@ -25,8 +25,18 @@
 
 #include <SDL3/SDL.h>
 
+/**
+ * @brief SDL3 integration for Stylizer API.
+ */
 namespace stylizer::api::sdl3 {
 
+	/**
+	 * @brief Creates a surface from an SDL_Window.
+	 *
+	 * @tparam Tsurface The surface type to create.
+	 * @param window The SDL_Window to create the surface for.
+	 * @return The created surface.
+	 */
 	template<stylizer::api::surface_concept Tsurface>
 	Tsurface create_surface(SDL_Window* window) {
 		SDL_PropertiesID props = SDL_GetWindowProperties(window);
@@ -96,6 +106,15 @@ namespace stylizer::api::sdl3 {
 		return {};
 	}
 
+	/**
+	 * @brief Creates both a surface and a device from an SDL_Window.
+	 *
+	 * @tparam Tdevice The device type to create.
+	 * @tparam Tsurface The surface type to create.
+	 * @param window The SDL_Window to use.
+	 * @param device_config Optional device configuration.
+	 * @return A pair containing the created device and surface.
+	 */
 	template<stylizer::api::device_concept Tdevice, stylizer::api::surface_concept Tsurface>
 	std::pair<Tdevice, Tsurface> create_surface_and_device(SDL_Window* window, api::device::create_config device_config = {}) {
 		Tsurface surface = create_surface<Tsurface>(window);

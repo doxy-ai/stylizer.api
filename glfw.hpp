@@ -37,14 +37,25 @@
 #  include <GLFW/glfw3native.h>
 #endif
 
+/**
+ * @brief GLFW integration for Stylizer API.
+ */
 namespace stylizer::api::glfw {
 
+	/** @brief Gets the window size as a vec2u. */
 	inline vec2u get_window_size(GLFWwindow* window) {
 		int x, y;
 		glfwGetWindowSize(window, &x, &y);
 		return {static_cast<size_t>(x), static_cast<size_t>(y)};
 	}
 
+/**
+ * @brief Creates a surface from a GLFWwindow.
+ *
+ * @tparam Tsurface The surface type to create.
+ * @param window The GLFWwindow to create the surface for.
+ * @return The created surface.
+ */
 template<stylizer::api::surface_concept Tsurface>
 Tsurface create_surface(GLFWwindow* window) {
 #ifndef __EMSCRIPTEN__
@@ -104,6 +115,15 @@ Tsurface create_surface(GLFWwindow* window) {
 	}
 }
 
+	/**
+	 * @brief Creates both a surface and a device from a GLFWwindow.
+	 *
+	 * @tparam Tdevice The device type to create.
+	 * @tparam Tsurface The surface type to create.
+	 * @param window The GLFWwindow to use.
+	 * @param device_config Optional device configuration.
+	 * @return A pair containing the created device and surface.
+	 */
 	template<stylizer::api::device_concept Tdevice, stylizer::api::surface_concept Tsurface>
 	std::pair<Tdevice, Tsurface> create_surface_and_device(GLFWwindow* window, api::device::create_config device_config = {}) {
 		Tsurface surface = create_surface<Tsurface>(window);

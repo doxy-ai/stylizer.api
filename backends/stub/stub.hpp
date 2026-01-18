@@ -5,11 +5,15 @@
 
 #include <utility>
 
+/**
+ * @brief Namespace for the stub backend implementation of the Stylizer API.
+ */
 namespace stylizer::api::stub {
 	constexpr static uint32_t magic_number = string2magic("STUB");
 	struct device;
 	struct texture;
 
+	/** @brief Stub implementation of a texture view. */
 	struct texture_view : public api::texture_view { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture_view); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(texture_view);
 		uint32_t type = magic_number;
 
@@ -26,6 +30,7 @@ namespace stylizer::api::stub {
 	};
 	static_assert(texture_view_concept<texture_view>);
 
+	/** @brief Stub implementation of a texture. */
 	struct texture : public api::texture { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(texture); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(texture);
 		uint32_t type = magic_number;
 
@@ -61,6 +66,7 @@ namespace stylizer::api::stub {
 	};
 	static_assert(texture_concept<texture>);
 
+	/** @brief Stub implementation of a buffer. */
 	struct buffer : public api::buffer { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(buffer); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(buffer);
 		uint32_t type = magic_number;
 
@@ -106,6 +112,7 @@ namespace stylizer::api::stub {
 	};
 	static_assert(buffer_concept<buffer>);
 
+	/** @brief Stub implementation of a shader module. */
 	struct shader : public api::shader { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(shader); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(shader);
 		uint32_t type = magic_number;
 
@@ -124,6 +131,7 @@ namespace stylizer::api::stub {
 	static_assert(shader_concept<shader>);
 
 	struct pipeline : public api::pipeline { };
+	/** @brief Stub implementation of a command buffer. */
 	struct command_buffer: public api::command_buffer { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_buffer); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(command_buffer);
 		uint32_t type = magic_number;
 
@@ -136,6 +144,7 @@ namespace stylizer::api::stub {
 		stylizer::auto_release<command_buffer> auto_release() { return std::move(*this); }
 	};
 
+	/** @brief Stub implementation of a bind group. */
 	struct bind_group: public api::bind_group { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(bind_group); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(bind_group);
 		uint32_t type = magic_number;
 
@@ -147,6 +156,7 @@ namespace stylizer::api::stub {
 		stylizer::auto_release<bind_group> auto_release() { return std::move(*this); }
 	};
 
+	/** @brief Stub implementation of a compute pipeline. */
 	struct compute_pipeline: public api::compute_pipeline { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(compute_pipeline); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(compute_pipeline);
 		uint32_t type = magic_number;
 
@@ -198,6 +208,7 @@ namespace stylizer::api::stub {
 		void release() override { STYLIZER_API_THROW("Not implemented yet!"); }
 	};
 
+	/** @brief Stub implementation of a command encoder. */
 	struct command_encoder : public command_encoder_base<api::command_encoder, command_encoder> { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(command_encoder); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(command_encoder);
 		using super = stub::command_encoder_base<api::command_encoder, command_encoder>;
 		inline command_encoder(command_encoder&& o) { *this = std::move(o); }
@@ -212,6 +223,7 @@ namespace stylizer::api::stub {
 		using pass = command_encoder;
 	}
 
+	/** @brief Stub implementation of a render pass. */
 	struct render_pass : public command_encoder_base<api::render_pass, render_pass> { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(render_pass); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(render_pass);
 		using super = stub::command_encoder_base<api::render_pass, render_pass>;
 
@@ -242,6 +254,7 @@ namespace stylizer::api::stub {
 	};
 	static_assert(render_pass_concept<render_pass>);
 
+	/** @brief Stub implementation of a render pipeline. */
 	struct render_pipeline : public api::render_pipeline { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(render_pipeline); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(render_pipeline);
 		uint32_t type = magic_number;
 
@@ -266,6 +279,7 @@ namespace stylizer::api::stub {
 		using pass = render_pass;
 	}
 
+	/** @brief Stub implementation of a surface. */
 	struct surface : public api::surface { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(surface);  STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(surface);
 		uint32_t type = magic_number;
 
@@ -295,6 +309,7 @@ namespace stylizer::api::stub {
 	};
 	static_assert(surface_concept<surface>);
 
+	/** @brief Stub implementation of a device. */
 	struct device : public api::device { STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(device); STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(device);
 		uint32_t type = magic_number;
 
