@@ -2,7 +2,7 @@
 
 namespace stylizer::api::webgpu {
 
-	bind_group internal_bind_group_create(webgpu::device& device, size_t index, WGPUBindGroupLayout layout, std::span<const bind_group::binding> bindings) {
+	bind_group internal_bind_group_create(webgpu::device& device, size_t index, WGPUBindGroupLayout layout, std::span<const bind_group::binding> bindings, std::string_view label) {
 		uint32_t i = 0;
 		std::vector<WGPUBindGroupEntry> entries;
 		entries.reserve(bindings.size());
@@ -45,6 +45,7 @@ namespace stylizer::api::webgpu {
 		bind_group out;
 		out.index = index;
 		WGPUBindGroupDescriptor d = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
+		d.label = to_webgpu(label);
 		d.layout = layout,
 		d.entryCount = entries.size(),
 		d.entries = entries.data(),
@@ -68,13 +69,13 @@ namespace stylizer::api::webgpu {
 		return out;
 	}
 
-	webgpu::bind_group compute_pipeline::create_bind_group(api::device& device_, size_t index, std::span<const bind_group::binding> bindings) {
+	webgpu::bind_group compute_pipeline::create_bind_group(api::device& device_, size_t index, std::span<const bind_group::binding> bindings, std::string_view label /* = "Stylizer Bind Group" */) {
 		auto& device = confirm_webgpu_type<webgpu::device>(device_);
-		return internal_bind_group_create(device, index, wgpuComputePipelineGetBindGroupLayout(pipeline, index), bindings);
+		return internal_bind_group_create(device, index, wgpuComputePipelineGetBindGroupLayout(pipeline, index), bindings, label);
 	}
-	api::bind_group& compute_pipeline::create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings) {
+	api::bind_group& compute_pipeline::create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label /* = "Stylizer Bind Group" */) {
 		static webgpu::bind_group group;
-		return group = create_bind_group(device, index, bindings);
+		return group = create_bind_group(device, index, bindings, label);
 	}
 
 	void compute_pipeline::release() {

@@ -203,8 +203,8 @@ namespace stylizer::api::webgpu {
 
 		static compute_pipeline create(api::device& device, pipeline::entry_point entry_point, const std::string_view label = "Stylizer Compute Pipeline");
 
-		webgpu::bind_group create_bind_group(api::device& device, size_t index, std::span<const bind_group::binding> bindings);
-		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings) override;
+		webgpu::bind_group create_bind_group(api::device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label = "Stylizer Bind Group");
+		api::bind_group& create_bind_group(temporary_return_t, api::device& device, size_t index, std::span<const bind_group::binding> bindings, std::string_view label = "Stylizer Bind Group") override;
 
 		void release() override;
 		stylizer::auto_release<compute_pipeline> auto_release() { return std::move(*this); }
