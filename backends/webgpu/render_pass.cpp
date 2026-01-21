@@ -20,7 +20,8 @@ namespace stylizer::api::webgpu {
 		std::vector<WGPURenderPassColorAttachment> color_attachments; color_attachments.reserve(colors.size());
 		for(auto& attach: colors) {
 			assert(attach.texture || attach.view);
-			auto& view = confirm_webgpu_type<webgpu::texture_view>(attach.texture ? confirm_webgpu_type<webgpu::texture>(*attach.texture).full_view(device) : *attach.view);
+			auto& unconfirmed_view = attach.texture ? confirm_webgpu_type<webgpu::texture>(*attach.texture).full_view(device) : *attach.view;
+			auto& view = confirm_webgpu_type<webgpu::texture_view>(unconfirmed_view);
 			color_attachments.emplace_back(WGPURenderPassColorAttachment{
 				.view = view.view,
 				.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
