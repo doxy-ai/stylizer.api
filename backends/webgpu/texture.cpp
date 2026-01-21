@@ -162,7 +162,7 @@ namespace stylizer::api::webgpu {
 	api::texture& texture::write(api::device& device_, std::span<const std::byte> data, const data_layout& layout, vec3u extent, std::optional<vec3u> origin_ /* = {{ 0, 0, 0 }} */, size_t mip_level /* = 0 */) {
 		assert(data.size() >= layout.offset + layout.bytes_per_row * layout.rows_per_image);
 		auto& device = confirm_webgpu_type<webgpu::device>(device_);
-		auto origin = origin_.value_or({0, 0, 0});
+		auto origin = origin_.value_or(vec3u{0, 0, 0});
 
 		WGPUTexelCopyTextureInfo dest = WGPU_TEXEL_COPY_TEXTURE_INFO_INIT;
 		dest.texture = texture_;
@@ -208,7 +208,7 @@ namespace stylizer::api::webgpu {
 		auto e = create_command_encoder(device.device_);
 		defer_ { wgpuCommandEncoderRelease(e); };
 		auto min_mip = min_mip_level.value_or(0);
-		copy_texture_to_texture_impl(e, *this, source, destination_origin.value_or({0, 0, 0}), source_origin.value_or({0, 0, 0}), extent_override.value_or({0, 0, 0}), min_mip, mip_levels_override.value_or(source.mip_levels() - min_mip));
+		copy_texture_to_texture_impl(e, *this, source, destination_origin.value_or(vec3u{0, 0, 0}), source_origin.value_or(vec3u{0, 0, 0}), extent_override.value_or(vec3u{0, 0, 0}), min_mip, mip_levels_override.value_or(source.mip_levels() - min_mip));
 		finish_and_submit(e, device.queue);
 		return *this;
 	}
