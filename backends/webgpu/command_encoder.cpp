@@ -59,17 +59,17 @@ namespace stylizer::api::webgpu {
 		auto min_mip = min_mip_level.value_or(0);
 		auto& device = confirm_webgpu_type<webgpu::device>(device_);
 		auto& dest = confirm_webgpu_type<webgpu::texture>(destination);
-		auto dest_origin = destination_origin.value_or({0, 0, 0});
+		auto dest_origin = destination_origin.value_or(vec3u{0, 0, 0});
 		auto dest_extent = dest.size() - dest_origin;
 		auto dest_mips = dest.mip_levels() - min_mip;
 		// TODO: check origin < size
 		auto& src = confirm_webgpu_type<webgpu::texture>(source);
-		auto src_origin = destination_origin.value_or({0, 0, 0});
+		auto src_origin = destination_origin.value_or(vec3u{0, 0, 0});
 		auto src_extent = dest.size() - dest_origin;
 		auto src_mips = src.mip_levels() - min_mip;
 		if(!mip_levels_override.has_value()) assert(src_mips <= dest_mips);
 		else assert(mip_levels_override.value() <= src_mips && mip_levels_override.value() <= dest_mips);
-		copy_texture_to_texture_impl(maybe_create_pre_encoder(device), dest, src, destination_origin.value_or({ 0, 0, 0 }), source_origin.value_or({0, 0, 0}), src_extent, min_mip, mip_levels_override.value_or(src_mips));
+		copy_texture_to_texture_impl(maybe_create_pre_encoder(device), dest, src, destination_origin.value_or(vec3u{ 0, 0, 0 }), source_origin.value_or(vec3u{0, 0, 0}), src_extent, min_mip, mip_levels_override.value_or(src_mips));
 		return *(Tapi_return*)this;
 	}
 
