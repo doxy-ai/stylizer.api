@@ -106,7 +106,7 @@ Tsurface create_surface(GLFWwindow* window) {
 
 	default:
 		// Unsupported platform
-		STYLIZER_API_THROW("Support has not been built for the current platform!");
+		STYLIZER_THROW("Support has not been built for the current platform!");
 	}
 }
 
