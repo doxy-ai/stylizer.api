@@ -38,6 +38,10 @@ option(STYLIZER_GRAPHICS_USE_WAYLAND "Should we build wayland support?" ${STYLIZ
 # option(STYLIZER_GRAPHICS_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
 
 set(CMAKE_CXX_STANDARD 26)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	add_compile_options(-stdlib=libc++)
+	add_link_options(-stdlib=libc++)
+endif()
 
 if(STYLIZER_GRAPHICS_USE_SPLIT_DWARF)
 	add_compile_options(-gsplit-dwarf)
@@ -52,7 +56,6 @@ target_sources(stylizer_graphics PUBLIC
 	# BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
 	FILES 
 		api.cppm extern/slcross/slcross.cppm
-		backends/stub/stub.cppm
 		util/errors.cppm
 		util/auto_release.cppm 
 		util/convertible_to_pointer.cppm 
@@ -64,6 +67,8 @@ target_link_libraries(stylizer_graphics PUBLIC slcross magic_enum std::math)
 target_include_directories(stylizer_graphics PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/backends)
 
 # add_library(stylizer::graphics alias stylizer_graphics)
+
+add_subdirectory(backends/stub)
 
 # if(STYLIZER_GRAPHICS_ENABLE_WEBGPU)
 # 	add_subdirectory(backends/webgpu EXCLUDE_FROM_ALL)

@@ -2,6 +2,10 @@
  * @file
  * @brief Defines utility functions for managing flags.
  */
+module;
+
+// #include <magic_enum/magic_enum.hpp>
+
 export module stylizer.flags;
 
 import magic_enum;
@@ -13,7 +17,7 @@ namespace stylizer::graphics {
 	*
 	* This namespace provides convenient access to bitwise operators for working with flags.
 	*/
-	inline namespace operators {
+	export namespace operators {
 		/**
 		* @brief Uses the magic_enum library's bitwise operators.
 		*/
@@ -31,8 +35,10 @@ namespace stylizer::graphics {
 	* @param flags The flags to check for.
 	* @return True if the flags are set, false otherwise.
 	*/
-	template<typename T>
+	export template<typename T>
 	bool flags_set(T full, T flags) {
+		using namespace operators;
+
 		constexpr T invalid = {};
 		return (full & flags) != invalid;
 	}
@@ -46,5 +52,5 @@ namespace stylizer {
      * This allows the `flags_set` function to be used directly within the `stylizer` namespace
      * without requiring explicit qualification.
      */
-    using stylizer::graphics::flags_set;
+    export using stylizer::graphics::flags_set;
 }

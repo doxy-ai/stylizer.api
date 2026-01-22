@@ -3,7 +3,7 @@
 *
 * @note None of these are intended to be directly used... bindings to other languages may find them helpful however
 */
-#define STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(type)       \
+#define STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(type)       \
 	template<typename T>                                       \
 	static type* move_temporary_to_heap_impl(T&& value) {      \
 		return (type*)(new T(std::move(value)));               \
@@ -16,7 +16,7 @@
 *
 * @note None of these are intended to be directly used... bindings to other languages may find them helpful however
 */
-#define STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(type)                    \
+#define STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(type)                    \
 	type&& move() { return std::move(*this); }                                      \
 	graphics::type* move_temporary_to_heap(graphics::type& temporary) override {              \
 		return graphics::type::move_temporary_to_heap_impl(temporary.as<type>().move()); \
@@ -25,7 +25,7 @@
 /**
 * @brief Macro used to generate default constructors and copy constructors for types.
 */
-#define STYLIZER_API_GENERIC_AUTO_RELEASE_SUPPORT(type) \
+#define STYLIZER_GRAPHICS_GENERIC_AUTO_RELEASE_SUPPORT(type) \
 	type() { }                                          \
 	type(const type&) = default;                        \
 	type& operator=(const type&) = default;
@@ -40,7 +40,7 @@
 * @endcode
 */
 #ifndef STYLIZER_NO_RTTI
-	#define STYLIZER_API_AS_METHOD(type)                 \
+	#define STYLIZER_GRAPHICS_AS_METHOD(type)                 \
 		template<std::derived_from<type> T>              \
 		T& as() {                                        \
 			T* out = dynamic_cast<T*>(this);             \
@@ -54,7 +54,7 @@
 			return *out;                                 \
 		}
 #else
-	#define STYLIZER_API_AS_METHOD(type)    \
+	#define STYLIZER_GRAPHICS_AS_METHOD(type)    \
 		template<std::derived_from<type> T> \
 		T& as() { return *(T*)this; }       \
 		template<std::derived_from<type> T> \

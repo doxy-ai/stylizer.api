@@ -78,14 +78,14 @@ namespace stylizer::graphics {
 
 	export enum class comparison_function {
 		NoDepthCompare,
-		Never,
+		NeverPass,
 		Less,
 		LessEqual,
 		Greater,
 		GreaterEqual,
 		Equal,
 		NotEqual,
-		Always,
+		AlwaysPass,
 	};
 
 	export struct blend_state {
@@ -241,9 +241,9 @@ namespace stylizer::graphics {
 
 		virtual ~surface() = default;
 
-		STYLIZER_API_AS_METHOD(surface);
+		STYLIZER_GRAPHICS_AS_METHOD(surface);
 
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(surface);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(surface);
 	};
 
 	export template<typename T>
@@ -282,9 +282,9 @@ namespace stylizer::graphics {
 
 		virtual ~texture_view() = default;
 
-		STYLIZER_API_AS_METHOD(texture_view);
+		STYLIZER_GRAPHICS_AS_METHOD(texture_view);
 
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(texture_view);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(texture_view);
 	};
 
 	export template<typename T>
@@ -368,8 +368,8 @@ namespace stylizer::graphics {
 
 		virtual ~texture() = default;
 
-		STYLIZER_API_AS_METHOD(texture);
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(texture);
+		STYLIZER_GRAPHICS_AS_METHOD(texture);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(texture);
 	};
 
 	export template<typename T>
@@ -405,9 +405,9 @@ namespace stylizer::graphics {
 
 		virtual ~buffer() = default;
 
-		STYLIZER_API_AS_METHOD(buffer);
+		STYLIZER_GRAPHICS_AS_METHOD(buffer);
 
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(buffer);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(buffer);
 	};
 
 	export template<typename T>
@@ -428,7 +428,7 @@ namespace stylizer::graphics {
 			case shader_stage::Vertex: return slcross::shader_stage::vertex;
 			case shader_stage::Fragment: return slcross::shader_stage::fragment;
 			case shader_stage::Compute: return slcross::shader_stage::compute;
-			default: STYLIZER_API_THROW("The combined stage is only valid for WGSL");
+			default: STYLIZER_THROW("The combined stage is only valid for WGSL");
 			}
 		}
 
@@ -444,7 +444,7 @@ namespace stylizer::graphics {
 				std::string path = module_name + ".slang";
 				session = slcross::slang::parse_from_memory(source, path, module_name);
 			}
-			break; default: STYLIZER_API_THROW("SLCross doesn't support consuming the provided shader language!");
+			break; default: STYLIZER_THROW("SLCross doesn't support consuming the provided shader language!");
 			}
 			return T::create_from_session(device, stage, session, entry_point, label);
 		}
@@ -455,9 +455,9 @@ namespace stylizer::graphics {
 
 		virtual ~shader() = default;
 
-		STYLIZER_API_AS_METHOD(shader);
+		STYLIZER_GRAPHICS_AS_METHOD(shader);
 
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(shader);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(shader);
 	};
 
 	export template<typename T>
@@ -494,9 +494,9 @@ namespace stylizer::graphics {
 
 		virtual ~command_buffer() = default;
 
-		STYLIZER_API_AS_METHOD(command_buffer);
+		STYLIZER_GRAPHICS_AS_METHOD(command_buffer);
 
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(command_buffer);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(command_buffer);
 	};
 
 	export struct bind_group {
@@ -520,9 +520,9 @@ namespace stylizer::graphics {
 
 		virtual ~bind_group() = default;
 
-		STYLIZER_API_AS_METHOD(bind_group);
+		STYLIZER_GRAPHICS_AS_METHOD(bind_group);
 
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(bind_group);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(bind_group);
 	};
 
 	export struct compute_pipeline : public pipeline {
@@ -538,9 +538,9 @@ namespace stylizer::graphics {
 
 		virtual ~compute_pipeline() = default;
 
-		STYLIZER_API_AS_METHOD(compute_pipeline);
+		STYLIZER_GRAPHICS_AS_METHOD(compute_pipeline);
 
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(compute_pipeline);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(compute_pipeline);
 	};
 
 	export template<typename T>
@@ -580,9 +580,9 @@ namespace stylizer::graphics {
 
 		virtual ~command_encoder_base() = default;
 
-		STYLIZER_API_AS_METHOD(command_encoder_base);
+		STYLIZER_GRAPHICS_AS_METHOD(command_encoder_base);
 
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(Treturn);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(Treturn);
 	};
 
 	export struct command_encoder : public command_encoder_base<command_encoder> {};
@@ -622,7 +622,7 @@ namespace stylizer::graphics {
 
 		virtual void release() = 0;
 
-		STYLIZER_API_AS_METHOD(render_pass);
+		STYLIZER_GRAPHICS_AS_METHOD(render_pass);
 	};
 
 	export template<typename T>
@@ -729,9 +729,9 @@ namespace stylizer::graphics {
 
 		virtual ~render_pipeline() = default;
 
-		STYLIZER_API_AS_METHOD(render_pipeline);
+		STYLIZER_GRAPHICS_AS_METHOD(render_pipeline);
 
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(render_pipeline);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(render_pipeline);
 	};
 
 	export template<typename T>
@@ -799,9 +799,9 @@ namespace stylizer::graphics {
 
 		virtual ~device() = default;
 
-		STYLIZER_API_AS_METHOD(device);
+		STYLIZER_GRAPHICS_AS_METHOD(device);
 
-		STYLIZER_API_MOVE_TEMPORARY_TO_HEAP_METHOD(device);
+		STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_METHOD(device);
 	};
 
 	export template<typename T>
@@ -815,13 +815,13 @@ namespace stylizer::graphics {
 		{ t.type } -> std::convertible_to<size_t>;
 	};
 
-	export inline texture::format surface::configured_texture_format(device& device) {
+	inline texture::format surface::configured_texture_format(device& device) {
 		auto texture = std::unique_ptr<struct texture>(next_texture(temporary_return, device).move_temporary_to_heap());
 		auto out = texture->texture_format();
 		present(device);
 		return out;
 	}
-	export inline void compute_pipeline::quick_dispatch(device& device, vec3u workgroups, const pipeline::entry_point& entry_point, std::span<const bind_group::binding> bindings) {
+	inline void compute_pipeline::quick_dispatch(device& device, vec3u workgroups, const pipeline::entry_point& entry_point, std::span<const bind_group::binding> bindings) {
 		auto& pipeline = device.create_compute_pipeline(temporary_return, entry_point);
 		device.create_command_encoder(temporary_return, true)
 			.bind_compute_pipeline(device, pipeline)
