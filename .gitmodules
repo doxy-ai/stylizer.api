@@ -1,0 +1,6 @@
+[submodule "extern/stdmath"]
+	path = extern/stdmath
+	url = https://github.com/doxy-ai/stdmath
+[submodule "extern/slcross"]
+	path = extern/slcross
+	url = https://github.com/doxy-ai/slcross
