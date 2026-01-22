@@ -36,7 +36,8 @@ option(STYLIZER_GRAPHICS_USE_X11 "Should we build X11 support?" ${LINUX})
 option(STYLIZER_GRAPHICS_USE_WAYLAND "Should we build wayland support?" ${STYLIZER_WAYLAND_PREFERRED})
 
 # option(STYLIZER_GRAPHICS_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
-option(STYLIZER_GRAPHICS_ENABLE_GLFW "Should the Stylizer Graphics API build support for GLFW?" ON)
+option(STYLIZER_GRAPHICS_ENABLE_GLFW "Should the Stylizer Graphics API build support for GLFW?" OFF)
+option(STYLIZER_GRAPHICS_ENABLE_SDL3 "Should the Stylizer Graphics API build support for SDL3?" ON)
 
 set(CMAKE_CXX_STANDARD 26)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -66,11 +67,21 @@ target_sources(stylizer_graphics PUBLIC
 )
 target_link_libraries(stylizer_graphics PUBLIC slcross magic_enum std::math)
 target_include_directories(stylizer_graphics PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/backends)
+include(cmake/surface_support.cmake)
 if(STYLIZER_GRAPHICS_ENABLE_GLFW)
 	target_sources(stylizer_graphics PUBLIC FILE_SET stylizer_graphics TYPE CXX_MODULES FILES glfw.cppm)
 	
 	include(cmake/glfw.cmake)
 	target_setup_glfw_for_stylizer(stylizer_graphics)
+	target_setup_surface_support_for_stylizer(stylizer_graphics)
+endif()
+if(STYLIZER_GRAPHICS_ENABLE_SDL3)
+	message("Enabling SDL support")
+	target_sources(stylizer_graphics PUBLIC FILE_SET stylizer_graphics TYPE CXX_MODULES FILES sdl3.cppm)
+	
+	include(cmake/sdl3.cmake)
+	target_setup_sdl3_for_stylizer(stylizer_graphics)
+	target_setup_surface_support_for_stylizer(stylizer_graphics)
 endif()
 
 # add_library(stylizer::graphics alias stylizer_graphics)
@@ -84,11 +95,8 @@ add_subdirectory(backends/stub)
 # endif(STYLIZER_GRAPHICS_ENABLE_WEBGPU)
 
 if(${STYLIZER_GRAPHICS_BUILD_TEST})
-	find_package(glfw3 CONFIG REQUIRED)
+	find_package(SDL3 REQUIRED)
 
 	add_executable(api_tst "test.cpp")
 	target_link_libraries(api_tst PUBLIC stylizer_graphics glfw)
-
-
-	
 endif()
