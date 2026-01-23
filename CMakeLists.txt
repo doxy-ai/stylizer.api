@@ -35,7 +35,8 @@ option(STYLIZER_GRAPHICS_USE_WINDOWS_UI "Should we build windows ui support?" ${
 option(STYLIZER_GRAPHICS_USE_X11 "Should we build X11 support?" ${LINUX})
 option(STYLIZER_GRAPHICS_USE_WAYLAND "Should we build wayland support?" ${STYLIZER_WAYLAND_PREFERRED})
 
-# option(STYLIZER_GRAPHICS_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
+option(STYLIZER_GRAPHICS_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
+
 option(STYLIZER_GRAPHICS_ENABLE_GLFW "Should the Stylizer Graphics API build support for GLFW?" OFF)
 option(STYLIZER_GRAPHICS_ENABLE_SDL3 "Should the Stylizer Graphics API build support for SDL3?" ${STYLIZER_GRAPHICS_BUILD_TEST})
 
@@ -56,13 +57,13 @@ add_library(stylizer_graphics)
 target_sources(stylizer_graphics PUBLIC
 	FILE_SET stylizer_graphics TYPE CXX_MODULES
 	# BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
-	FILES 
+	FILES
 		api.cppm extern/slcross/slcross.cppm
 		util/errors.cppm
-		util/auto_release.cppm 
-		util/convertible_to_pointer.cppm 
+		util/auto_release.cppm
+		util/convertible_to_pointer.cppm
 		util/flags.cppm extern/slcross/thirdparty/magic_enum/module/magic_enum.cppm
-		util/spans.cppm 
+		util/spans.cppm
 		util/string2magic.cppm
 )
 target_link_libraries(stylizer_graphics PUBLIC slcross magic_enum std::math)
@@ -70,7 +71,7 @@ target_include_directories(stylizer_graphics PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} 
 include(cmake/surface_support.cmake)
 if(STYLIZER_GRAPHICS_ENABLE_GLFW)
 	target_sources(stylizer_graphics PUBLIC FILE_SET stylizer_graphics TYPE CXX_MODULES FILES glfw.cppm)
-	
+
 	include(cmake/glfw.cmake)
 	target_setup_glfw_for_stylizer(stylizer_graphics)
 	target_setup_surface_support_for_stylizer(stylizer_graphics)
@@ -93,7 +94,7 @@ if(STYLIZER_GRAPHICS_ENABLE_SDL3)
 	endif()
 
 	target_sources(stylizer_graphics PUBLIC FILE_SET stylizer_graphics TYPE CXX_MODULES FILES sdl3.cppm)
-	
+
 	include(cmake/sdl3.cmake)
 	target_setup_sdl3_for_stylizer(stylizer_graphics)
 	target_setup_surface_support_for_stylizer(stylizer_graphics)
@@ -103,15 +104,15 @@ endif()
 
 add_subdirectory(backends/stub)
 
-# if(STYLIZER_GRAPHICS_ENABLE_WEBGPU)
-# 	add_subdirectory(backends/webgpu EXCLUDE_FROM_ALL)
-# elseif(STYLIZER_GRAPHICS_CURRENT_BACKEND_LOWER STREQUAL webgpu)
-# 	message(FATAL_ERROR "WebGPU set as the current backend but it is not enabled!")
-# endif(STYLIZER_GRAPHICS_ENABLE_WEBGPU)
+if(STYLIZER_GRAPHICS_ENABLE_WEBGPU)
+	add_subdirectory(backends/webgpu EXCLUDE_FROM_ALL)
+elseif(STYLIZER_GRAPHICS_CURRENT_BACKEND_LOWER STREQUAL webgpu)
+	message(FATAL_ERROR "WebGPU set as the current backend but it is not enabled!")
+endif(STYLIZER_GRAPHICS_ENABLE_WEBGPU)
 
 if(${STYLIZER_GRAPHICS_BUILD_TEST})
 	find_package(SDL3 REQUIRED)
 
 	add_executable(api_tst "test.cpp")
-	target_link_libraries(api_tst PUBLIC stylizer_graphics glfw)
+	target_link_libraries(api_tst PUBLIC stylizer::graphics::webgpu glfw)
 endif()

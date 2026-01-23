@@ -1,12 +1,14 @@
+#include "util/defer.hpp"
+
 #include <SDL3/SDL.h>
 #include <GL/gl.h>
-#include "util/defer.hpp"
 
 import std.compat;
 import stylizer.errors;
 import stylizer.auto_release;
 import stylizer.graphics;
 import stylizer.graphics.sdl3;
+import stylizer.graphics.webgpu;
 
 int main() {
 	auto& errors = stylizer::get_error_handler();
@@ -34,6 +36,8 @@ int main() {
 		return -1;
 	}
 	defer_ { SDL_DestroyWindow(window); };
+
+	stylizer::auto_release device = stylizer::graphics::webgpu::device::create_default();
 
 	SDL_GL_CreateContext(window);
 
