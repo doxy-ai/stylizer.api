@@ -397,6 +397,8 @@ namespace stylizer::graphics {
 
 		virtual std::byte* map(device& device, std::optional<bool> for_writing = false, std::optional<size_t> offset = 0, std::optional<size_t> size = {}) = 0;
 
+		virtual std::byte* get_mapped_range(bool for_writing = false, size_t offset = 0, std::optional<size_t> size = {}) = 0;
+
 		virtual void unmap() = 0;
 
 		virtual operator bool() const { return false; }
