@@ -8,8 +8,7 @@ export module stylizer.graphics.stub:command_buffer;
 import :device;
 
 namespace stylizer::graphics::stub {
-	export struct pipeline : public graphics::pipeline { };
-	
+
 	export struct command_buffer: public graphics::command_buffer { STYLIZER_GRAPHICS_GENERIC_AUTO_RELEASE_SUPPORT(command_buffer); STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(command_buffer);
 		uint32_t type = magic_number;
 
@@ -21,4 +20,5 @@ namespace stylizer::graphics::stub {
 		void release() override { STYLIZER_THROW("Not implemented yet!"); }
 		stylizer::auto_release<command_buffer> auto_release() { return std::move(*this); }
 	};
+
 }
