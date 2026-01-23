@@ -6,6 +6,8 @@ module;
 export module stylizer.graphics.stub:bind_group;
 
 import :device;
+import :buffer;
+import :texture;
 
 namespace stylizer::graphics::stub {
 
