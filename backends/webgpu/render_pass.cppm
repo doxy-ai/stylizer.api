@@ -7,9 +7,8 @@ module;
 
 export module stylizer.graphics.webgpu:render_pass;
 
-import :device;
 import :command_encoder;
-import :command_buffer;
+import :render_pipeline;
 
 namespace stylizer::graphics::webgpu {
 
@@ -42,6 +41,11 @@ namespace stylizer::graphics::webgpu {
 		stylizer::auto_release<render_pass> auto_release() { return std::move(*this); }
 	};
 	static_assert(render_pass_concept<render_pass>);
+
+	render_pipeline render_pipeline::create_from_compatible_render_pass(graphics::device& device, const pipeline::entry_points& entry_points, const graphics::render_pass& compatible_render_pass, const render_pipeline::config& config /* = {} */, const std::string_view label /* = "Stylizer Graphics Pipeline" */) {
+		// auto& render_pass = confirm_webgpu_type<webgpu::render_pass>(compatible_render_pass);
+		// return render_pipeline::create(device, entry_points, render_pass.color_attachments, render_pass.depth_attachment, config, label);
+	}
 
 	render_pass device::create_render_pass(std::span<const graphics::render_pass::color_attachment> colors, std::optional<graphics::render_pass::depth_stencil_attachment> depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) { STYLIZER_THROW("Not implemented yet!"); }
 	graphics::render_pass& device::create_render_pass(graphics::temporary_return_t, std::span<const graphics::render_pass::color_attachment> colors, const std::optional<graphics::render_pass::depth_stencil_attachment>& depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) { STYLIZER_THROW("Not implemented yet!"); }
