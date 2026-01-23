@@ -3,9 +3,12 @@
 #include <SDL3/SDL.h>
 #include <GL/gl.h>
 
+#include <cassert>
+
 import std.compat;
 import stylizer.errors;
 import stylizer.auto_release;
+import stylizer.spans;
 import stylizer.graphics;
 import stylizer.graphics.sdl3;
 import stylizer.graphics.current_backend;
@@ -47,6 +50,14 @@ int main() {
 	}
 
 	surface.configure(device, surface.determine_optimal_default_config(device, size));
+
+	std::vector<int> data = {1, 2, 3, 4};
+	auto b = device.create_and_write_buffer(stylizer::graphics::usage::MapRead, stylizer::byte_span<int>(data));
+	auto ints = (int*)b.map(device);
+	assert(ints[0] == 1);
+	assert(ints[1] == 2);
+	assert(ints[2] == 3);
+	assert(ints[3] == 4);
 
 	bool should_close = false;
 	while (!should_close) {
