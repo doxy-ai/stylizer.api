@@ -7,6 +7,7 @@ target_sources(stylizer_graphics_webgpu_impl PUBLIC
 		bind_group.cppm 
 		buffer.cppm 
 		command_buffer.cppm 
+		command_encoder_base.cppm 
 		command_encoder.cppm 
 		compute_pipeline.cppm 
 		device.cppm 

@@ -69,20 +69,20 @@ void compute(vector<int, 3> id : SV_DispatchThreadID) {
 
 	stylizer::auto_release pipeline = device.create_compute_pipeline({&compute_shader, "compute"});
 	stylizer::auto_release result_buffer = device.create_and_write_buffer(stylizer::graphics::usage::MapRead, stylizer::byte_span<int>(data));
-	// device.create_command_encoder(true)
-	// 	.bind_compute_pipeline(device, pipeline)
-	// 	.bind_compute_group(device, pipeline.create_bind_group(device, 0, stylizer::span_from_value<stylizer::graphics::bind_group::binding>(stylizer::graphics::bind_group::buffer_binding{&buffer})))
-	// 	.dispatch_workgroups(device, {1, 1, 1})
-	// 	.one_shot_submit(device);
+	device.create_command_encoder(true)
+		.bind_compute_pipeline(device, pipeline)
+		.bind_compute_group(device, pipeline.create_bind_group(device, 0, stylizer::span_from_value<stylizer::graphics::bind_group::binding>(stylizer::graphics::bind_group::buffer_binding{&buffer})))
+		.dispatch_workgroups(device, {1, 1, 1})
+		.one_shot_submit(device);
 
-	// result_buffer.copy_from(device, buffer);
-	// auto ints = (int*)result_buffer.map(device);
-	// std::cout << ints << std::endl;
-	// assert(ints[0] == 5);
-	// assert(ints[1] == 10);
-	// assert(ints[2] == 15);
-	// assert(ints[3] == 20);
-	// result_buffer.unmap();
+	result_buffer.copy_from(device, buffer);
+	auto ints = (int*)result_buffer.map(device);
+	std::cout << ints << std::endl;
+	assert(ints[0] == 5);
+	assert(ints[1] == 10);
+	assert(ints[2] == 15);
+	assert(ints[3] == 20);
+	result_buffer.unmap();
 
 	errors(stylizer::error::severity::Info, "Computation Finished", 0);
 
