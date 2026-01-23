@@ -73,7 +73,7 @@ namespace stylizer::graphics::webgpu {
 		}
 		inline operator bool() const override { return texture_ || sampler; }
 
-		static texture create(graphics::device& device_, const create_config& config /* = {} */) {
+		static texture create(graphics::device& device_, const create_config& config = {}) {
 			auto& device = confirm_webgpu_type<webgpu::device>(device_);
 
 			WGPUTextureFormat format = to_webgpu(config.format);
@@ -92,7 +92,7 @@ namespace stylizer::graphics::webgpu {
 			return out;
 		}
 
-		static texture create_and_write(graphics::device& device, std::span<const std::byte> data, const data_layout& layout, create_config config /* = {} */) {
+		static texture create_and_write(graphics::device& device, std::span<const std::byte> data, const data_layout& layout, create_config config = {}) {
 			using namespace magic_enum::bitwise_operators;
 
 			config.size = { data.size() / layout.rows_per_image / bytes_per_pixel(config.format), layout.rows_per_image, 1 };
@@ -102,15 +102,15 @@ namespace stylizer::graphics::webgpu {
 			return out;
 		}
 
-		texture_view create_view(graphics::device& device, const view::create_config& config /* = {} */) const {
+		texture_view create_view(graphics::device& device, const view::create_config& config = {}) const {
 			return texture_view::create(device, *this, config);
 		}
-		graphics::texture_view& create_view(temporary_return_t, graphics::device& device, const view::create_config& config /* = {} */) const {
+		graphics::texture_view& create_view(temporary_return_t, graphics::device& device, const view::create_config& config = {}) const {
 			static webgpu::texture_view view;
 			return view = create_view(device, config);
 		}
 
-		const graphics::texture_view& full_view(graphics::device& device, bool treat_as_cubemap /* = false */) const {
+		const graphics::texture_view& full_view(graphics::device& device, bool treat_as_cubemap = false) const {
 			if (view) return view;
 			return view = create_view(device, {.treat_as_cubemap = treat_as_cubemap}); // TODO: Do we want to expose control over the aspect?
 		}
