@@ -5,6 +5,8 @@ module;
 
 #include <webgpu/webgpu.h>
 
+#include <cassert>
+
 export module stylizer.graphics.webgpu:render_pass;
 
 import :command_encoder;
@@ -12,41 +14,190 @@ import :render_pipeline;
 
 namespace stylizer::graphics::webgpu {
 
-	export struct render_pass : public command_encoder_base<graphics::render_pass, render_pass> { STYLIZER_GRAPHICS_GENERIC_AUTO_RELEASE_SUPPORT(render_pass); STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(render_pass);
+	struct render_pass : public command_encoder_base<graphics::render_pass, render_pass> { STYLIZER_GRAPHICS_GENERIC_AUTO_RELEASE_SUPPORT(render_pass); STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(render_pass);
 		using super = webgpu::command_encoder_base<graphics::render_pass, render_pass>;
 
 		// NOTE: Type gets inherited from command_encoder
-		// inline render_pass(std::vector<color_attachment> colors, std::optional<depth_stencil_attachment> depth): color_attachments(std::move(colors)), depth_attachment(depth) {}
+		WGPUCommandEncoder render_encoder = nullptr;
+		WGPURenderPassEncoder pass = nullptr;
+		std::vector<color_attachment> color_attachments = {};
+		std::optional<depth_stencil_attachment> depth_attachment = {};
+		bool render_used = false;
+
+		inline render_pass(std::vector<color_attachment> colors, std::optional<depth_stencil_attachment> depth): color_attachments(std::move(colors)), depth_attachment(depth) {}
 		inline render_pass(render_pass&& o) { *this = std::move(o); }
-		inline render_pass& operator=(render_pass&& o) { STYLIZER_THROW("Not implemented yet!"); }
-		inline operator bool() const override { STYLIZER_THROW("Not implemented yet!"); }
+		inline render_pass& operator=(render_pass&& o) {
+			super::operator=(std::move(o));
+			render_encoder = std::exchange(o.render_encoder, nullptr);
+			pass = std::exchange(o.pass, nullptr);
+			color_attachments = std::exchange(o.color_attachments, {});
+			depth_attachment = std::exchange(o.depth_attachment, {});
+			render_used = std::exchange(o.render_used, false);
+			return *this;
+		}
+		inline operator bool() const override { return super::operator bool() || render_encoder || pass; }
 
+		static render_pass create(graphics::device& device_, std::span<const render_pass::color_attachment> colors, const std::optional<depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label_ = "Stylizer Render Pass") {
+			assert(colors.size() > 0);
+			assert(!(depth.has_value() && depth->depth_clear_value.has_value()) || depth->depth_clear_value >= 0);
+			assert(!(depth.has_value() && depth->depth_clear_value.has_value()) || depth->depth_clear_value <= 1);
+			auto& device = confirm_webgpu_type<webgpu::device>(device_);
 
-		static webgpu::render_pass create(graphics::device& device, std::span<const render_pass::color_attachment> colors, const std::optional<depth_stencil_attachment>& depth = {}, bool one_shot = false, const std::string_view label = "Stylizer Render Pass") { STYLIZER_THROW("Not implemented yet!"); }
+			render_pass out({colors.begin(), colors.end()}, depth);
+			std::string label = out.label = label_;
+			out.one_shot = one_shot;
 
-		graphics::render_pass& bind_render_pipeline(graphics::device& device, const graphics::render_pipeline& pipeline, bool release_on_submit =  false) override { STYLIZER_THROW("Not implemented yet!"); }
-		graphics::render_pass& bind_render_group(graphics::device& device, const graphics::bind_group& group, std::optional<bool> release_on_submit = false, std::optional<size_t> index_override = {}) override { STYLIZER_THROW("Not implemented yet!"); }
-		graphics::render_pass& bind_vertex_buffer(graphics::device& device, size_t slot, const graphics::buffer& buffer, std::optional<size_t> offset = 0, std::optional<size_t> size_override = {}) override { STYLIZER_THROW("Not implemented yet!"); }
-		graphics::render_pass& bind_index_buffer(graphics::device& device, const graphics::buffer& buffer, std::optional<size_t> offset = 0, std::optional<size_t> size_override = {}) override { STYLIZER_THROW("Not implemented yet!"); }
+			{
+				label += "Encoder";
+				WGPUCommandEncoderDescriptor d { .label = to_webgpu(label) };
+				out.render_encoder = wgpuDeviceCreateCommandEncoder(device.device_, &d);
+			}
 
-		graphics::render_pass& draw(graphics::device& device, size_t vertex_count, std::optional<size_t> instance_count = 1, std::optional<size_t> first_vertex = 0, size_t first_instance = 0) override { STYLIZER_THROW("Not implemented yet!"); }
-		graphics::render_pass& draw_indexed(graphics::device& device, size_t index_count, std::optional<size_t> instance_count = 1, std::optional<size_t> first_index = 0, std::optional<size_t> base_vertex = 0, size_t first_instance = 0) override { STYLIZER_THROW("Not implemented yet!"); }
+			std::vector<WGPURenderPassColorAttachment> color_attachments; color_attachments.reserve(colors.size());
+			for(auto& attach: colors) {
+				assert(attach.texture || attach.view);
+				auto& unconfirmed_view = attach.texture ? confirm_webgpu_type<webgpu::texture>(*attach.texture).full_view(device) : *attach.view;
+				auto& view = confirm_webgpu_type<webgpu::texture_view>(unconfirmed_view);
+				color_attachments.emplace_back(WGPURenderPassColorAttachment{
+					.view = view.view,
+					.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
+					.resolveTarget = attach.resolve_target ? confirm_webgpu_type<webgpu::texture_view>(*attach.resolve_target).view : nullptr,
+					.loadOp = attach.clear_value.has_value() ? WGPULoadOp_Clear : WGPULoadOp_Load,
+					.storeOp = attach.should_store ? WGPUStoreOp_Store : WGPUStoreOp_Discard,
+					.clearValue = attach.clear_value.has_value() ? to_webgpu(*attach.clear_value) : WGPUColor{},
+				});
+			}
+			WGPURenderPassDepthStencilAttachment* depth_attachment = nullptr;
+			if(depth) {
+				assert(depth->texture || depth->view);
+				auto& view = confirm_webgpu_type<webgpu::texture_view>(depth->texture ? confirm_webgpu_type<webgpu::texture>(*depth->texture).full_view(device) : *depth->view);
+				bool hasStencil = depth->stencil.has_value();
+				auto stencil = depth->stencil.value_or(depth_stencil_attachment::stencil_config{});
+				auto loadOP = stencil.clear_value.has_value() ? WGPULoadOp_Clear : WGPULoadOp_Load;
+				auto storeOP = stencil.should_store ? WGPUStoreOp_Store : WGPUStoreOp_Discard;
 
-		webgpu::command_buffer end(graphics::device& device) { STYLIZER_THROW("Not implemented yet!"); }
-		graphics::command_buffer& end(temporary_return_t, graphics::device& device) override { STYLIZER_THROW("Not implemented yet!"); }
+				static WGPURenderPassDepthStencilAttachment static_depth;
+				static_depth = {
+					.view = view.view,
+					.depthLoadOp = depth->depth_clear_value.has_value() ? WGPULoadOp_Clear : WGPULoadOp_Load,
+					.depthStoreOp = depth->should_store_depth ? WGPUStoreOp_Store : WGPUStoreOp_Discard,
+					.depthClearValue = depth->depth_clear_value.has_value() ? *depth->depth_clear_value : 1,
+					.depthReadOnly = depth->depth_readonly,
+					.stencilLoadOp = hasStencil ? loadOP : WGPULoadOp_Undefined,
+					.stencilStoreOp = hasStencil ? storeOP : WGPUStoreOp_Undefined,
+					.stencilClearValue = static_cast<uint32_t>(stencil.clear_value.has_value() ? *stencil.clear_value : 0),
+					.stencilReadOnly = stencil.readonly,
+				};
+				depth_attachment = &static_depth;
+			}
 
-		void one_shot_submit(graphics::device& device) override { STYLIZER_THROW("Not implemented yet!"); }
+			{
+				WGPURenderPassDescriptor d = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
+				d.label = to_webgpu(label),
+				d.colorAttachmentCount = color_attachments.size(),
+				d.colorAttachments = color_attachments.data(),
+				d.depthStencilAttachment = depth_attachment,
+				d.occlusionQuerySet = nullptr,
+				d.timestampWrites = nullptr,
+				out.pass = wgpuCommandEncoderBeginRenderPass(out.render_encoder, &d);
+			}
 
-		void release() override { STYLIZER_THROW("Not implemented yet!"); }
+			return out;
+		}
+
+		graphics::render_pass& bind_render_pipeline(graphics::device& device, const graphics::render_pipeline& pipeline_, bool release_on_submit =  false) override {
+			render_used = true;
+			auto& pipeline = confirm_webgpu_type<webgpu::render_pipeline>(pipeline_);
+			wgpuRenderPassEncoderSetPipeline(pass, pipeline.pipeline);
+			if(release_on_submit) deferred_to_release->connect([pipeline = std::move(pipeline)]() mutable {
+				pipeline.release();
+			});
+			return *this;
+		}
+
+		graphics::render_pass& bind_render_group(graphics::device& device, const graphics::bind_group& group_, std::optional<bool> release_on_submit = false, std::optional<size_t> index_override = {}) override {
+			auto& group = confirm_webgpu_type<webgpu::bind_group>(group_);
+			wgpuRenderPassEncoderSetBindGroup(pass, index_override.value_or(group.index), group.group, 0, nullptr);
+			if(release_on_submit.value_or(false)) deferred_to_release->connect([group = std::move(group)]() mutable {
+				group.release();
+			});
+			return *this;
+		}
+		graphics::render_pass& bind_vertex_buffer(graphics::device& device, size_t slot, const graphics::buffer& buffer_, std::optional<size_t> offset = 0, std::optional<size_t> size_override = {}) override {
+			render_used = true;
+			auto& buffer = confirm_webgpu_type<webgpu::buffer>(buffer_);
+			wgpuRenderPassEncoderSetVertexBuffer(pass, slot, buffer.buffer_, offset.value_or(0), size_override.value_or(buffer.size()));
+			return *this;
+		}
+		graphics::render_pass& bind_index_buffer(graphics::device& device, const graphics::buffer& buffer_, std::optional<size_t> offset = 0, std::optional<size_t> size_override = {}) override {
+			render_used = true;
+			auto& buffer = confirm_webgpu_type<webgpu::buffer>(buffer_);
+			wgpuRenderPassEncoderSetIndexBuffer(pass, buffer.buffer_, WGPUIndexFormat_Uint32, offset.value_or(0), size_override.value_or(buffer.size()));
+			return *this;
+		}
+		graphics::render_pass& draw(graphics::device& device, size_t vertex_count, std::optional<size_t> instance_count = 1, std::optional<size_t> first_vertex = 0, size_t first_instance = 0) override {
+			render_used = true;
+			wgpuRenderPassEncoderDraw(pass, vertex_count, instance_count.value_or(1), first_vertex.value_or(0), first_instance);
+			return *this;
+		}
+		graphics::render_pass& draw_indexed(graphics::device& device, size_t index_count, std::optional<size_t> instance_count = 1, std::optional<size_t> first_index = 0, std::optional<size_t> base_vertex = 0, size_t first_instance = 0) override {
+			render_used = true;
+			wgpuRenderPassEncoderDrawIndexed(pass, index_count, instance_count.value_or(1), first_index.value_or(0), base_vertex.value_or(0), first_instance);
+			return *this;
+		}
+
+		webgpu::command_buffer end(graphics::device& device) {
+			if(compute_pass) wgpuComputePassEncoderEnd(compute_pass);
+			command_buffer out;
+			WGPUCommandBufferDescriptor d = WGPU_COMMAND_BUFFER_DESCRIPTOR_INIT;
+			if(pre_encoder) out.pre = wgpuCommandEncoderFinish(pre_encoder, &d);
+			if(compute_encoder) out.compute = wgpuCommandEncoderFinish(compute_encoder, &d);
+			if(render_used) {
+				wgpuRenderPassEncoderEnd(pass);
+				out.render = wgpuCommandEncoderFinish(render_encoder, &d);
+			}
+			{ // TODO: Why does this have to be two steps?
+				auto& deferred = *deferred_to_release;
+				out.deferred_to_release = std::move(deferred);
+			}
+			return out;
+		}
+		graphics::command_buffer& end(temporary_return_t, graphics::device& device) override {
+			static command_buffer buffer;
+			return buffer = end(device);
+		}
+
+		void one_shot_submit(graphics::device& device) override {
+			assert(one_shot);
+			auto buffer = end(device);
+			buffer.submit(device, true);
+			this->release();
+		}
+
+		void release() override {
+			if(pre_encoder) wgpuCommandEncoderRelease(std::exchange(pre_encoder, nullptr));
+			if(compute_encoder) wgpuCommandEncoderRelease(std::exchange(compute_encoder, nullptr));
+			if(compute_pass) wgpuComputePassEncoderRelease(std::exchange(compute_pass, nullptr));
+			// TODO: ^^^ Calling release on command encoder infinitely recurses?
+			if(render_encoder) wgpuCommandEncoderRelease(std::exchange(render_encoder, nullptr));
+			if(pass) wgpuRenderPassEncoderRelease(std::exchange(pass, nullptr));
+			(*deferred_to_release)();
+		}
 		stylizer::auto_release<render_pass> auto_release() { return std::move(*this); }
 	};
 	static_assert(render_pass_concept<render_pass>);
 
 	render_pipeline render_pipeline::create_from_compatible_render_pass(graphics::device& device, const pipeline::entry_points& entry_points, const graphics::render_pass& compatible_render_pass, const render_pipeline::config& config /* = {} */, const std::string_view label /* = "Stylizer Graphics Pipeline" */) {
-		// auto& render_pass = confirm_webgpu_type<webgpu::render_pass>(compatible_render_pass);
-		// return render_pipeline::create(device, entry_points, render_pass.color_attachments, render_pass.depth_attachment, config, label);
+		auto& render_pass = confirm_webgpu_type<webgpu::render_pass>(compatible_render_pass);
+		return render_pipeline::create(device, entry_points, render_pass.color_attachments, render_pass.depth_attachment, config, label);
 	}
 
-	render_pass device::create_render_pass(std::span<const graphics::render_pass::color_attachment> colors, std::optional<graphics::render_pass::depth_stencil_attachment> depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) { STYLIZER_THROW("Not implemented yet!"); }
-	graphics::render_pass& device::create_render_pass(graphics::temporary_return_t, std::span<const graphics::render_pass::color_attachment> colors, const std::optional<graphics::render_pass::depth_stencil_attachment>& depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) { STYLIZER_THROW("Not implemented yet!"); }
+	webgpu::render_pass device::create_render_pass(std::span<const graphics::render_pass::color_attachment> colors, std::optional<graphics::render_pass::depth_stencil_attachment> depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) {
+		return webgpu::render_pass::create(*this, colors, depth, one_shot, label);
+	}
+
+	graphics::render_pass& device::create_render_pass(temporary_return_t, std::span<const graphics::render_pass::color_attachment> colors, const std::optional<graphics::render_pass::depth_stencil_attachment>& depth /* = {} */, bool one_shot /* = false */, const std::string_view label /* = "Stylizer Render Pass" */) {
+		static webgpu::render_pass temp;
+		return temp = create_render_pass(colors, depth, one_shot, label);
+	}
 }
