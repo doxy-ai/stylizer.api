@@ -6,6 +6,7 @@
 #include <cassert>
 
 import std.compat;
+import magic_enum;
 import stylizer.errors;
 import stylizer.auto_release;
 import stylizer.spans;
@@ -14,6 +15,8 @@ import stylizer.graphics.sdl3;
 import stylizer.graphics.current_backend;
 
 int main() {
+	using namespace magic_enum::bitwise_operators;
+
 	auto& errors = stylizer::get_error_handler();
 	stylizer::auto_release c = errors.connect([](stylizer::error::severity severity, std::string_view message, size_t) {
 		if (severity >= stylizer::error::severity::Error)
@@ -52,12 +55,36 @@ int main() {
 	surface.configure(device, surface.determine_optimal_default_config(device, size));
 
 	std::vector<int> data = {1, 2, 3, 4};
-	auto b = device.create_and_write_buffer(stylizer::graphics::usage::MapRead, stylizer::byte_span<int>(data));
-	auto ints = (int*)b.map(device);
-	assert(ints[0] == 1);
-	assert(ints[1] == 2);
-	assert(ints[2] == 3);
-	assert(ints[3] == 4);
+	stylizer::auto_release buffer = device.create_and_write_buffer(stylizer::graphics::usage::CopySource | stylizer::graphics::usage::Storage, stylizer::byte_span<int>(data));
+
+	stylizer::auto_release compute_shader = device.create_shader_from_source(stylizer::graphics::shader::language::Slang, stylizer::graphics::shader::stage::Compute, R"__(
+RWStructuredBuffer<int> buffer;
+
+[shader("compute"), numthreads(5, 1, 1)]
+void compute(vector<int, 3> id : SV_DispatchThreadID) {
+	int i = id.x;
+	buffer[i] = buffer[i] * 5;
+}
+	)__", "compute");
+
+	stylizer::auto_release pipeline = device.create_compute_pipeline({&compute_shader, "compute"});
+	stylizer::auto_release result_buffer = device.create_and_write_buffer(stylizer::graphics::usage::MapRead, stylizer::byte_span<int>(data));
+	// device.create_command_encoder(true)
+	// 	.bind_compute_pipeline(device, pipeline)
+	// 	.bind_compute_group(device, pipeline.create_bind_group(device, 0, stylizer::span_from_value<stylizer::graphics::bind_group::binding>(stylizer::graphics::bind_group::buffer_binding{&buffer})))
+	// 	.dispatch_workgroups(device, {1, 1, 1})
+	// 	.one_shot_submit(device);
+
+	// result_buffer.copy_from(device, buffer);
+	// auto ints = (int*)result_buffer.map(device);
+	// std::cout << ints << std::endl;
+	// assert(ints[0] == 5);
+	// assert(ints[1] == 10);
+	// assert(ints[2] == 15);
+	// assert(ints[3] == 20);
+	// result_buffer.unmap();
+
+	errors(stylizer::error::severity::Info, "Computation Finished", 0);
 
 	bool should_close = false;
 	while (!should_close) {
