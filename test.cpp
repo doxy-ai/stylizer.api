@@ -27,7 +27,7 @@ int main() {
 	defer_ { SDL_Quit(); };
 
 	stylizer::graphics::vec2u size = {800, 600};
-	SDL_Window* window = SDL_CreateWindow("Stylizer::API Test", size.x, size.y, 0);
+	SDL_Window* window = SDL_CreateWindow("Stylizer::Graphics Test", size.x, size.y, 0);
 	if (!window) {
 		errors(stylizer::error::severity::Error, "Failed to create SDL window", 0);
 		return -1;
