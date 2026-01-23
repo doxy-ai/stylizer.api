@@ -12,3 +12,5 @@ export import :shader;
 export import :surface;
 export import :texture_view;
 export import :texture;
+
+static_assert(stylizer::graphics::device_concept<stylizer::graphics::webgpu::device>);
