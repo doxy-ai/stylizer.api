@@ -19,14 +19,6 @@ else()
 	set(STYLIZER_SPLIT_DWARF_PREFERRED false)
 endif()
 
-set(STYLIZER_GRAPHICS_CURRENT_BACKEND_OPTIONS "webgpu" "none")
-set(STYLIZER_GRAPHICS_CURRENT_BACKEND webgpu CACHE STRING "Backend that is currently set as the default for the Stylizer Graphics API")
-set_property(CACHE STYLIZER_GRAPHICS_CURRENT_BACKEND PROPERTY STRINGS ${STYLIZER_GRAPHICS_CURRENT_BACKEND_OPTIONS})
-string(TOLOWER ${STYLIZER_GRAPHICS_CURRENT_BACKEND} STYLIZER_GRAPHICS_CURRENT_BACKEND_LOWER)
-if(NOT STYLIZER_GRAPHICS_CURRENT_BACKEND_LOWER IN_LIST STYLIZER_GRAPHICS_CURRENT_BACKEND_OPTIONS)
-	message(FATAL_ERROR "The current backend must be one of ${STYLIZER_GRAPHICS_CURRENT_BACKEND_OPTIONS} not ${STYLIZER_GRAPHICS_CURRENT_BACKEND_LOWER}")
-endif()
-
 option(STYLIZER_GRAPHICS_BUILD_TEST "Should we build the test file?" ${PROJECT_IS_TOP_LEVEL})
 option(STYLIZER_GRAPHICS_USE_SPLIT_DWARF "Should debugging information be included in separated files?" ${STYLIZER_SPLIT_DWARF_PREFERRED})
 
@@ -34,8 +26,6 @@ option(STYLIZER_GRAPHICS_USE_COCOA "Should we build cocoa support?" ${APPLE})
 option(STYLIZER_GRAPHICS_USE_WINDOWS_UI "Should we build windows ui support?" ${WIN32})
 option(STYLIZER_GRAPHICS_USE_X11 "Should we build X11 support?" ${LINUX})
 option(STYLIZER_GRAPHICS_USE_WAYLAND "Should we build wayland support?" ${STYLIZER_WAYLAND_PREFERRED})
-
-option(STYLIZER_GRAPHICS_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
 
 option(STYLIZER_GRAPHICS_ENABLE_GLFW "Should the Stylizer Graphics API build support for GLFW?" OFF)
 option(STYLIZER_GRAPHICS_ENABLE_SDL3 "Should the Stylizer Graphics API build support for SDL3?" ${STYLIZER_GRAPHICS_BUILD_TEST})
@@ -102,17 +92,11 @@ endif()
 
 # add_library(stylizer::graphics alias stylizer_graphics)
 
-add_subdirectory(backends/stub)
-
-if(STYLIZER_GRAPHICS_ENABLE_WEBGPU)
-	add_subdirectory(backends/webgpu EXCLUDE_FROM_ALL)
-elseif(STYLIZER_GRAPHICS_CURRENT_BACKEND_LOWER STREQUAL webgpu)
-	message(FATAL_ERROR "WebGPU set as the current backend but it is not enabled!")
-endif(STYLIZER_GRAPHICS_ENABLE_WEBGPU)
+add_subdirectory(backends)
 
 if(${STYLIZER_GRAPHICS_BUILD_TEST})
 	find_package(SDL3 REQUIRED)
 
 	add_executable(api_tst "test.cpp")
-	target_link_libraries(api_tst PUBLIC stylizer::graphics::webgpu glfw)
+	target_link_libraries(api_tst PUBLIC stylizer::graphics::current_backend glfw)
 endif()

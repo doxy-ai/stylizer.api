@@ -8,12 +8,12 @@ import stylizer.errors;
 import stylizer.auto_release;
 import stylizer.graphics;
 import stylizer.graphics.sdl3;
-import stylizer.graphics.webgpu;
+import stylizer.graphics.current_backend;
 
 int main() {
 	auto& errors = stylizer::get_error_handler();
 	stylizer::auto_release c = errors.connect([](stylizer::error::severity severity, std::string_view message, size_t) {
-		if (severity > stylizer::error::severity::Error)
+		if (severity >= stylizer::error::severity::Error)
 			throw stylizer::error(message);
 		std::cerr << message << std::endl;
 	});
@@ -37,7 +37,7 @@ int main() {
 	}
 	defer_ { SDL_DestroyWindow(window); };
 
-	stylizer::auto_release device = stylizer::graphics::webgpu::device::create_default();
+	stylizer::auto_release device = stylizer::graphics::current_backend::device::create_default();
 
 	SDL_GL_CreateContext(window);
 
