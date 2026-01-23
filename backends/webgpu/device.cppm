@@ -101,6 +101,9 @@ namespace stylizer::graphics::webgpu {
 			return create_and_write_buffer(usage, byte_span(data), offset, label);
 		}
 
+		webgpu::shader create_shader_from_wgsl(const std::string_view wgsl, const std::string_view label = "Stylizer Shader");
+		graphics::shader& create_shader_from_wgsl(graphics::temporary_return_t, const std::string_view wgsl, const std::string_view label = "Stylizer Shader");
+
 		webgpu::shader create_shader_from_session(graphics::shader::stage stage, slcross::session session, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader");
 		graphics::shader& create_shader_from_session(graphics::temporary_return_t, graphics::shader::stage stage, slcross::session session, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") override;
 		webgpu::shader create_shader_from_spirv(graphics::shader::stage stage, graphics::spirv_view spirv, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader");
