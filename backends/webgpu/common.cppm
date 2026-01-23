@@ -12,8 +12,8 @@ export module stylizer.graphics.webgpu.common;
 
 import std.compat;
 import stdmath;
-import magic_enum;
-import stylizer.flags;
+export import magic_enum;
+export import stylizer.flags;
 import stylizer.errors;
 import stylizer.graphics;
 import stylizer.graphics.string2magic;
