@@ -26,32 +26,27 @@ int main() {
 	}
 	defer_ { SDL_Quit(); };
 
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-	SDL_Window* window = SDL_CreateWindow("Stylizer Test", 800, 600, SDL_WINDOW_OPENGL);
+	stylizer::graphics::vec2u size = {800, 600};
+	SDL_Window* window = SDL_CreateWindow("Stylizer::API Test", size.x, size.y, 0);
 	if (!window) {
 		errors(stylizer::error::severity::Error, "Failed to create SDL window", 0);
 		return -1;
 	}
 	defer_ { SDL_DestroyWindow(window); };
 
-	stylizer::auto_release device = stylizer::graphics::current_backend::device::create_default();
-
-	SDL_GL_CreateContext(window);
-
-	auto glClearColor = (void (*)(float, float, float, float))SDL_GL_GetProcAddress("glClearColor");
-	if (!glClearColor) {
-		errors(stylizer::error::severity::Error, "Failed to find glClearColor", 0);
+	stylizer::auto_release<stylizer::graphics::current_backend::device> device;
+	stylizer::auto_release<stylizer::graphics::current_backend::surface> surface;
+	std::tie(device, surface) = stylizer::graphics::sdl3::create_surface_and_device<stylizer::graphics::current_backend::device, stylizer::graphics::current_backend::surface>(window);
+	if(!device) {
+		errors(stylizer::error::severity::Error, "Failed to create stylizer device", 0);
+		return -1;
+	}
+	if(!surface) {
+		errors(stylizer::error::severity::Error, "Failed to create stylizer surface", 0);
 		return -1;
 	}
 
-	auto glClear = (void (*)(uint32_t))SDL_GL_GetProcAddress("glClear");
-	if (!glClear) {
-		errors(stylizer::error::severity::Error, "Failed to find glClear", 0);
-		return -1;
-	}
+	surface.configure(device, surface.determine_optimal_default_config(device, size));
 
 	bool should_close = false;
 	while (!should_close) {
@@ -60,9 +55,8 @@ int main() {
 			should_close = true;
 		}
 
-		glClearColor(2.f/255, 7.f/255, 53.f/255, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
+		surface.next_texture(device);
 
-		SDL_GL_SwapWindow(window);
+		surface.present(device);
 	}
 }
