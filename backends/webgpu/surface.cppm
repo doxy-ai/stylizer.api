@@ -267,7 +267,7 @@ namespace stylizer::graphics::webgpu {
 			}
 
 			webgpu::texture out;
-			// out.texture_ = texture.texture;
+			out.texture_ = texture.texture;
 			return out;
 		}
 		graphics::texture& next_texture(temporary_return_t, graphics::device& device) override {
