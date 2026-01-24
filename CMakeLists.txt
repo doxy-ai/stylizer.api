@@ -76,7 +76,22 @@ if(STYLIZER_GRAPHICS_ENABLE_GLFW)
 	target_setup_surface_support_for_stylizer(stylizer_graphics)
 endif()
 if(STYLIZER_GRAPHICS_ENABLE_SDL3)
-	message("Enabling SDL support")
+	find_package(SDL3)
+	# If not found, fetch and build it
+	if (NOT SDL3_FOUND)
+		message("SDL not found... fetching from github!")
+
+		FetchContent_Declare(
+			SDL3
+			GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+			GIT_TAG        main # or a specific release tag like release-3.2.0
+		)
+
+		set(SDL_TEST OFF CACHE BOOL "" FORCE)
+
+		FetchContent_MakeAvailable(SDL3)
+	endif()
+
 	target_sources(stylizer_graphics PUBLIC FILE_SET stylizer_graphics TYPE CXX_MODULES FILES sdl3.cppm)
 	
 	include(cmake/sdl3.cmake)
