@@ -37,7 +37,7 @@ option(STYLIZER_GRAPHICS_USE_WAYLAND "Should we build wayland support?" ${STYLIZ
 
 # option(STYLIZER_GRAPHICS_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
 option(STYLIZER_GRAPHICS_ENABLE_GLFW "Should the Stylizer Graphics API build support for GLFW?" OFF)
-option(STYLIZER_GRAPHICS_ENABLE_SDL3 "Should the Stylizer Graphics API build support for SDL3?" ON)
+option(STYLIZER_GRAPHICS_ENABLE_SDL3 "Should the Stylizer Graphics API build support for SDL3?" ${STYLIZER_GRAPHICS_BUILD_TEST})
 
 set(CMAKE_CXX_STANDARD 26)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
