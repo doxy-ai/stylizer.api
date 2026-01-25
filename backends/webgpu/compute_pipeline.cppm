@@ -53,7 +53,7 @@ namespace stylizer::graphics::webgpu {
 			return group = create_bind_group(device, index, bindings, label);
 		}
 
-		void release() {
+		void release() override {
 			if (pipeline) wgpuComputePipelineRelease(std::exchange(pipeline, nullptr));
 		}
 		stylizer::auto_release<compute_pipeline> auto_release() { return std::move(*this); }
