@@ -200,4 +200,73 @@ namespace stylizer::graphics::webgpu {
 		static webgpu::render_pass temp;
 		return temp = create_render_pass(colors, depth, one_shot, label);
 	}
+
+	graphics::texture& webgpu::texture::blit_from(graphics::device& device_, const graphics::texture& source_, std::optional<color32> clear_value /* = {} */, graphics::render_pipeline* pipeline_override /* = nullptr */, std::optional<size_t> vertex_count_override /* = {} */) {
+		auto& device = confirm_webgpu_type<webgpu::device>(device_);
+		auto& source = confirm_webgpu_type<webgpu::texture>(source_);
+		assert(source.sampler);
+
+		auto attachment = std::array<color_attachment, 1>{color_attachment{
+			.texture = this,
+			.clear_value = clear_value
+		}};
+		auto format = texture_format();
+		static thread_local std::unordered_map<texture::format, stylizer::auto_release<webgpu::render_pipeline>> pipeline_cache = {};
+		if(!pipeline_override && pipeline_cache[format])
+			pipeline_override = &pipeline_cache[format];
+
+		webgpu::render_pipeline* pipeline;
+		if(!pipeline_override) {
+			static thread_local stylizer::auto_release<webgpu::shader> shader = webgpu::shader::create_from_wgsl(device, R"_(
+@group(0) @binding(0) var texture: texture_2d<f32>;
+@group(0) @binding(1) var sampler_: sampler;
+
+struct vertex_output {
+	@builtin(position) position: vec4f,
+	@location(0) uv: vec2f
+}
+
+@vertex
+fn vertex(@builtin(vertex_index) index: u32) -> vertex_output {
+	var out: vertex_output;
+	switch(index) {
+		case 0: {
+			out.position = vec4f(-1, -1, 0, 1);
+			out.uv = vec2f(0, 0);
+		}
+		case 1: {
+			out.position = vec4f(3, -1, 0, 1);
+			out.uv = vec2f(2, 0);
+		}
+		default: {
+			out.position = vec4f(-1, 3, 0, 1);
+			out.uv = vec2f(0, 2);
+		}
+	}
+	return out;
+}
+
+@fragment
+fn fragment(v: vertex_output) -> @location(0) vec4f {
+	// let c = textureSample(texture, sampler_, vert.uv);
+	// return vec4f(vert.uv, 0, 1) + c * .01;
+	var vert = v;
+	vert.uv.y = -vert.uv.y; // Unflip v axis
+	return textureSample(texture, sampler_, vert.uv);
+})_");
+			pipeline = &(pipeline_cache[format] = std::move(device.create_render_pipeline({
+				{shader::stage::Vertex, {&shader, "vertex"}},
+				{shader::stage::Fragment, {&shader, "fragment"}},
+			}, attachment, {}, {}, "Stylizer Blit Pipeline")));
+		} else pipeline = &confirm_webgpu_type<webgpu::render_pipeline>(*pipeline_override);
+
+		device.create_render_pass(attachment, {}, true, "Stylizer Blit Renderpass")
+			.bind_render_pipeline(device, *pipeline)
+			.bind_render_group(device, pipeline->create_bind_group(device, 0, std::array<bind_group::binding, 1>{
+				bind_group::texture_binding{&source}
+			}), true)
+			.draw(device, vertex_count_override.value_or(3))
+			.one_shot_submit(device);
+		return *this;
+	}
 }
