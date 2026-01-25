@@ -714,7 +714,7 @@ namespace stylizer::graphics {
 				std::optional<size_t> stride_override = {};
 			};
 			std::vector<vertex_buffer_layout> vertex_buffers = {};
-			using attribute_format = STYLIZER_ENUM_CLASS vertex_buffer_layout::attribute::format;
+			// using attribute_format = STYLIZER_ENUM_CLASS vertex_buffer_layout::attribute::format; // TODO: Why broken?
 
 			struct sampling {
 				uint32_t count = 1;
