@@ -85,37 +85,37 @@ namespace stylizer::graphics::webgpu {
 		texture_view create_view(graphics::device& device, const view::create_config& config = {}) const {
 			return texture_view::create(device, *this, config);
 		}
-		graphics::texture_view& create_view(temporary_return_t, graphics::device& device, const view::create_config& config = {}) const {
+		graphics::texture_view& create_view(temporary_return_t, graphics::device& device, const view::create_config& config = {}) const override {
 			static webgpu::texture_view view;
 			return view = create_view(device, config);
 		}
 
-		const graphics::texture_view& full_view(graphics::device& device, bool treat_as_cubemap = false) const {
+		const graphics::texture_view& full_view(graphics::device& device, bool treat_as_cubemap = false) const override {
 			if (view) return view;
 			return view = create_view(device, {.treat_as_cubemap = treat_as_cubemap}); // TODO: Do we want to expose control over the aspect?
 		}
 
-		vec3u size() const {
+		vec3u size() const override {
 			auto& texture = texture_;
 			return { wgpuTextureGetWidth(texture), wgpuTextureGetHeight(texture), wgpuTextureGetDepthOrArrayLayers(texture) };
 		}
 
-		format texture_format() const {
+		format texture_format() const override {
 			return from_webgpu(wgpuTextureGetFormat(texture_));
 		}
 
-		graphics::usage usage() const {
+		graphics::usage usage() const override {
 			return from_webgpu_texture(wgpuTextureGetUsage(texture_));
 		}
 
-		uint32_t mip_levels() const {
+		uint32_t mip_levels() const override {
 			return wgpuTextureGetMipLevelCount(texture_);
 		}
-		uint32_t samples() const {
+		uint32_t samples() const override {
 			return wgpuTextureGetSampleCount(texture_);
 		}
 
-		graphics::texture& configure_sampler(graphics::device& device_, const sampler_config& config = {}) {
+		graphics::texture& configure_sampler(graphics::device& device_, const sampler_config& config = {}) override {
 			auto& device = confirm_webgpu_type<webgpu::device>(device_);
 			if (sampler) wgpuSamplerRelease(sampler);
 			WGPUSamplerDescriptor d = WGPU_SAMPLER_DESCRIPTOR_INIT;
@@ -134,11 +134,11 @@ namespace stylizer::graphics::webgpu {
 			return *this;
 		}
 
-		bool sampled() const {
+		bool sampled() const override {
 			return sampler;
 		}
 
-		graphics::texture& write(graphics::device& device_, std::span<const std::byte> data, const data_layout& layout, vec3u extent, std::optional<vec3u> origin_ = {{ 0, 0, 0 }}, size_t mip_level = 0) {
+		graphics::texture& write(graphics::device& device_, std::span<const std::byte> data, const data_layout& layout, vec3u extent, std::optional<vec3u> origin_ = {{ 0, 0, 0 }}, size_t mip_level = 0) override {
 			assert(data.size() >= layout.offset + layout.bytes_per_row * layout.rows_per_image);
 			auto& device = confirm_webgpu_type<webgpu::device>(device_);
 			auto origin = origin_.value_or(vec3u{0, 0, 0});
@@ -157,7 +157,7 @@ namespace stylizer::graphics::webgpu {
 			return *this;
 		}
 
-		graphics::texture& copy_from(graphics::device& device_, const graphics::texture& source_, std::optional<vec3u> destination_origin = {{0, 0, 0}}, std::optional<vec3u> source_origin = {{0, 0, 0}}, std::optional<vec3u> extent_override = {}, std::optional<size_t> min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) {
+		graphics::texture& copy_from(graphics::device& device_, const graphics::texture& source_, std::optional<vec3u> destination_origin = {{0, 0, 0}}, std::optional<vec3u> source_origin = {{0, 0, 0}}, std::optional<vec3u> extent_override = {}, std::optional<size_t> min_mip_level = 0, std::optional<size_t> mip_levels_override = {}) override {
 			auto& device = confirm_webgpu_type<webgpu::device>(device_);
 			auto& source = confirm_webgpu_type<webgpu::texture>(source_);
 			auto e = create_command_encoder(device.device_);
@@ -168,7 +168,7 @@ namespace stylizer::graphics::webgpu {
 			return *this;
 		}
 
-		graphics::texture& blit_from(graphics::device& device_, const graphics::texture& source_, std::optional<color32> clear_value = {}, graphics::render_pipeline* pipeline_override = nullptr, std::optional<size_t> vertex_count_override = {}) {
+		graphics::texture& blit_from(graphics::device& device_, const graphics::texture& source_, std::optional<color32> clear_value = {}, graphics::render_pipeline* pipeline_override = nullptr, std::optional<size_t> vertex_count_override = {}) override {
 	// 		auto& device = confirm_webgpu_type<webgpu::device>(device_);
 	// 		auto& source = confirm_webgpu_type<webgpu::texture>(source_);
 	// 		assert(source.sampler);
@@ -237,7 +237,7 @@ namespace stylizer::graphics::webgpu {
 			return *this;
 		}
 
-		graphics::texture& generate_mipmaps(graphics::device& device_, std::optional<size_t> first_mip_level_ = 0, std::optional<size_t> mip_levels_override = {}) {
+		graphics::texture& generate_mipmaps(graphics::device& device_, std::optional<size_t> first_mip_level_ = 0, std::optional<size_t> mip_levels_override = {}) override {
 	// 		auto& device = confirm_webgpu_type<webgpu::device>(device_);
 	// 		auto size = this->size();
 	// 		size_t size_max_levels = std::bit_width(std::min(size.x, size.y));
@@ -296,7 +296,7 @@ namespace stylizer::graphics::webgpu {
 			return *this;
 		}
 
-		void release() {
+		void release() override {
 			if (texture_) wgpuTextureRelease(std::exchange(texture_, nullptr));
 			if (sampler) wgpuSamplerRelease(std::exchange(sampler, nullptr));
 			if (view) std::exchange(view, {}).release();
