@@ -25,7 +25,7 @@ namespace stylizer::graphics::webgpu {
 		}
 		inline operator bool() const override { return module; }
 
-		static shader create_from_wgsl(graphics::device& device_, const std::string_view wgsl, const std::string_view label /* = "Stylizer Shader" */) {
+		static shader create_from_wgsl(graphics::device& device_, const std::string_view wgsl, const std::string_view label = "Stylizer Shader") {
 			auto& device = confirm_webgpu_type<webgpu::device>(device_);
 
 			shader out;
@@ -43,19 +43,19 @@ namespace stylizer::graphics::webgpu {
 			return out;
 		}
 
-		static shader create_from_session(graphics::device& device, shader::stage stage, slcross::session session, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
+		static shader create_from_session(graphics::device& device, shader::stage stage, slcross::session session, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") {
 			auto wgsl = slcross::wgsl::generate(session, entry_point);
 			return create_from_wgsl(device, wgsl, label);
 		}
 
-		static shader create_from_spirv(graphics::device& device, shader::stage stage, spirv_view spirv, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
+		static shader create_from_spirv(graphics::device& device, shader::stage stage, spirv_view spirv, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") {
 			auto session = slcross::experimental::spirv::parse_from_memory(spirv, {{to_slcross(stage), entry_point}});
 			defer_ { session.free(); };
 			auto wgsl = slcross::wgsl::generate(session, entry_point);
 			return create_from_wgsl(device, wgsl, label);
 		}
 
-		static shader create_from_source(graphics::device& device, language lang, shader::stage stage, const std::string_view source, const std::string_view entry_point /* = "main" */, const std::string_view label /* = "Stylizer Shader" */) {
+		static shader create_from_source(graphics::device& device, language lang, shader::stage stage, const std::string_view source, const std::string_view entry_point = "main", const std::string_view label = "Stylizer Shader") {
 			if(lang == shader::language::WGSL) return create_from_wgsl(device, source, label);
 			return graphics::shader::create_from_source<webgpu::shader>(device, lang, stage, source, entry_point, label);
 		}
