@@ -1,6 +1,3 @@
-
-add_subdirectory(stub)
-
 set(STYLIZER_GRAPHICS_CURRENT_BACKEND_OPTIONS "webgpu" "none")
 set(STYLIZER_GRAPHICS_CURRENT_BACKEND webgpu CACHE STRING "Backend that is currently set as the default for the Stylizer Graphics API")
 set_property(CACHE STYLIZER_GRAPHICS_CURRENT_BACKEND PROPERTY STRINGS ${STYLIZER_GRAPHICS_CURRENT_BACKEND_OPTIONS})
@@ -12,6 +9,9 @@ endif()
 option(STYLIZER_GRAPHICS_ENABLE_WEBGPU "Should the Stylizer Graphics API support the WebGPU Backend?" ON)
 
 add_library(stylizer_graphics_current_backend)
+
+add_subdirectory(stub)
+target_link_libraries(stylizer_graphics_current_backend PUBLIC stylizer_graphics_stub)
 
 if(STYLIZER_GRAPHICS_ENABLE_WEBGPU)
 	add_subdirectory(webgpu EXCLUDE_FROM_ALL)
