@@ -56,7 +56,7 @@ namespace stylizer::graphics::webgpu {
 	protected:
 		WGPUCommandEncoder maybe_create_pre_encoder(webgpu::device& device) {
 			std::string label = this->label + " Pre Encoder";
-			WGPUCommandEncoderDescriptor d = {.label = label.c_str()};
+			WGPUCommandEncoderDescriptor d = {.label = to_webgpu(label)};
 			if(!pre_encoder) pre_encoder = wgpuDeviceCreateCommandEncoder(device.device_, &d);
 			return pre_encoder;
 		}
@@ -64,12 +64,12 @@ namespace stylizer::graphics::webgpu {
 		WGPUComputePassEncoder maybe_create_compute_pass(webgpu::device& device) {
 			if(!compute_encoder) {
 				std::string label = this->label + " Compute Encoder";
-				WGPUCommandEncoderDescriptor d{.label = label.c_str()};
+				WGPUCommandEncoderDescriptor d{.label = to_webgpu(label)};
 				compute_encoder = wgpuDeviceCreateCommandEncoder(device.device_, &d);
 			}
 			if(!compute_pass) {
 				std::string label = this->label + " Compute Pass";
-				WGPUComputePassDescriptor d{.label = label.c_str()};
+				WGPUComputePassDescriptor d{.label = to_webgpu(label)};
 				compute_pass = wgpuCommandEncoderBeginComputePass(compute_encoder, &d);
 			}
 			return compute_pass;
@@ -151,14 +151,14 @@ namespace stylizer::graphics::webgpu {
 			return buffer = end(device);
 		}
 
-		void one_shot_submit(graphics::device& device) {
+		void one_shot_submit(graphics::device& device) override {
 			assert(one_shot);
 			auto buffer = end(device);
 			buffer.submit(device, true);
 			this->release();
 		}
 
-		void release() {
+		void release() override {
 			if(pre_encoder) wgpuCommandEncoderRelease(std::exchange(pre_encoder, nullptr));
 			if(compute_encoder) wgpuCommandEncoderRelease(std::exchange(compute_encoder, nullptr));
 			if(compute_pass) wgpuComputePassEncoderRelease(std::exchange(compute_pass, nullptr));
