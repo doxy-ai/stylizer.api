@@ -15,26 +15,6 @@ import :texture_view;
 
 namespace stylizer::graphics::webgpu {
 
-	inline enum texture_view::create_config::aspect from_webgpu(WGPUTextureAspect aspect){
-		switch(aspect){
-		case WGPUTextureAspect_All: return texture_view::create_config::aspect::All;
-		case WGPUTextureAspect_DepthOnly: return texture_view::create_config::aspect::DepthOnly;
-		case WGPUTextureAspect_StencilOnly: return texture_view::create_config::aspect::StencilOnly;
-		default:
-			STYLIZER_THROW(std::string("Failed to find texture aspect: ") + std::string(magic_enum::enum_name(aspect)));
-		}
-		std::unreachable();
-	}
-
-	inline WGPUTextureAspect to_webgpu(enum texture_view::create_config::aspect aspect){
-		switch(aspect){
-		case texture_view::create_config::aspect::All: return WGPUTextureAspect_All;
-		case texture_view::create_config::aspect::DepthOnly: return WGPUTextureAspect_DepthOnly;
-		case texture_view::create_config::aspect::StencilOnly: return WGPUTextureAspect_StencilOnly;
-		}
-		std::unreachable();
-	}
-
 	inline graphics::texture::address_mode from_webgpu(WGPUAddressMode mode) {
 		switch (mode) {
 		case WGPUAddressMode_Repeat: return graphics::texture::address_mode::Repeat;
