@@ -30,8 +30,8 @@ namespace stylizer::graphics::webgpu {
 		}
 		inline operator bool() const override { return pre || compute || render; }
 
-		void submit(graphics::device& device_, bool release = true) {
-			if(!this) { // If there is nothing to submit just skip!
+		void submit(graphics::device& device_, bool release = true) override {
+			if(!*this) { // If there is nothing to submit just skip!
 				if (release) this->release();
 				return;
 			} 
@@ -46,7 +46,7 @@ namespace stylizer::graphics::webgpu {
 			if (release) this->release();
 		}
 
-		void release() {
+		void release() override {
 			if (pre) wgpuCommandBufferRelease(std::exchange(pre, nullptr));
 			if (compute) wgpuCommandBufferRelease(std::exchange(compute, nullptr));
 			if (render) wgpuCommandBufferRelease(std::exchange(render, nullptr));
