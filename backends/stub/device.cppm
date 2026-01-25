@@ -42,7 +42,7 @@ namespace stylizer::graphics::stub {
 
 		static stub::device create_default(const stub::device::create_config& config = {}) { STYLIZER_THROW("Not implemented yet!"); }
 
-		bool tick(bool wait_for_queues = true) override { STYLIZER_THROW("Not implemented yet!"); }
+		bool per_frame(bool wait_for_queues = true) override { STYLIZER_THROW("Not implemented yet!"); }
 
 		stub::texture create_texture(const graphics::texture::create_config& config = {});
 		graphics::texture& create_texture(graphics::temporary_return_t, const graphics::texture::create_config& config = {}) override;
