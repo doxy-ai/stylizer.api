@@ -61,7 +61,7 @@ namespace stylizer::graphics::webgpu {
 			return true;
 		}
 
-		bool tick(bool for_queues = true) {
+		bool per_frame(bool for_queues = true) override {
 			if (!for_queues) return process_events();
 
 			bool done = false;
@@ -122,7 +122,7 @@ namespace stylizer::graphics::webgpu {
 		webgpu::render_pipeline create_render_pipeline_from_compatible_render_pass(const graphics::pipeline::entry_points& entry_points, const graphics::render_pass& compatible_render_pass, const graphics::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline");
 		graphics::render_pipeline& create_render_pipeline_from_compatible_render_pass(graphics::temporary_return_t, const graphics::pipeline::entry_points& entry_points, const graphics::render_pass& compatible_render_pass, const graphics::render_pipeline::config& config = {}, const std::string_view label = "Stylizer Render Pipeline") override;
 
-		void release(bool static_sub_objects = false);
+		void release(bool static_sub_objects = false) override;
 		stylizer::auto_release<device> auto_release() { return std::move(*this); }
 	};
 	// static_assert(device_concept<device>);
