@@ -36,4 +36,11 @@ namespace stylizer {
 	export template<typename T>
 	std::span<const std::byte> byte_span(std::span<const T> span) { return {(std::byte*)span.data(), span.size() * sizeof(T)}; }
 
+	namespace unsafe {
+		export template<typename T>
+		std::span<T> span_remove_const(std::span<const T> in) {
+			return std::move((std::span<T>&)in);
+		}
+	}
+
 } // namespace stylizer
