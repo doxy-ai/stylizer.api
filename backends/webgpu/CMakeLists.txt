@@ -19,7 +19,7 @@ target_sources(stylizer_graphics_webgpu_impl PUBLIC
 		# webgpu.cppm
 )
 target_link_libraries(stylizer_graphics_webgpu_impl PUBLIC stylizer_graphics)
-target_compile_definitions(stylizer_graphics_webgpu_impl PUBLIC -Dstylizer_graphics_webgpu_impl_AVAILABLE)
+target_compile_definitions(stylizer_graphics_webgpu_impl PUBLIC -DSTYLIZER_GRAPHICS_WEBGPU_AVAILABLE)
 if(NOT EMSCRIPTEN)
     include(../../cmake/surface_support.cmake)
     target_setup_surface_support_for_stylizer(stylizer_graphics_webgpu_impl)

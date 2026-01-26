@@ -19,7 +19,7 @@ target_sources(stylizer_graphics_stub_impl PUBLIC
 		texture.cppm
 )
 target_link_libraries(stylizer_graphics_stub_impl PUBLIC stylizer_graphics)
-
+target_compile_definitions(stylizer_graphics_stub_impl PUBLIC -DSTYLIZER_GRAPHICS_STUB_AVAILABLE)
 
 add_library(stylizer_graphics_stub)
 target_sources(stylizer_graphics_stub PUBLIC FILE_SET stylizer_graphics_stub TYPE CXX_MODULES FILES stub.cppm)
