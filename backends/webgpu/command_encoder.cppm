@@ -12,6 +12,7 @@ export module stylizer.graphics.webgpu:command_encoder;
 import :command_encoder_base;
 
 namespace stylizer::graphics::webgpu {
+	using namespace magic_enum::bitwise_operators;
 
 	export struct command_encoder : public command_encoder_base<graphics::command_encoder, command_encoder> { STYLIZER_GRAPHICS_GENERIC_AUTO_RELEASE_SUPPORT(command_encoder); STYLIZER_GRAPHICS_MOVE_TEMPORARY_TO_HEAP_DERIVED_METHOD(command_encoder);
 		using super = webgpu::command_encoder_base<graphics::command_encoder, command_encoder>;
