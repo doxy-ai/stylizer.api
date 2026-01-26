@@ -61,7 +61,7 @@ namespace stylizer::graphics::webgpu {
 			return true;
 		}
 
-		bool per_frame(bool for_queues = true) override {
+		bool tick(bool for_queues = true) override {
 			if (!for_queues) return process_events();
 
 			bool done = false;
