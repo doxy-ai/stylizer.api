@@ -757,7 +757,7 @@ namespace stylizer::graphics {
 			STYLIZER_NULLABLE struct surface* compatible_surface = nullptr;
 		};
 
-		virtual bool per_frame(bool wait_for_queues = true) = 0;
+		virtual bool tick(bool wait_for_queues = true) = 0;
 
 		virtual texture& create_texture(temporary_return_t, const texture::create_config& config = {}) = 0;
 
