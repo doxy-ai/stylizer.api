@@ -1,7 +1,8 @@
 export module stylizer.graphics.current_backend;
 
 #if STYLIZER_CURRENT_BACKEND == 1 // TODO: Replace with platform decision logic
-	export import stylizer.graphics.webgpu;
+	export import stylizer.graphics.webgpu.common;
+import stylizer.graphics.webgpu;
 
 	export namespace stylizer::graphics::current_backend {
 		using webgpu::surface;

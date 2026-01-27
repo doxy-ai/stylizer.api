@@ -34,7 +34,9 @@ if(NOT EMSCRIPTEN)
     target_link_libraries(stylizer_graphics_webgpu_impl PUBLIC webgpu_dawn)
 endif()
 
-add_library(stylizer_graphics_webgpu)
+add_library(stylizer_graphics_webgpu bind_group.cpp buffer.cpp command_buffer.cpp compute_pipeline.cpp 
+	device.cpp device.create.cpp render_pass.cpp render_pipeline.cpp shader.cpp surface.cpp texture.cpp
+)
 target_sources(stylizer_graphics_webgpu PUBLIC
 	FILE_SET stylizer_graphics_webgpu TYPE CXX_MODULES
 	# BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}

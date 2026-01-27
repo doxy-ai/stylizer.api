@@ -30,28 +30,9 @@ namespace stylizer::graphics::webgpu {
 		}
 		inline operator bool() const override { return pre || compute || render; }
 
-		void submit(graphics::device& device_, bool release = true) override {
-			if(!*this) { // If there is nothing to submit just skip!
-				if (release) this->release();
-				return;
-			} 
+		void submit(graphics::device& device_, bool release = true) override;
 
-			auto& device = confirm_webgpu_type<webgpu::device>(device_);
-			std::vector<WGPUCommandBuffer> commands;
-			commands.reserve(3);
-			if (pre) commands.emplace_back(pre);
-			if (compute) commands.emplace_back(compute);
-			if (render) commands.emplace_back(render);
-			wgpuQueueSubmit(device.queue, commands.size(), commands.data());
-			if (release) this->release();
-		}
-
-		void release() override {
-			if (pre) wgpuCommandBufferRelease(std::exchange(pre, nullptr));
-			if (compute) wgpuCommandBufferRelease(std::exchange(compute, nullptr));
-			if (render) wgpuCommandBufferRelease(std::exchange(render, nullptr));
-			deferred_to_release();
-		}
+		void release() override;
 		stylizer::auto_release<command_buffer> auto_release() { return std::move(*this); }
 	};
 }
